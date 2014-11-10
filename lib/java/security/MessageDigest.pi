@@ -1,0 +1,34 @@
+/*
+ * @(#)MessageDigest.java	1.74 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+package java.security;
+
+
+
+public abstract native class MessageDigest 
+{
+    
+    // NOTE difference with KeyPairGenerator signature
+    public !policyof(algorithm) ?policyof(algorithm) static 
+    java.security.MessageDigest getInstance(String algorithm) 
+    throws !policyof(algorithm) NoSuchAlgorithmException;
+
+    public !(policyof(algorithm)+policyof(provider))
+           ?(policyof(algorithm)*policyof(provider))
+    static java.security.MessageDigest getInstance
+    (String algorithm, Provider provider)
+    throws !(policyof(algorithm)+policyof(provider)) NoSuchAlgorithmException,
+           !(policyof(algorithm)+policyof(provider)) NoSuchProviderException;
+
+
+
+    public void update(?policyof(this) byte[]<policyof(this)> input);
+    
+    public ?policyof(this) byte[]<policyof(this)> digest();
+
+}
+

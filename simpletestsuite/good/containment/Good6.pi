@@ -1,0 +1,11 @@
+public class Good6
+{
+  public static final java.lang.Object Alice = new java.lang.Object();
+  public static final lock Declassified(java.lang.Object);
+  public static final policy secret = {java.lang.Object y: Good6.Declassified(y)};
+  public static final policy alice = {Alice:};
+  public static final ?Good6.alice int aliceData;
+  public static final ?Good6.secret int secretData;
+  !Good6.alice public static void bar()
+  ;
+}

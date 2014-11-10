@@ -1,0 +1,7 @@
+public class UsingExt extends Using {
+
+    !{Object x:} public void foo() {
+       myA = myB;
+    }
+
+}

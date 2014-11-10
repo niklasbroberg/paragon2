@@ -1,0 +1,19 @@
+public class Guess <actor java.lang.Object act>
+{
+  private static lock Givehint;
+  public static final policy low = {java.lang.Object x:};
+  public static final policy owner = {java.lang.Object x: Guess.Givehint;act:};
+  public static final ?Guess.low int FAILED = -2;
+  public static final ?Guess.low int LOWER = -1;
+  public static final ?Guess.low int CORRECT = 0;
+  public static final ?Guess.low int HIGHER = 1;
+  private ?Guess.owner int number;
+  private ?Guess.low int tries;
+  public Guess (?Guess.owner int n)
+  {
+  }
+  public ?Guess.owner int getNumber()
+  ;
+  !Guess.low public ?Guess.low int guess(?Guess.low int i)
+  ;
+}

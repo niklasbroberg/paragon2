@@ -1,0 +1,13 @@
+public class InstanceMethodStaticMethodFromStaticMethod {
+  private static void stat() {
+    int x = inst().stat1();
+  }
+
+  public static int stat1() {
+    return 1;
+  }
+
+  private InstanceMethodStaticMethodFromStaticMethod inst() {
+    return new InstanceMethodStaticMethodFromStaticMethod();
+  }
+}

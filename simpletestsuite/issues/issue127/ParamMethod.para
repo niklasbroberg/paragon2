@@ -1,0 +1,12 @@
+public class ParamMethod {
+
+  public <actor Object a> void foo() {
+  }
+  
+  public void bar() {
+    final Object alice;
+    ParamMethod m;
+    (m).<alice>foo();
+  }
+
+}

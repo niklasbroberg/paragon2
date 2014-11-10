@@ -1,0 +1,4 @@
+public interface InterfacePolicyRedeclaration {
+  public static final policy p = {Object o:};
+  public static final policy p = {Object o:};
+}

@@ -1,0 +1,9 @@
+public class ReturnEmptyTryCatch {
+  public int f() {
+    try {
+    }
+    catch (Exception e) {}
+    return 1;
+  }
+}
+

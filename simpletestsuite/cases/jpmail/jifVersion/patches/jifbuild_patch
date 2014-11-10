@@ -1,0 +1,32 @@
+--- jif-2.0.1/build.xml	2006-03-16 21:20:24.000000000 +0100
++++ jifbuild.xml	2012-12-17 16:37:23.707359729 +0100
+@@ -307,6 +307,21 @@
+             <arg value="sig-src" />
+             <srcfile />
+             <fileset dir="${basedir}" includes="sig-src/**/Object.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/BufferedReader.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/System.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/ArrayStoreException.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/ArrayIndexOutOfBoundsException.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/SecurityException.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/ArithmeticException.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/IllegalStateException.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/FileDescriptor.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/FileInputStream.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/FileNotFoundException.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/FileOutputStream.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/FilterOutputStream.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/IOException.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/InputStreamReader.jif" />
++            <fileset dir="${basedir}" includes="sig-src/**/PrintStream.jif" />
+             <mapper type="regexp" from="^sig-src(.*)\.jif" to="sig-classes\1\.class" />
+         </apply>
+ 
+@@ -483,6 +498,7 @@
+ 		       skipemptyfilesets="true" 
+ 		       vmlauncher="false">
+             <arg value="${jif-native-unix.sharedflag}" />
++            <arg value="-fPIC" />
+             <arg value="-I." />
+             <arg value="-I" />
+             <arg path="${env.JAVA_HOME}/include" />

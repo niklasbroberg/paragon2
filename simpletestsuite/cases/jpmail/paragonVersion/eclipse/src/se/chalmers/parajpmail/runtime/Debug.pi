@@ -1,0 +1,10 @@
+package se.chalmers.parajpmail.runtime;
+
+
+public class Debug {
+
+  public static void println(?{:} String msg);
+  
+  public static void printstack(?{:} Exception e);
+
+}

@@ -1,0 +1,22 @@
+package javax.mail;
+
+public native class Folder {
+
+  public static final ?{Object x:} int HOLDS_MESSAGES;
+  
+  // TODO fix naming hack ISSUE
+  public abstract !policyof(this) void _open(int mode)
+    throws ?(policyof(this)*policyof(mode)) !(policyof(this)*policyof(mode)) MessagingException,
+           ?policyof(this) !policyof(this) IllegalStateException,
+           ?policyof(this) !policyof(this) FolderNotFoundException;
+           
+  public ?policyof(this) Message<policyof(this)>[]<policyof(this)> getMessages()
+       throws !policyof(this) ?policyof(this) MessagingException,
+              !policyof(this) ?policyof(this) IllegalStateException,
+              !policyof(this) ?policyof(this) FolderNotFoundException;
+  
+  public abstract !policyof(this) void _close(boolean expunge)
+        throws ?(policyof(this)*policyof(expunge)) !(policyof(this)*policyof(expunge)) MessagingException,
+                    !policyof(this) ?policyof(this) IllegalStateException;
+  
+}

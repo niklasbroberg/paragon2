@@ -1,0 +1,7 @@
+public class D {
+
+    public static final policy p = {Object x : C.CLock};
+    
+    public D() { }
+
+}

@@ -1,0 +1,9 @@
+public class Transitivity
+{
+  lock A(java.lang.Object, java.lang.Object) {(java.lang.Object x,java.lang.Object y,java.lang.Object z) Transitivity.A(x,y): Transitivity.A(x,z),Transitivity.A(z,y)};
+  public static final java.lang.Object alice = new java.lang.Object();
+  public static final java.lang.Object bob = new java.lang.Object();
+  public static final java.lang.Object charlie = new java.lang.Object();
+  void foo()
+  ;
+}

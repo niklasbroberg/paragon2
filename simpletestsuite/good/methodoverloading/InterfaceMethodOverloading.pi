@@ -1,0 +1,7 @@
+public class InterfaceMethodOverloading
+{
+  public void f()
+  ;
+  public void f(int i)
+  ;
+}

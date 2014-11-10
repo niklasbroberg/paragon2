@@ -1,0 +1,81 @@
+/*
+ * SMTPMail.para
+ *
+ * Version 0.1
+ *
+ * February 2013
+ *
+ * Copyright:           Chalmers University, CSE department, Paragon Team
+ * Lioense:             BSD 3-Clause
+ * Implementation v0.1: Bart van Delft
+ */
+
+package se.chalmers.parajpmail;
+
+import java.io.IOException;
+import java.util.Properties;
+
+import javax.mail.Authenticator;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+/**
+ * Simple helper class for sending an email over SMTP.
+ */
+public class SMTPMail {
+
+    private lock DeclassPassword;
+
+    /**
+     * Exposed policy to be used with smtp server password, can only be
+     * declassified by SMTPMail (acting as trusted declassifier).
+     */
+    public static final policy passwordPol = { 'x : DeclassPassword };
+
+    public static !p <policy p> void 
+            sendMail(?p String server, ?p String username,
+                ?(p*passwordPol) String password, ?p CryptedMail<p> mail)
+                    throws !p ?p NullPointerException, 
+                           !p ?p MessagingException {
+                           
+        Properties<p, p> props = new Properties<p, p>();
+        props.put("mail.smtp.host", server);
+        props.put("mail.smtp.socketFactory.port", "465"); // TODO make parameter
+        props.put("mail.smtp.socketFactory.class", 
+                  "javax.net.ssl.SSLSocketFactory");
+        props.put("mail.smtp.auth","true");
+        props.put("mail.smtp.port","465"); // TODO make parameter
+
+        ?p String _password; // Declassifying password
+        open DeclassPassword {
+            _password = password;
+        }
+        Session session = Session.<p>getInstance(props,
+                new MyAuthenticator(username, _password));
+        try
+        {
+            Message<p> message = new MimeMessage<p>(session);
+            message.setFrom(new InternetAddress(mail.getFromAddress()));
+            message.setRecipient(javax.mail.Message.RecipientType.TO,
+                    new InternetAddress(mail.getToAddress()));
+            message.setSubject(mail.getSubject());
+            message.setText(mail.asMailBody());
+            message.setHeader("X-PPMail-Crypto","true");
+            Transport.send(message);
+        } catch (?p javax.mail.internet.AddressException e) {
+            throw new MessagingException(e.getMessage());
+        } catch (?p javax.mail.IllegalWriteException e) {
+            throw new MessagingException(e.getMessage());
+        } catch (?p java.lang.IllegalStateException e) {
+            throw new MessagingException(e.getMessage());
+        } catch (?p javax.mail.SendFailedException e) {
+            throw e;
+        }
+    }
+
+}

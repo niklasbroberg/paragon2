@@ -1,0 +1,6 @@
+public class PARA {
+  final Object s = new Object();
+  void foo() {
+    PI<s> pi = new PI<s>();
+  }
+}

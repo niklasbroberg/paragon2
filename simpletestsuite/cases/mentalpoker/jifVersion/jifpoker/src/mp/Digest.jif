@@ -1,0 +1,106 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+ 
+public class Digest[label L] 
+implements DataFieldAttribute[L] {
+	private final byte{L}[]{L} digest;
+	public Digest(byte{L}[]{L} dg) {
+		this.digest = dg;
+	}
+	
+	/* (non-Javadoc)
+	 * @see poker.DataFieldAttribute#toByteArray()
+	 */
+     public byte{L}[]{L} toByteArray() {
+		return this.digest;
+	}
+
+	/* (non-Javadoc)
+	 * @see poker.DataFieldAttribute#byteLength()
+	 */
+     public int{L} byteLength() {
+        byte {L}[] d = this.digest;
+        if (d != null) return d.length;
+        else return 0;
+	}
+
+    
+    public int{L} hashCode() {
+        int hashCode = 1;
+        int i = 0;
+        byte [] digest = this.digest;
+        if (digest == null) return 0;
+        while (i < digest.length) {
+            try {
+                hashCode = 31*hashCode + digest[i];
+            }
+            catch (IndexOutOfBoundsException e) {}
+        }
+        return hashCode;
+    }
+    
+    public String{L} toString() {
+       String s = "[";
+       int i = 0;
+       byte [] digest = this.digest;
+       if (digest == null) return "";
+       while (i < digest.length) {
+           s += Integer.toString(i);
+           if ( i< digest.length - 1)
+               s+= ",";
+       }
+       s += "]";
+       return s;
+    }
+    
+    
+    public boolean{L;o} equals (IDComparable[L] o) {
+        if (o == null || !(o instanceof Digest[L])) 
+            return false;
+        try {
+            Digest[L] that = (Digest[L]) o;
+            byte[] thisdigest = this.digest;
+            byte[] thatdigest = that.digest;
+            if (thisdigest == null || thatdigest == null)
+                return false;
+            
+            
+            if (thisdigest.length != thatdigest.length)
+                return false;
+            
+            int t = thisdigest.length;
+            for (int i = 0; i < t; i++)
+                if (thisdigest[i] != thatdigest[i])
+                    return false;
+        } catch (ClassCastException impossible) {
+        } catch (ArrayIndexOutOfBoundsException impossible){
+        }
+        return true;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

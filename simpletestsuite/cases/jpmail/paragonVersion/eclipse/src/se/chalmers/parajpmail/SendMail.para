@@ -1,0 +1,476 @@
+/*
+ * SendMail.para
+ *
+ * Version 0.1
+ *
+ * February 2013
+ *
+ * Copyright:           Chalmers University, CSE department, Paragon Team
+ * Lioense:             BSD 3-Clause
+ * Implementation v0.1: Bart van Delft
+ */
+
+package se.chalmers.parajpmail;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+import java.nio.file.NoSuchFileException;
+
+import java.security.GeneralSecurityException;
+import java.security.PublicKey;
+
+import se.chalmers.parajpmail.cryptmessage.AESEncryption;
+import se.chalmers.parajpmail.cryptmessage.ASymPol;
+import se.chalmers.parajpmail.cryptmessage.CryptUtil;
+import se.chalmers.parajpmail.cryptmessage.DESEncryption;
+import se.chalmers.parajpmail.cryptmessage.MailBody;
+import se.chalmers.parajpmail.cryptmessage.RSAEncryption;
+
+import se.chalmers.parajpmail.jpmailpol.GlobalPol;
+import se.chalmers.parajpmail.jpmailpol.JPMailPolicy;
+
+import se.chalmers.parajpmail.runtime.Debug;
+import se.chalmers.parajpmail.runtime.JPMailRuntime;
+import se.chalmers.parajpmail.runtime.JPMailUserID;
+import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+import se.chalmers.parajpmail.runtime.UnixFile;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.Insets;
+
+
+import se.chalmers.paragon.swing.PPanel;
+
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+
+
+
+
+/** 
+ * Main class for sending encrypted e-mail.
+ *
+ * First information regarding location of files containing login information to
+ * mail servers and keystore locations is read, as well as the jpmail actor on
+ * whose behalf this unix user is going to send an e-mail. If this is all fine
+ * an email is read from the standard input and relabeled. Header information is
+ * considered public but the body needs to be encrypted under a form of 
+ * encryption trusted by the receiver.
+ *
+ * Note: should only be using SimpleUnixRuntime, not System. This could be 
+ * enforced by programming against a library where System.pi does not exists.
+ */
+public class SendMail extends java.awt.event.ActionListener<GlobalPol.publ+GlobalPol.toScreen> {
+
+    /**
+     * Reads the body of the email from the standard input into a MailBody 
+     * object that correctly labels it with a policy that ensures encryption
+     * according to the receiver's policy.
+     */
+    private static ?{'x:} MailBody readMailBody(?{'x:} BufferedReader<{'x:}> in)
+            throws !GlobalPol.publScreen ParaJPMailException {
+
+        String result = "";
+        String line = "";
+
+        while (!".".equals(line)) {
+            result += line + "\n"; // Only adding non-terminating lines.
+            line = Util.<GlobalPol.publScreen>readLine(in);
+        }
+        return new MailBody(result);
+    }
+
+    /**
+     * Tries to declassify the email body on the basis of the preferences of the
+     * specified receiver, as based on the policy file. Throws a 
+     * ParaJPMailExceotuib if this is not possible. NullPointerExceptions are
+     * thrown upward as well.
+     */
+    public static !GlobalPol.publScreen void
+            declassifyBody(?GlobalPol.publScreen MailBody body,
+                    ?GlobalPol.publScreen UserSettings userSettings,
+                    ?GlobalPol.publScreen CryptedMail<GlobalPol.publScreen> mail) 
+                            throws !GlobalPol.publScreen ParaJPMailException,
+                                   !GlobalPol.publScreen NullPointerException {
+
+        actor recv = JPMailRuntime.getActorOf(
+                new JPMailUserID(mail.getToUser()));
+        open GlobalPol.Receiver(recv);
+
+        if (  JPMailPolicy.AllowsAESEncryption(recv)
+           || JPMailPolicy.AllowsDESEncryption(recv)) {
+
+            byte[] secretKey = null;
+            byte[] initVector = null;
+
+            if (JPMailPolicy.AllowsAESEncryption(recv)) {
+                try {
+                    AESEncryption<GlobalPol.publ, ASymPol.allASymPol> aes =
+                            AESEncryption.<GlobalPol.publ, ASymPol.allASymPol>
+                                    encrypt(body.getContent());
+                    mail.setSymMode(CryptedMail.AES);
+                    mail.setSymmEncBody(aes.getResult());
+                    secretKey  = aes.getSymKey();
+                    initVector = aes.getIV();
+                } catch (?GlobalPol.publ GeneralSecurityException e) {
+                    throw new ParaJPMailException("Security error in " +
+                            "performing AES encryption: " + e.getMessage());
+                }
+            }
+            else if (JPMailPolicy.AllowsDESEncryption(recv)) {
+                try {
+                    DESEncryption<GlobalPol.publ, ASymPol.allASymPol> des = 
+                            DESEncryption.<GlobalPol.publ, ASymPol.allASymPol>
+                                    encrypt(body.getContent());
+                    mail.setSymMode(CryptedMail.DES);
+                    mail.setSymmEncBody(des.getResult());
+                    secretKey  = des.getSymKey();
+                    initVector = des.getIV();
+                } catch (?GlobalPol.publ GeneralSecurityException e) {
+                    throw new ParaJPMailException("Security error in " +
+                            "performing DES encryption: " + e.getMessage());
+                }
+            }
+            else {
+                throw new ParaJPMailException("Well, this should never " +
+                        "happen. AES or DES but neither...");
+            }
+
+            // Now to encrypt the key with asymmetric encryption
+            if (JPMailPolicy.AllowsRSAEncryption(recv)) {
+                try {
+                    // TODO check if public key is signed by CA
+                    ?GlobalPol.publ PublicKey recvKey =
+                            userSettings.getPublicKey(mail.getToUser());
+
+                    // Declassify byte array under AllowsRSA-lock
+                    int length = secretKey.length;
+                    byte[] _dSKey = new byte[length];
+                    for (int i = 0; i < length; i++)
+                        _dSKey[i] = secretKey[i];
+                    // Encrypt and convert to Hex
+                    mail.setSymmKey(CryptUtil.<GlobalPol.publ>
+                            toHex(RSAEncryption.<GlobalPol.publ>
+                                    encrypt(recvKey,_dSKey)));
+
+                    // Similar for IV
+                    length = initVector.length;
+                    byte[] _dIV = new byte[length];
+                    for (int i = 0; i < length; i++)
+                        _dIV[i] = initVector[i];
+                    mail.setSymmIV(CryptUtil.<GlobalPol.publ>
+                            toHex(RSAEncryption.<GlobalPol.publ>
+                                    encrypt(recvKey,_dIV)));
+                    mail.setASymMode(CryptedMail.RSA);
+                } catch (GeneralSecurityException e) {
+                    throw new ParaJPMailException("Security error in " +
+                            "performing RSA encryption: " + e.getMessage());
+                }
+
+            } 
+            //else if (JPMailPolicy.AllowsECCEncryption(recv)) { // TODO ElGamal
+            //}
+            else {
+                throw new ParaJPMailException("JPMail user " + 
+                        mail.getToUser() + " allowed for encryption but " +
+                        "does not allow the key to be declassified with RSA " +
+                        "(or ECC) encryption.\nCheck the supplied policyfile.");
+            }
+        }
+        else if (false) { // TODO add case for filter
+        }
+        else {
+            throw new ParaJPMailException("JPmail user " + mail.getToUser() +
+                    " does not trust any declassifier.\nCheck the supplied " +
+                    "policyfile.");
+        }
+    }
+
+    /**
+     * Method for composing an email, encrypting it and sending if successful.
+     * 
+     * TODO: Should be write effect only to current unix user, but we are 
+     * lacking escape analysis.
+     */
+    public !GlobalPol.publScreen static void composeAndSend() 
+            throws !GlobalPol.publScreen ParaJPMailException {
+
+        try { // NullPointers catch all
+
+            BufferedReader<{'x:}> in = 
+                    new BufferedReader<{'x:}>(new 
+                            InputStreamReader<{'x:}>(SimpleUnixRuntime.in));
+
+            // 1) Reading and parsing the policy:
+
+            SimpleUnixRuntime.out.print("Policy filepath: ");
+            String policyFilePath = Util.<GlobalPol.publ>readLine(in);
+            Util.parsePolicy(policyFilePath);
+
+            // 2) Read jpmail uid and verify this unix user may send for it:
+
+            SimpleUnixRuntime.out.print("JPMail username: ");
+            String jpmailUserName = Util.<GlobalPol.publ>readLine(in);
+            final actor jpmailUser = JPMailRuntime.getActorOf(
+                    new JPMailUserID(jpmailUserName));
+
+            // Negation in lock queries is not supported.
+            if (JPMailPolicy.DelegatesTo(jpmailUser, 
+                    SimpleUnixRuntime.currentUser)) {
+            } else {
+                throw new ParaJPMailException("JPMail user " + jpmailUserName +
+                        " is not known to delegate to this UNIX user.");
+            }
+
+            // 3) Read and parse user's settings (servers, passwords, etc)
+            // Since this is a sensitive file, require that it has permission
+            // set to 600
+
+            SimpleUnixRuntime.out.print("Settings file:   ");
+            String userSettingsFile = Util.<GlobalPol.publ>readLine(in);
+
+            // TODO replace with unix file permissions check via locks?
+            if (!Util.checkPermissions(userSettingsFile, "rw-------")) { 
+                throw new ParaJPMailException("The permissions of this file " +
+                        "should be set to 600 - and the file should exist.");
+            }
+
+            UserSettings userSettings = Util.parseSettings(userSettingsFile);
+
+            // 4) Get the email information
+
+            CryptedMail<GlobalPol.publ> mail =
+                    new CryptedMail<GlobalPol.publ>();
+
+            SimpleUnixRuntime.out.print("To JPMail user:  ");
+            mail.setToUser(Util.<GlobalPol.publ>readLine(in));
+
+            SimpleUnixRuntime.out.print("From email:      ");
+            mail.setFromAddress(Util.<GlobalPol.publ>readLine(in));
+
+            SimpleUnixRuntime.out.print("To email:        ");
+            mail.setToAddress(Util.<GlobalPol.publ>readLine(in));
+
+            SimpleUnixRuntime.out.print("Subject:         ");
+            mail.setSubject(Util.<GlobalPol.publ>readLine(in));
+            mail.setFromUser(jpmailUserName);
+
+            SimpleUnixRuntime.out.println("Mail body, end with a line with a " +
+                    "single dot (.) on it:");
+            MailBody body = readMailBody(in);
+
+            // 5) Encrypt and declassify the email body
+
+            declassifyBody(body, userSettings, mail);
+
+            // 6) Send the declassified email
+            SMTPMail.<GlobalPol.publ>sendMail(userSettings.getSMTPServer(),
+                    userSettings.getSMTPUsername(),
+                    userSettings.getSMTPPassword(), mail);
+
+        } catch (?GlobalPol.publ NullPointerException e) {
+            throw new ParaJPMailException("Nullpointer: " + e.getMessage());
+        } catch (?GlobalPol.publ javax.mail.MessagingException e) {
+            throw new ParaJPMailException(e.getMessage());
+        }
+
+    }
+    
+    private ?{'x:} static final int TEXTW = 100;
+    private ?{'x:} static final int INPUTW = 400;
+    
+    private ?GlobalPol.publ JTextField<GlobalPol.publ+GlobalPol.toScreen> toAddress;
+    private ?GlobalPol.publ JTextField<GlobalPol.publ+GlobalPol.toScreen> toUser;
+    private ?GlobalPol.publ JTextField<GlobalPol.publ+GlobalPol.toScreen> subject;
+    public final policy contentPol =
+      AESEncryption.encPol * 
+            { SimpleUnixRuntime.currentUser :
+            ; GlobalPol.network : JPMailPolicy.AllowsAESEncryption('x)
+                                , GlobalPol.Receiver('x)
+            }
+    + DESEncryption.encPol *
+            { SimpleUnixRuntime.currentUser :
+            ; GlobalPol.network : JPMailPolicy.AllowsDESEncryption('x)
+                                , GlobalPol.Receiver('x)
+            }
+    ;
+    private ?(contentPol+GlobalPol.toScreen) JTextArea<contentPol+GlobalPol.toScreen> message;
+    
+    private static ?p !p <policy p> JLabel<p> sizedLabel(?p String text) {
+        JLabel<p> l = new JLabel<p>(text);
+        l.setPreferredSize(new Dimension(TEXTW, 25));
+        return l;
+    }
+    
+    public !(GlobalPol.publ+GlobalPol.toScreen) void actionPerformed(java.awt.event.ActionEvent e) {
+      //int mid = list.getSelectedIndex();
+      //message.setText(decrMessages[mid]);
+      // TODO send mail
+    }
+    
+    // TODO <GlobalPol.publ> -> <toMe> ???
+    
+    private !(GlobalPol.publ+GlobalPol.toScreen) void initGUI() {
+
+        this.toAddress = new JTextField<GlobalPol.publ+GlobalPol.toScreen>();
+        this.toAddress.setPreferredSize(new Dimension(INPUTW, 25));
+
+        this.toUser = new JTextField<GlobalPol.publ+GlobalPol.toScreen>();
+        this.toUser.setPreferredSize(new Dimension(INPUTW, 25));
+    
+        this.subject = new JTextField<GlobalPol.publ+GlobalPol.toScreen>();
+        this.subject.setPreferredSize(new Dimension(INPUTW, 25));
+    
+        this.message = new JTextArea<contentPol+GlobalPol.toScreen>();
+        
+        this.message.setBorder(new LineBorder(new Color(100, 100, 100)));
+        this.message.setMargin(new Insets(10,10,10,10));
+        this.message.setLineWrap(true);
+      /*
+        JScrollPane<contentPol+GlobalPol.toScreen> sp = 
+                new JScrollPane<contentPol+GlobalPol.toScreen>(this.message);
+        sp.setPreferredSize(new Dimension(TEXTW+INPUTW, 300));
+        sp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+    
+        PPanel<GlobalPol.publ+GlobalPol.toScreen> p =
+                new PPanel<GlobalPol.publ+GlobalPol.toScreen>();
+        JButton<GlobalPol.publ+GlobalPol.toScreen> send =
+                new JButton<GlobalPol.publ+GlobalPol.toScreen>("Send");
+        send.addActionListener(this);
+        p.add(send);
+        JButton<GlobalPol.publ+GlobalPol.toScreen> closec =
+                new JButton<GlobalPol.publ+GlobalPol.toScreen>("Close");
+       // closec.addActionListener(new CloseComponent(this));
+        p.add(closec);
+    
+        PPanel<GlobalPol.publ+GlobalPol.toScreen> mainPanel =
+                new PPanel<GlobalPol.publ+GlobalPol.toScreen>();
+
+        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+    /*
+        mainPanel.setLayout(new GridBagLayout<GlobalPol.publ+GlobalPol.toScreen>());
+        GridBagConstraints<GlobalPol.publ> gbc = new GridBagConstraints<GlobalPol.publ>();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        mainPanel.add(SendMail.<GlobalPol.publ>sizedLabel("To email:"), gbc);
+        gbc.gridx += 1;
+        mainPanel.add(this.toAddress, gbc);
+        gbc.gridx = 0; gbc.gridy += 1;
+        mainPanel.add(SendMail.<GlobalPol.publ>sizedLabel("To user:"), gbc);
+        gbc.gridx += 1;
+        mainPanel.add(this.toUser, gbc);
+        gbc.gridx = 0; gbc.gridy += 1;
+        mainPanel.add(SendMail.<GlobalPol.publ>sizedLabel("Subject:"), gbc);
+        gbc.gridx += 1;
+        mainPanel.add(this.subject, gbc);
+        gbc.gridx = 0; gbc.gridy += 1;
+        gbc.gridwidth = 2;
+        //mainPanel.add(sp, gbc);
+        gbc.gridy += 1;
+        mainPanel.add(p, gbc);
+        JFrame<GlobalPol.publ> f = new JFrame<GlobalPol.publ>("Compose an e-mail");
+        f.add(mainPanel);
+        f.pack();
+        f.setResizable(false);
+        f.setVisible(true);
+     */
+        
+    }
+    
+    public !(GlobalPol.publ+GlobalPol.toScreen) SendMail() 
+            throws !(GlobalPol.publ+GlobalPol.toScreen) ParaJPMailException {
+
+        try { // NullPointers catch all
+
+            BufferedReader<{'x:}> in = 
+                    new BufferedReader<{'x:}>(new 
+                            InputStreamReader<{'x:}>(SimpleUnixRuntime.in));
+
+            // 1) Reading and parsing the policy:
+
+            SimpleUnixRuntime.out.print("Policy filepath: ");
+            String policyFilePath = Util.<GlobalPol.publ>readLine(in);
+            Util.parsePolicy(policyFilePath);
+
+            // 2) Read jpmail uid and verify this unix user may send for it:
+
+            SimpleUnixRuntime.out.print("JPMail username: ");
+            String jpmailUserName = Util.<GlobalPol.publ>readLine(in);
+            final actor jpmailUser = JPMailRuntime.getActorOf(
+                    new JPMailUserID(jpmailUserName));
+
+            // Negation in lock queries is not supported.
+            if (JPMailPolicy.DelegatesTo(jpmailUser, 
+                    SimpleUnixRuntime.currentUser)) {
+            } else {
+                throw new ParaJPMailException("JPMail user " + jpmailUserName +
+                        " is not known to delegate to this UNIX user.");
+            }
+
+            // 3) Read and parse user's settings (servers, passwords, etc)
+            // Since this is a sensitive file, require that it has permission
+            // set to 600
+
+            SimpleUnixRuntime.out.print("Settings file:   ");
+            String userSettingsFile = Util.<GlobalPol.publ>readLine(in);
+
+            // TODO replace with unix file permissions check via locks?
+            if (!Util.checkPermissions(userSettingsFile, "rw-------")) { 
+                throw new ParaJPMailException("The permissions of this file " +
+                        "should be set to 600 - and the file should exist.");
+            }
+
+            UserSettings userSettings = Util.parseSettings(userSettingsFile);
+
+            // 4) Get the email information
+            
+            initGUI();
+
+        } catch (?GlobalPol.publ NullPointerException e) {
+            throw new ParaJPMailException("Nullpointer: " + e.getMessage());
+        } catch (?GlobalPol.publ javax.mail.MessagingException e) {
+            throw new ParaJPMailException(e.getMessage());
+        }
+        
+    }
+
+    public static !(GlobalPol.publ+GlobalPol.toScreen) void main(String[] args) {
+
+        try {
+          java.security.Security.addProvider(
+                new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        } catch (NullPointerException e) {
+            SimpleUnixRuntime.out.println("Bouncy Castle Provider could not " +
+                "be registered.");
+            SimpleUnixRuntime.out.println(e.getMessage());
+            SimpleUnixRuntime.exit(1);
+        } catch (SecurityException e) {
+            SimpleUnixRuntime.out.println("Bouncy Castle Provider could not " +
+                "be registered.");
+            SimpleUnixRuntime.out.println(e.getMessage());
+            SimpleUnixRuntime.exit(1);
+        }
+
+        try {
+            SendMail.composeAndSend();
+        } catch(ParaJPMailException e) {
+            SimpleUnixRuntime.out.println("ParaJPMailException:");
+            SimpleUnixRuntime.out.println(e.getMessage());
+            SimpleUnixRuntime.out.println("Exiting");
+            SimpleUnixRuntime.exit(1);
+        }
+    }
+
+}

@@ -1,0 +1,5 @@
+public class MethodRedefinition {
+  public void f() {}
+
+  public void f() {}
+}

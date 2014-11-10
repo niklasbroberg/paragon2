@@ -1,0 +1,28 @@
+/*
+ * @(#)KeyPair.java	1.13 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+package java.security;
+
+import java.security.PublicKey;
+import java.security.PrivateKey;
+
+// import java.util.*;
+
+// (paragon) General note: Key objects are immutable, 
+// hence policyof(this) is safe.
+
+public final native class KeyPair<policy pubP, policy privP> 
+/*implements java.io.Serializable*/ 
+{
+
+    public KeyPair(?pubP PublicKey publicKey,
+                    ?privP PrivateKey privateKey){}
+
+    public ?pubP PublicKey getPublic() ;
+
+    public ?privP PrivateKey getPrivate();
+}

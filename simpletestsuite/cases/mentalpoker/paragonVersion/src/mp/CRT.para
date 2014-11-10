@@ -1,0 +1,61 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ * Adapted in paragon
+ */
+package mp;
+
+import java.math.BigInteger;
+
+
+
+/**
+ * @author aaskarov
+ *
+ */
+public class CRT {
+
+
+
+
+	/**
+	 * Chinese remainder theorem for the case of 2 equations
+	 * Garner's algorithm
+	 * Handbook of Applied Cryptography, Algorithm 14.71, page 612
+	 */
+
+
+    public static 
+    ?P <policy P> BigInteger 
+    crt2(?P BigInteger v1p, 
+         ?P BigInteger v2p, 
+         ?P BigInteger m1p, 
+         ?P BigInteger m2p) // for now...
+        throws !P ArithmeticException {
+
+	?P BigInteger v1 = v1p, v2 = v2p, m1 = m1p, m2 = m2p;
+        
+        if (v1==null || v2==null || m1== null || m2 == null)
+            return null;
+        
+        BigInteger x = null;
+        try {
+        
+            BigInteger C2 = BigInteger.ONE;
+      
+            BigInteger u = m1.modInverse(m2);
+            C2 = u.multiply(C2).mod(m2);
+            u = v1;
+            x = u;
+            u = v2.subtract(x).multiply(C2).mod(m2);
+            x = x.add(u.multiply(m1));
+           
+        } catch (NullPointerException impossible) {}
+        
+        
+        return x;
+
+    }
+	
+}
+

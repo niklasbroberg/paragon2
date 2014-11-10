@@ -1,0 +1,8 @@
+public class Symmetry
+{
+  lock A(java.lang.Object, java.lang.Object) {(java.lang.Object x,java.lang.Object y) Symmetry.A(x,y): Symmetry.A(y,x)};
+  public static final java.lang.Object alice = new java.lang.Object();
+  public static final java.lang.Object bob = new java.lang.Object();
+  void foo()
+  ;
+}

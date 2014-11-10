@@ -1,0 +1,11 @@
+public class LocalPolicyOf {
+
+  public ?policyof(s) byte[]<policyof(s)> moo(String s)
+  {
+    final policy p = policyof(s);
+    // Using policyof(s) directly works.
+    byte[]<p> bb = s.getBytes();
+    return bb;
+  }
+
+}

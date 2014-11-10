@@ -1,0 +1,4 @@
+In the context of class Launder:
+In the context of method foo:
+In the context of lock state []:
+Cannot assign result of expression x with policy policyof(this) to location y with policy { java.lang.Object x :}

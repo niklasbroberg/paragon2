@@ -1,0 +1,8 @@
+public class Basic
+{
+  public static final ?{java.lang.Object x:} lock myLock;
+  public static final policy p = {java.lang.Object x: Basic.myLock};
+  public static final policy bot = {java.lang.Object x:};
+  public static void foo()
+  ;
+}

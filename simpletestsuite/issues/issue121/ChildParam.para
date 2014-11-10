@@ -1,0 +1,2 @@
+public class ChildParam<G> extends ParentParam<G> {
+}

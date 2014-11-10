@@ -1,0 +1,253 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import java.math.BigInteger;
+import java.util.Random;
+
+/**
+ * BigInteger class which implements from DataFieldAttribute,
+ * since we may need to keep BigIntegers as an attribute in the chain
+ */
+public class DABigInteger[label L]
+implements DataFieldAttribute[L], JifObject[L] {
+    
+    // this is non-zero after initialization 
+    private final BigInteger{L} value;
+
+    public BigInteger{L} getValue() {
+        return this.value;
+    }
+    
+    
+	/* (non-Javadoc)
+	 * @see poker.DataFieldAttribute#byteLength()
+	 */
+     public int {L} byteLength() { 
+        BigInteger v = this.value;
+        if (v != null)        
+            try {
+                return (int) (Math.ceil((v.bitLength() + 1)/8.0));
+            } catch (ArithmeticException ignored) {       
+            }
+        return -1;
+	}
+	
+    
+    public byte{L}[]{L} toByteArray{L}() {
+        BigInteger{L} value  = this.value;
+        if (value == null) return null;
+        byte{L} [] ba = value.toByteArray(); 
+        return ba;
+    }
+
+        	
+    public DABigInteger (java.math.BigInteger {L} val):{L}
+    throws (IllegalArgumentException){
+        if (val == null)
+            throw new IllegalArgumentException();
+    	this.value = val;
+    }
+    
+    
+	/**
+	 * @param val
+	 */
+    public DABigInteger(byte{L}[]{L}val):{L} 
+    throws NumberFormatException {
+        if (val != null)
+            this.value  = new BigInteger (val);
+        else 
+            this.value = null;
+    }
+	/**
+	 * @param signum
+	 * @param magnitude
+	 */
+    public DABigInteger(int {L} signum, byte{L}[]{L} magnitude):{L} 
+    throws NumberFormatException{
+        value = new BigInteger(signum, magnitude);
+    }
+    
+	/**
+	 * @param bitLength
+	 * @param certainty
+	 * @param rnd
+	 */
+    public DABigInteger(int{L} bitLength,  int {L} certainty, 
+        Random {L} rnd):{L} 
+    throws (ArithmeticException){        
+        this.value = new BigInteger (bitLength, certainty, rnd);
+	}
+	/**
+	 * @param numBits
+	 * @param rnd
+	 */
+    public DABigInteger(int{L} numBits, Random {L}rnd):{L}  
+    throws (IllegalArgumentException){
+        this.value = new BigInteger (numBits, rnd);
+    }
+    
+	/**
+	 * @param val
+	 */
+    public DABigInteger(String {L}val):{L}  
+    throws (NumberFormatException){
+		this.value = new BigInteger(val);
+	}
+    /**
+  	 * @param val
+     * @param radix
+     */
+    public DABigInteger(String {L}  val, int {L} radix):{L}  
+    throws (NumberFormatException){
+		this.value = new BigInteger(val, radix);
+	}
+    
+    
+    public static DABigInteger[{}] ZERO() {
+        try {
+            return new DABigInteger[{}](BigInteger.ZERO);
+        } catch (IllegalArgumentException impossible) {}
+        return null;
+    }
+    
+    public static DABigInteger[{}] ONE()  {
+        try {
+            return new DABigInteger[{}](BigInteger.ONE);
+        } catch (IllegalArgumentException impossible) {}
+        return null;
+    }
+    
+    public static DABigInteger[{val}] valueOf(long val) {
+        BigInteger{val} v = BigInteger.valueOf(val);
+        try {
+            return new DABigInteger[{val}](v);
+        } catch (IllegalArgumentException impossible) {}
+        return null;
+    }
+    
+    public int{L;that} compareTo (DABigInteger[L] that):{L;that}
+    throws IllegalArgumentException{     
+        if (that == null)
+            throw new IllegalArgumentException("that is null");
+        
+        BigInteger thisvalue = this.value;
+        if (thisvalue != null)
+            return thisvalue.compareTo(that.value);
+        return 0;  // impossible
+    }
+    
+    
+    
+    
+    public DABigInteger[L]{L;that} add{L}(DABigInteger[L]{L} that):{L;that}
+    throws (IllegalArgumentException ){
+        if (that == null)
+            throw new IllegalArgumentException();
+        
+        BigInteger y = that.value;
+        BigInteger x = this.value;
+        BigInteger sum = null;
+        if (x != null && y != null) 
+             sum = x.add(y);
+            
+        return new DABigInteger[L](sum);
+        
+    }
+    
+    public DABigInteger[L]{L;that} multiply{L}(DABigInteger[L]{L} that):{L;that}
+    throws IllegalArgumentException{
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.multiply(thatvalue);
+        
+        return new DABigInteger[L](res);
+    }
+    
+    public DABigInteger[L]{L;that} subtract{L}(DABigInteger[L]{L} that):{L;that}
+    throws IllegalArgumentException{
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.subtract(thatvalue);
+        
+        return new DABigInteger[L](res);
+    }
+    
+    public DABigInteger[L]{L;that} divide{L}(DABigInteger[L]{L} that):{L;that}
+    throws (IllegalArgumentException, ArithmeticException){
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.divide(thatvalue);
+        return new DABigInteger[L](res);        
+    }
+    
+    public DABigInteger[L]{L;that} mod{L}(DABigInteger[L]{L} that):{L;that}
+    throws (IllegalArgumentException, ArithmeticException){
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.mod(thatvalue);
+        return new DABigInteger[L](res);
+    }
+    
+    public DABigInteger[L]{L;that} modInverse{L}(DABigInteger[L]{L} that):{L;that}
+    throws (IllegalArgumentException, ArithmeticException){
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.modInverse(thatvalue);
+        return new DABigInteger[L](res);
+    }
+    
+    public static DABigInteger[L] probablePrime(int{L} bitLength, Random {L}
+    rnd):{L}
+    throws (ArithmeticException) {
+        try {
+         return new DABigInteger[L](BigInteger.probablePrime(bitLength, rnd));
+        } catch (IllegalArgumentException notprobable) { // :)
+        }
+        return null;
+    }
+
+    
+    public String{L} toString() {
+        BigInteger v = this.value;
+        if (v == null) return "";
+        return v.toString();
+    }
+    
+    public int{L} hashCode() {
+        BigInteger v = this.value;
+        if (v == null) return -1;
+        return v.hashCode();
+    }
+    
+    public boolean{L; obj} equals(IDComparable [L] obj) {
+        return true;
+    }
+    
+    public int{L} bitLength() {
+        BigInteger v = this.value;
+        if (v == null) return -1;
+        return v.bitLength();
+    }
+    
+}
+
+

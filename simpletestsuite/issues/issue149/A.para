@@ -1,0 +1,15 @@
+public class A {
+  public lock ALock(A);
+
+  // this keyword not handled as actor:
+
+  public final policy pol =
+    { this: }; 
+  
+  public final policy poltwo =
+    { Object x : ALock(this) };
+
+  public void foo() {
+    open ALock(this); 
+  }
+}

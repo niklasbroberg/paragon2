@@ -1,0 +1,76 @@
+// Paragonized
+
+/* *****************************************************************************
+*
+*   FILE          :MailSenderCrypto.jif
+*   Project       :JPmail
+*   Description   :Main file for sending email using SMTP
+*				  
+*   Last Modified :Mon Apr 10 15:27:52 EDT 2006
+*
+*  Copyright (c) 2006 The Pennsylvania State University
+*  Systems and Internet Infrastructure Security Laboratory
+*
+******************************************************************************/
+package smtp;
+
+// import java.io.OutputStream;
+// import com.sun.mail.util.BASE64EncoderStream;
+import java.io.BufferedReader;
+import java.io.BufferedOutputStream;
+// import java.io.IOException;
+// import java.io.InputStreamReader;
+// import java.io.Writer;
+// import java.io.PrintWriter;
+import java.net.Socket;
+// import java.io.PrintStream;
+// import java.io.ByteArrayOutputStream;
+// import java.text.ParseException;
+// import java.text.SimpleDateFormat;
+// import java.util.Date;
+// import java.util.StringTokenizer;
+
+//import javax.mail.internet.MailDateFormat;
+// import javax.net.SocketFactory;
+//import javax.net.ssl.SSLSocketFactory;
+// import jif.net.JifSocketFactory;
+
+import jif.DLM;
+
+import policy.PolicyStore;
+// import policy.JifPolicy;
+// import policy.AddDelClosureL;
+// import policy.KeyPrincipal;
+
+// import pop3.JPMailMessage;
+// import pop3.MimeMailMessage;
+
+/**
+ * @author phicks
+ *
+ */
+public class MailSenderCrypto<actor owner> {
+    /*== Class Global Data ==========================================*/
+    final private ?{'x:} String mailhost, username;
+    final private ?{'x:} String emailAddress;
+    // user byte array, because Strings can't be destroyed:
+    final private ?{'x:DLM.RunsFor(owner)} byte[]<{'x:DLM.RunsFor(owner)}> password;  
+    final private ?{'x:} int mailport;
+    final private ?{'x:} boolean isSSL;
+
+    final private ?{'x:} actor SocketP;
+    // TODO check policy instantiation:
+    final private policy SocketL = {SocketP : };
+    private ?SocketL Socket[]<SocketL> sock;
+    private ?SocketL BufferedReader[]<SocketL> in;
+    private ?SocketL BufferedOutputStream[]<SocketL> out;
+    protected ?SocketL boolean isConnected;
+
+    public static final String SMTP_PORT = "25"; // default POP3 port
+    public static final String SSMTP_port = "465"; // default POP3 SSL port
+    // ISSUE 117
+    // private static final byte[] CRLF = { (byte)'\r', (byte)'\n' };
+
+    final private ?{'x:} PolicyStore policy;
+  
+}

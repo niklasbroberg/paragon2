@@ -1,0 +1,9 @@
+public class ReturnSwitchDefault {
+  public int f() {
+    int i = 0;
+    switch (i) {
+      default:
+        return 1;
+    }
+  }
+}

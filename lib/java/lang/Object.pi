@@ -1,0 +1,11 @@
+public native class Object {
+
+  public ?policyof(this) String toString();
+
+  public Object(){}
+  
+  public ?(policyof(this) * policyof(o)) boolean equals(java.lang.Object o);
+  
+  public ?policyof(this) int hashCode();
+
+}

@@ -1,0 +1,6 @@
+// First testing settings
+keystoreLocation=certs/bart/bart.keystore
+keystorePassword=apples
+smtpServer=smtp.gmail.com
+smtpUsername=paralocked
+smtpPassword=

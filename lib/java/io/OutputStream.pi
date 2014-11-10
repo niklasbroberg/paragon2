@@ -1,0 +1,18 @@
+package java.io;
+
+public native class OutputStream<policy p> extends java.lang.Object {
+	
+	public OutputStream() { }
+	
+	public !p void write(?p byte[]<p> bytes)
+	  throws !p java.io.IOException;
+	  
+  public !p void write(?p byte[]<p> b, ?p int off, ?p int len)
+    throws !p java.io.IOException;
+	
+	public !p void flush() 
+	  throws !p java.io.IOException;
+	  
+  public !p void _close(); // TODO Preferable called close...
+	
+}

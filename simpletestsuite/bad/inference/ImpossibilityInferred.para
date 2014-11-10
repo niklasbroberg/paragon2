@@ -1,0 +1,18 @@
+public class ImpossibilityInferred {
+
+    private static final Object Alice = new Object();
+  
+    public static final policy alice = {Alice:};
+    public static final policy bot = { Object x:};
+
+  !alice
+  public void method0(){
+    ?alice int a = 5;			
+    ?bot int b = 4;
+    int x = 3;   
+
+    x = a + 2;
+    b = x + 1;
+
+  }
+}

@@ -1,0 +1,31 @@
+package mp;
+/* Seal belongs to a principal P, and she allows it to be */
+/* visible on the level L */
+public class Seal[principal P, label L]  authority(P) {
+	/*actual value of the seal */
+	private boolean{P:;L} open;
+
+    /*we require the principal to create this */
+    public Seal{P:;L}() where caller(P) {
+		this.open = false;
+	}
+	
+	/*we require the principal to unseal it*/
+	public void unseal{P:;L}() where caller (P) {
+		this.open = true;
+	}  
+
+	/*anyone on the level L can check it */
+	public boolean{this;L} isOpen():{L} where authority (P) {
+		return declassify (open, {this;L});
+	}	
+
+	/*similar to previous */
+	public void assertIntegrity():{L} throws SecurityException {
+
+		if (this.isOpen())
+			throw new SecurityException(); 
+		
+	}
+
+}

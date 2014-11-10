@@ -1,0 +1,18 @@
+
+package java.lang;
+
+public final native class Integer
+{
+    public static 
+    ?policyof(i) // default?
+    String toString(int i);
+    
+    public static final int MAX_VALUE;
+    
+    
+    public static ?policyof(s) int parseInt(String s);
+    
+    
+    public Integer(int i) { }
+    
+}

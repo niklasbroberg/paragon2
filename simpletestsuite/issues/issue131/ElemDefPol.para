@@ -1,0 +1,16 @@
+public class ElemDefPol {
+
+  public final Object a = new Object();
+
+  public void moo(?{a:} byte[]<{a:}> data)
+  {
+  }
+  
+  public void foo() {
+    ?{a:} byte[] bb = new byte[20];
+    
+    moo(bb);
+    
+  }
+
+}

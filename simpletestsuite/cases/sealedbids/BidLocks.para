@@ -1,0 +1,7 @@
+public class BidLocks {
+
+	public lock AuctionClosed;
+	public lock DetermineWinner;
+	public ?{Object x:} lock HasBid(Object);
+	public lock Winner(Object);
+}

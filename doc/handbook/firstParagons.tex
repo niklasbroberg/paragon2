@@ -1,0 +1,304 @@
+In this section you find how to install the Paragon compiler \texttt{parac}
+and some first programs that handle information flows in simple code. In later
+chapters we have a look at more complicated flows involving methods, exceptions
+and Java classes.
+
+\section{Installation}
+
+Paragon is an operating system independent compiler. To install paragon you need
+to have the following programs already installed:
+
+\begin{itemize}
+
+  \item The Haskell Platform
+  
+  \item Cabal
+  
+  \item Happy and Alex
+
+\end{itemize}
+
+Paragon can then easily be installed using cabal:
+
+\begin{lstlisting}
+cabal update
+cabal install paragon
+\end{lstlisting}
+
+Congratulations, you just installed the paragon compiler!
+
+\section{Explicit information flows}
+
+We start with a small program that only knows two policies. Policy 
+\texttt{top}, specifying that information can flow to no one, and policy
+\texttt{bottom}, specifying that information can flow to everyone. As described
+in Chapter~\ref{chap:paralocks}, these two policies are specified in Paralocks as
+follows:
+
+\begin{lstlisting}
+top    = { }
+bottom = { 'x : }
+\end{lstlisting}
+
+In order to specify these policies within Java, Paragon extends Java with a new
+primitive type \newSyntax{policy}. At declaration, 
+a variable can be given a policy by writing a 
+question-mark followed by the name of the policy next to the type of 
+the variable. This policy is called the \emph{read effect} of the variable.
+That is, it specifies what actors may know the value of this variable. During
+compilation Paragon checks that the value of this variable never affects 
+variables with a less restrictive policy.
+
+To run a first test of Paragon, create a file called 
+\smallcode{MyVeryFirstParagon.para} and copy the following code (or use the file
+provided in the \smallcode{codesrc} directory that should come with this handbook).
+
+\begin{paragoncode}
+public class MyVeryFirstParagon {
+
+  public static final policy top = { : } ;
+  
+  public static final policy bottom = { 'x : } ;
+  
+  public void assignUp() {
+  
+    ?top int highData = 0;
+    ?bottom int lowData = 0;
+    
+    highData = lowData;
+    
+  }
+  
+  public void assignDown() {
+  
+    ?top int highData = 0;
+    ?bottom int lowData = 0;
+    
+    lowData = highData;
+    
+  }
+
+}
+\end{paragoncode}
+
+In this example, we create two simple methods. Each of them has a variable with
+high, secret data and a variable containing low, public data. In the method
+\smallcode{assignUp} the public data is copied into the variable which carries secret
+data. This is an allowed flow, since no one gains any more knowledge. In the
+method \smallcode{assignDown} however, the secret data flows to the public and the
+data that was first known to nobody, now becomes known to everyone. This 
+\emph{explicit} flow of information should be detected by Paragon\footnote{
+In practise, there is no need to annotate local variables (i.e. within methods)
+in Paragon. These policies will be automatically derived by the compiler. However,
+for the sake of creating simple example we use this here.
+}.
+
+In a terminal, navigate to the directory where \smallcode{MyVeryFirstParagon.para}
+is located. To compile the file, run (assuming the cabal \smallcode{bin} directory
+is in your \smallcode{PATH} environment variable):
+
+\begin{lstlisting}
+parac MyVeryFirstParagon.para
+\end{lstlisting}
+
+Depending on the synchronization between this handbook and the compiler, you 
+might get the error:
+
+\begin{lstlisting}
+Unknown package: java.lang
+\end{lstlisting}
+
+In order to combine several classes and preserve the information flows between
+instances of those classes, Paragon requires each imported class to have an
+interface file. This interface file contains information on the policies and
+information flows in the imported class and is used by Paragon to check if no
+information is leaked by using instances of this class. We discuss this concept
+in more detail in Chapter~\ref{chap:interfaces}. 
+
+The reason you get this error is that Paragon, like Java, automatically assumes
+the presences of all classes in the \smallcode{java.lang} package. Hence, to compile 
+any paragon program, the interface files for this package have to be in the
+\emph{PI-path} of \smallcode{parac}. A bunch of interface files has been installed
+with Paragon, and you can simply add the directory \emph{TODO} to this path.
+
+The PI-path can be modified both by setting the environment variable \smallcode{PIPATH}
+as well as by parsing it as an argument to the compiler flag \smallcode{-p}. For the
+remainder of this chapter we assume that the correct path resides in the 
+environment variable.
+
+When successful, the compiler outputs:
+
+\begin{lstlisting}
+When checking class MyVeryFirstParagon:
+When checking body of method assignDown:
+In the context of lock state: []
+Cannot assign result of expression highData with policy {:} to location lowData with policy {'x:}
+\end{lstlisting}
+
+Currently, the compiler only outputs to the console when an error occurred. In
+this case \smallcode{parac} correctly detected the invalid information flow in the 
+method \smallcode{assignDown}. Comment out line \smallcode{21} in \smallcode{MyVeryFirstParagon.para}
+to remove this information flow and compile the file again.
+Compilation is now successful and the files \smallcode{MyVeryFirstParagon.pi} and
+\smallcode{MyVeryFirstParagon.java} are generated. The \smallcode{.java} file can be compiled
+to be run together with the Paragon runtime library (more on this in 
+Chapter~\ref{chap:runtime}), the \smallcode{.pi} file is used when compiling different
+classes that use this class. If you are interested you can have a look at these
+files, but for the moment they are not relevant.
+
+When combining data from several sources, the policy of each source needs to be
+taken into consideration. For example, in the assignment:
+\begin{lstlisting}
+lowData = lowData + highData;
+\end{lstlisting}
+information flows from both \smallcode{top} and \smallcode{bottom} policy-annotated data. 
+The policy on the expression needs to be what is called the 
+\emph{least upper bound} of these two policies. Intuitively, this is the policy
+that allows information flows only if they are allowed by each of the individual
+policies. Therefore the combination of data can only give rise to more restrictive
+policies. For an exact description of the least upper bound operator (including 
+actors and locks), see Appendix~\ref{app:paralocksOperations}.
+
+In this example, the policy of the expression \smallcode{lowData + highData} becomes
+\smallcode{top}. If you add this expression to your Paragon file and compile it, you
+get the error:
+
+\begin{lstlisting}
+When checking class MyVeryFirstParagon:
+When checking body of method combineData:
+In the context of lock state: []
+Cannot assign result of expression highData + lowData with policy {:} to location lowData with policy {'x:}
+\end{lstlisting}
+
+Here it is possible to give an example of the incompleteness of Paragon. Paragon
+does not consider the semantic structure of expressions, hence in the following
+assignment:
+\begin{lstlisting}
+lowData = highData - highData;
+\end{lstlisting}
+the policy derived by Paragon on the right hand side is still \smallcode{top}, despite
+the result of the computation always being 0.
+
+\section{Implicit information flows}
+
+As described in Chapter~\ref{chap:introduction} information flows can present
+themselves in multiple ways. Where the previous section demonstrated flows 
+directly from one variable into the other, here we consider indirect flows of
+information. The following example is famous for demonstrating implicit flow
+in its most simple form:
+
+\begin{paragoncode}
+public class ImplicitFlows {
+
+  public static final policy top = { : } ;
+  
+  public static final policy bottom = { 'x : } ;
+
+  public void simpleFlow() {
+  
+    ?top boolean highData = true;
+    ?bottom boolean lowData = false;
+    
+    if (highData) {
+      lowData = true;
+    } else {
+      lowData = false;
+    }
+    
+  }
+}
+\end{paragoncode}
+
+Clearly we are copying the value of \smallcode{highData} into
+\smallcode{lowData}, but we do not use a direct assingment for that. Paragon
+uses the concept of a \emph{program counter}: a policy that represents the
+lower bound on what assignments can be executed. In this example the program
+counter is increased to the policy of \smallcode{highData}, \smallcode{top},
+for each of the two branches of the condition. As a result, only variables with
+a policy of \smallcode{top} or higher may be affected in these branches. This 
+concept is revisted in Chapter~\ref{chap:methods} on method signatures.
+
+Paragon gives you the following error on compiling this code:
+
+\begin{lstlisting}
+When checking class ImplicitFlows:
+When checking body of method simpleFlow:
+Assignment to lowData with policy {'x:} not allowed in branch dependent on condition highData with write effect bound {:}
+\end{lstlisting}
+
+After typechecking the conditional statement, the program counter is reset 
+to its value before the conditional statement, so
+that assignments to variables with a policy lower than \smallcode{top} is 
+possible after the conditional statement.
+
+A conditional assignment on the other hand, such as below, is considered as a
+direct flow. That is, the occurrence of the variable \smallcode{highData} on
+the right hand side of the assignment makes that its policy is part of the least upper
+bound computed for the whole expression. 
+
+\begin{paragoncode}
+lowData = highData ? true : false;
+\end{paragoncode}
+
+Although we are specifying policies on local variables here, this is not needed
+in general. Paragon will try to infer the policies based on context information
+and give an error message if this is not possible (which in general implies that
+there is an illegal flow of information). Currently these errors are still a bit
+cryptic. Consider the following, more complicated information flow:
+\begin{paragoncode}
+  public void moreComplicated() {
+  
+    ?top boolean highData = true;
+    ?bottom boolean lowData = false;
+    
+    boolean temp = false;
+    if (highData)
+      temp = true;
+            
+    if (temp)
+      lowData = true;
+      
+  }
+\end{paragoncode}
+
+When observed carefully, you see that the value of \smallcode{highData} always
+gets copied to \smallcode{lowData}, via two implicit flows using the additional
+variable \smallcode{temp}. Here we left the policy on the variable \smallcode{temp}
+unspecified and leave it to Paragon to derive it. Compilation gives us:
+
+\begin{lstlisting}
+When checking class ImplicitFlows:
+When checking body of method moreComplicated:
+The system failed to infer the set of unspecified policies
+\end{lstlisting}
+
+Paragon tells us it is unable to derive the unspecified policies, in this case
+that has to be the one on \smallcode{temp}. Indeed, we cannot associate the
+policy \smallcode{bottom} with \smallcode{temp}, since then we have an implicit
+flow of information in line \smallcode{7-8}.  Neither can we associate the
+policy \smallcode{top}, since then we have an implicit flow in line
+\smallcode{10-11}.
+
+Up to this point we have been considering programs where the impicit flow leaks
+the entire value of the data to be protected. In general implicit flows leak
+less information. The following example only leaks the parity of 
+\smallcode{highData}:
+
+\begin{paragoncode}
+  public void leakParity() {
+  
+    ?top int highData = 13;
+    ?bottom int lowData = 0;
+    
+    if (highData % 2 == 1)
+      lowData = 1;
+      
+  }
+\end{paragoncode}
+
+Implicit flows also result from while loops and exceptions, the latter we 
+consider in Chapter~\ref{chap:methods}.
+
+\section{Introducing actors}
+
+\section{Unlocking a world of Locks}

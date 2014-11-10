@@ -1,0 +1,10 @@
+package javax.mail;
+
+public abstract native class Transport {
+  
+  // Think about: write effect?
+  public static final void send(javax.mail.Message msg)
+  throws !policyof(msg) ?policyof(msg) SendFailedException,
+         !policyof(msg) ?policyof(msg) MessagingException;
+
+}

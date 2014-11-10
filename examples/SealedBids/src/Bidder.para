@@ -1,0 +1,57 @@
+/**
+ * Class representing a bidder at the auction.
+ **/
+public class Bidder {
+
+    /**
+     * An instance actor to use this bidder in policies. In the next iteration
+     * of the Paragon type system we can simply refer to the instance of the
+     * Bidder class itself instead.
+     **/
+    public final actor id;
+    
+    /**
+     * Policy placed on bids. The bidder can see her own bid, any bidder who
+     * has placed a bid can see it if the auction is closed and this bidder is
+     * the winner of the auction. In addition it can be released during the
+     * process of determining who is the winner.
+     **/
+    public final policy bidpol = 
+      { id : ;
+        'y : BidLocks.AuctionClosed, BidLocks.HasBid('y), BidLocks.Winner(id) ;
+        'y : BidLocks.DetermineWinner }; 
+        
+    /**
+     * The bid from this participant.
+     **/
+    public ?bidpol int bid;
+    
+    /**
+     * The channel of communication with the bidder. Data received on the
+     * channel gets the policy "bidpol", data sent on the channel should be
+     * allowed to flow to actor "id".
+     **/
+    public final notnull Channel<bidpol,id> chan;
+
+    /**
+     * Constructor - initializes the channel. 
+     **/
+    Bidder(int cid) {
+        chan = new Channel<bidpol,id>(cid);
+    }
+      
+    /**
+     * Get a bid from this bidder, over the channel with that bidder.
+     * We do not consider it secret if someone has placed a bid or not, only the
+     * value of the bid is protected.
+     *
+     * @throws NoBidExc             If the bidder decides  
+     * @opens  BidLocks.HasBid(id)  Indication that this bidder has placed a bid
+     **/
+    +BidLocks.HasBid(id) !{'x:} void getBid() throws !{'x:} NoBidExc {
+        bid = chan.get();
+        open BidLocks.HasBid(id);
+    }
+    
+}
+

@@ -1,0 +1,5 @@
+public class UsingIt {
+
+  public int y = SomePIfile.x;
+
+}

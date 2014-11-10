@@ -1,0 +1,28 @@
+/**
+ * Encapsulating class for lexical flows. Should preferably include the Flow
+ * lock as well, but Paragon cannot handle circular imports and thus prevents
+ * this for now.
+ **/
+public class LexicalFlow {
+
+    /**
+     * Typemethod for creating policies of the appropriate level.
+     * We use the primitive actor type to represent a security level.
+     **/
+    public static typemethod policy pol(actor a) {
+        return { 'x : LockCirc.Flow(a,'x) };
+    }
+
+    /**
+     * The interface to the flow-construct. Needs the two levels between which
+     * a flow is allowed, a block of code to be executed and the expected
+     * side-effects by this codeblock.
+     **/
+    public static !w <actor from, actor to, policy w>
+      void flow(FlowBlock<from, to, w> block) {
+        open LockCirc.Flow(from, to) {
+          block.go();
+        }
+    }
+
+}

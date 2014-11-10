@@ -1,0 +1,12 @@
+
+package java.lang;
+
+public final class Integer
+{
+    public static 
+    ?policyof(i) // default?
+    String toString(int i);
+    
+    
+    public static ?policyof(s) int parseInt(String s);
+}

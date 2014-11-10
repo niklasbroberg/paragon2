@@ -1,0 +1,37 @@
+/**
+ * Testing the simple declassification model
+ **/
+public class TestDeclassify {
+
+    // short-hand access to the specified policies:
+    public static final policy low  = SimpleDeclassify.low;
+    public static final policy high = SimpleDeclassify.high;
+    
+    // Labelling information as being secret resp. public
+    private ?high Object someHighInfo ;
+    private ?low  Object someLowInfo  ;
+
+    !low public void test1() {
+        /*
+        // An explicit flow:
+        someLowInfo = someHighInfo;
+        */
+    }
+    
+    !low public void test2() {
+        /*
+        // An implicit flow:
+        if (someHighInfo != null) {
+          someLowInfo = null;
+        } else {
+          someLowInfo = new Object();
+        }
+        */
+    }
+    
+    !low public void test3() {
+        // No illegal flow in this method, since we declassify:
+        someLowInfo = SimpleDeclassify.<Object>declassify(someHighInfo);
+    }
+
+}

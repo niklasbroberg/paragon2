@@ -1,0 +1,30 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ */
+package mp;
+
+public class Main {
+
+    // ISSUE 98
+    private static final policy _$_ = Channel.channelP;
+    
+    !Channel.channelP
+    -GameState.GameRunning
+    public static final void 
+    main (?Channel.channelP String[]<Channel.channelP> args)
+    throws SecurityException, IllegalArgumentException
+    {
+        Debug.println("Started Main");
+        if (args!= null && args.length > 0)
+            try {
+                Debug.println("Calling communicator for " + args[0]);
+                Communicator.play(args[0]);
+            } catch (ArrayIndexOutOfBoundsException ignored) {
+            }
+         
+        else
+            return;
+      
+    }
+    
+}

@@ -1,0 +1,7 @@
+public class T {
+
+    public static final Object a = new Object();
+    
+    private S<a> s = new S<a>();
+
+}

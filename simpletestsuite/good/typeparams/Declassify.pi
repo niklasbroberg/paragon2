@@ -1,0 +1,7 @@
+class Declassify
+{
+  private lock Declassify;
+  private static final policy dec = {java.lang.Object x: Declassify.Declassify};
+  public static ?TO <A, policy TO> A declassify(?(TO * Declassify.dec) A x)
+  ;
+}

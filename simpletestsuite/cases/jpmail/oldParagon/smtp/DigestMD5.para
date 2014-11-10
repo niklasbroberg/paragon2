@@ -1,0 +1,351 @@
+// Paragon version of:
+
+/* *****************************************************************************
+*
+*   FILE          :DigestMD5.jif
+*   Project       :JPmail
+*   Description   :Class for doing DIGEST-MD5 authentication in SMTP
+*				  
+*   Last Modified :Mon Apr 10 15:27:52 EDT 2006
+*
+*  Copyright (c) 2006 The Pennsylvania State University
+*  Systems and Internet Infrastructure Security Laboratory
+*
+******************************************************************************/
+
+/**
+ * DIGEST-MD5 authentication support.  Jif-ized by Boniface Hicks
+ *
+ * @author Dean Gibson
+ * @author Bill Shannon
+ * @author Boniface Hicks
+ */
+
+package smtp;
+
+import crypto.MD5Closure;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StreamTokenizer;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SecureRandom;
+
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
+
+import jif.DLM;
+
+import com.sun.mail.util.BASE64DecoderStream;
+import com.sun.mail.util.BASE64EncoderStream;
+
+import se.chalmers.paragon.DebugPrinter;
+
+import se.chalmers.paragon.java.util.ArrayMap;
+import se.chalmers.paragon.java.util.Map;
+
+public class DigestMD5<actor owner> {
+
+    final private ?{'x:} MessageDigest md5;
+    private ?{'x:} String uri;
+    private ?{'x:} String clientResponse;
+    
+    // constructor. instantiates digest
+    !{'x:}
+    public DigestMD5() throws !{'x:} NoSuchAlgorithmException,
+                              !{'x:} NoSuchProviderException {
+        this.md5 = MessageDigest.getInstance("MD5",
+          new org.bouncycastle.jce.provider.BouncyCastleProvider());
+    }
+    
+    // Code based on http://www.ietf.org/rfc/rfc2831.txt
+    /**
+     * Return client's authentication response to server's challenge.
+     *
+     * @return byte array with client's response
+     */
+    public !{'x:} ?{'x:} byte[]<{'x:}> 
+    authClient(?{'x:} String host, 
+               ?{'x:} String user, 
+               ?{'x:DLM.RunsFor(owner)} String passwd, 
+               ?{'x:} String realmInput, 
+               ?{'x:} String serverChallenge)
+    throws !{'x:} IOException 
+	{
+		?{'x:} ByteArrayOutputStream<{'x:}> bos = new ByteArrayOutputStream<{'x:}>();
+		?{'x:} OutputStream<{'x:}> b64os = new BASE64EncoderStream<{'x:}>(bos, Integer.MAX_VALUE);
+		SecureRandom<{'x:}> random = new SecureRandom<{'x:}>();
+		String realm = realmInput;
+		
+		final StringBuffer<{'x:}> result = new StringBuffer<{'x:}>();
+		
+		uri = "smtp/" + host;
+		String nc = "00000001";
+		String qop = "auth";
+		byte[] bytes = new byte[32];	// arbitrary size ...
+		int resp;
+		
+		DebugPrinter.println("Beginning authentication");
+		
+		final Map<String, {'x:}, String, {'x:}> map = tokenize(serverChallenge);
+		
+		if (map == null) {
+			DebugPrinter.println("Could not tokenize map! -- returning null");
+			return null;
+		}
+		
+		final ?{'x:} String r = map.get("realm");
+		final ?{'x:} String n = map.get("nonce");
+		final ?{'x:} String q = map.get("qop");
+		final ?{'x:} String c = map.get("cipher");
+		
+		DebugPrinter.println("realm --> " + r + "\n" +
+		                     "nonce --> " + n + "\n" +
+		                     "qop --> " + q + "\n" + 
+		                     "cipher --> " + c);
+			
+		if (realm == null) {
+		    final ?{'x:} String text =  map.get("realm");
+		    final StringTokenizer stok = new StringTokenizer(text,",");
+		    try {
+		    		realm = (text != null && stok != null) ? stok.nextToken() : host;
+		    } catch (NoSuchElementException ignore) { realm = host; }
+		}
+		
+		// server challenge random value
+		final String nonce = map.get("nonce");
+		
+		random.nextBytes(bytes);
+		b64os.write(bytes);
+		b64os.flush();
+		
+		// client challenge random value
+		?{'x:} String cnonce = bos.toString();
+		bos.reset();
+	    
+		DebugPrinter.println("My nonce is: " + cnonce);
+		
+		// DIGEST-MD5 computation, common portion (order critical)
+		if (md5 == null) {
+			DebugPrinter.println("md5 is null! -- Returning null.");
+			return null;
+		}
+		
+		final ?{'x:DLM.RunsFor(owner)} String input1 =  user + ":" + realm + ":" + passwd;
+		final ?{'x:} String input2 = ":" + nonce + ":" + cnonce;
+		
+		// DECLASSIFICATION!!
+		// Declassification is happening in the MD5 closure, using the
+		// authority of owner.
+		final ?{'x:} MD5Closure<owner, {'x:}> md5clo = new MD5Closure<owner, {'x:}>(md5,input1);
+		
+		?{'x:} byte[]<{'x:}> input1_declass = null;
+		
+		// ISSUE 111
+		// TODO 
+		// This assignment does not work, because we do not have a 
+		// policy on the owner (and it is defaulted to top)
+		/*
+		final ?{'x:} actor p = owner;
+		try {
+			input1_declass = (byte[])PrincipalUtil.authorize(p,null,md5clo,new label{}).invoke();
+		} catch (NullPointerException e) {if (debugout != null && p != null) debugout.println("Authorization failed for " + p.name());} //authorization failed
+		*/
+		
+		md5.update(input1_declass); 
+		md5.update(input2 != null ? input2.getBytes() : null);
+		
+		clientResponse = this.<{'x:}>toHex(md5.digest()) + ":" + nonce  + ":" + nc + ":" + cnonce + ":" + qop + ":";
+		
+		
+		DebugPrinter.println("Client RESPONSE to be: " + clientResponse);
+		
+		// DIGEST-MD5 computation, client response (order critical)
+		final String input3 = "AUTHENTICATE:" + uri;
+		md5.update(input3 != null ? input3.getBytes() : null);
+		final String input4 = clientResponse + this.<{'x:}>toHex(md5.digest());
+		md5.update(input4 != null ? input4.getBytes() : null);
+	
+		// build response text (order not critical)
+		result.append("username=\"" + user + "\"");
+		result.append(",realm=\"" + realm + "\"");
+		result.append(",qop=" + qop);
+		result.append(",nc=" + nc);
+		result.append(",nonce=\"" + nonce + "\"");
+		result.append(",cnonce=\"" + cnonce + "\"");
+		result.append(",digest-uri=\"" + uri + "\"");
+		result.append(",response=" + this.<{'x:}>toHex(md5.digest()));
+
+		String resultStr = result != null ? result.toString() : null;
+	
+		DebugPrinter.println("Response => " + resultStr);
+		
+		b64os.write(resultStr != null ? resultStr.getBytes() : null);
+		b64os.flush();
+		return bos.toByteArray();
+		
+    }
+    
+    /**
+     * Allow the client to authenticate the server based on its
+     * response.
+     *
+     * @return	true if server is authenticated
+     */
+    public !{'x:} boolean
+    authServer(?{'x:} String serverResponse) //, PrintStream[{debugP:}]{debugP:} debugout, principal{} debugP) 
+    throws !{'x:} IOException 
+    {
+    	final ?{'x:} Map<String, {'x:}, String, {'x:}> map = tokenize(serverResponse);
+    		
+		// DIGEST-MD5 computation, server response (order critical)
+		final ?{'x:} String input1 = ":" + uri;
+		if (md5 != null) md5.update(input1 != null ? input1.getBytes() : null);
+		final ?{'x:} String input2 = clientResponse + this.<{'x:}>toHex(md5 != null ? md5.digest() : null);
+		if (md5 != null) md5.update(input2 != null ? input2.getBytes() : null);
+		final String text = this.<{'x:}>toHex(md5 != null ? md5.digest() : null);
+		final String rspAuthVal = map != null ? map.get("rspauth") : null;
+		if (text != null ? (!text.equals(rspAuthVal)) : true) {
+		    //if (debugout != null)
+			//debugout.println("DEBUG DIGEST-MD5: " +
+			//	    "Expected => rspauth=" + text);
+		    return false;	// server NOT authenticated by client !!!
+		}
+		return true;
+    }
+    
+    public ?{'x:} String authAPOP(?{'x:} String okLine)
+    {
+    	if (okLine == null) return null;
+    		
+	    int challStart = okLine.indexOf('<');	// start of challenge
+	    int challEnd = okLine.indexOf('>', challStart); // end of challenge
+	    ?{'x:} String apopChallenge = null;
+	    if (challStart != -1 && challEnd != -1)
+	    		try {
+	    			apopChallenge = okLine.substring(challStart, challEnd + 1);
+	    		} catch (StringIndexOutOfBoundsException ignore) {}
+	    return apopChallenge;
+	}
+	
+	/**
+     * Gets the APOP message digest. 
+     * From RFC 1939:
+     *
+     * The 'digest' parameter is calculated by applying the MD5
+     * algorithm [RFC1321] to a string consisting of the timestamp
+     * (including angle-brackets) followed by a shared secret.
+     * The 'digest' parameter itself is a 16-octet value which is
+     * sent in hexadecimal format, using lower-case ASCII characters.
+     *
+     * @param	password	The APOP password
+     * @return		The APOP digest or an empty string if an error occurs.
+     */
+    public ?{'x:} !{'x:} String getAPOPDigest(?{'x:DLM.RunsFor(owner)} String password, 
+                                              ?{'x:} String apopChallenge) {
+		?{'x:DLM.RunsFor(owner)} String key = apopChallenge + password;
+		final ?{'x:} MD5Closure<owner,{'x:}> md5clo= new MD5Closure<owner,{'x:}>(md5,key);
+		?{'x:} byte[]<{'x:}> digest = null;
+		// ISSUE 111
+		/*
+		final ?{'x:} Principal p = Owner;
+		try {
+			digest = (byte[])PrincipalUtil.authorize(p,null,md5clo,new label{}).invoke();
+		} catch (NullPointerException e) {}//if (debugout != null && p != null) debugout.println("Authorization failed for " + p.name());} //authorization failed
+		*/
+	    //digest = md5.digest(key.getBytes("iso-8859-1"));	// XXX
+		return this.<{'x:}>toHex(digest);
+    }
+    
+    /**
+     * Tokenize a response from the server.
+     *
+     * @return	Hashtable containing key/value pairs from server
+     */
+    private !{'x:} Map<String, {'x:}, String, {'x:}> tokenize(?{'x:}String serverResponse) 
+      throws !{'x:} IOException {
+        // ISSUE 121
+		?{'x:} Map<String, {'x:}, String, {'x:}> map; // = new ArrayMap<String, {'x:}, String, {'x:}>();
+		
+		final ?{'x:} byte[]<{'x:}> bytes = serverResponse != null ? serverResponse.getBytes() : null;
+		if (bytes == null || map == null) return null;
+		
+		String key = null;
+		int ttype;
+		StreamTokenizer<{'x:}> tokens
+			= new StreamTokenizer<{'x:}>(
+			    new InputStreamReader<{'x:}>(
+			      new BASE64DecoderStream<{'x:}>(
+				new ByteArrayInputStream<{'x:}>(bytes, 4, bytes.length - 4)
+			 )));
+	
+		tokens.ordinaryChars('0', '9');	// reset digits
+		tokens.wordChars('0', '9');	// digits may start words
+		while ((ttype = tokens.nextToken()) != StreamTokenizer.TT_EOF) {
+		    // ISSUE 116
+			// TODO : switch statement is not supported.
+			// after fixing uncomment all // below.
+		    // switch (ttype) {
+		    // case StreamTokenizer.TT_WORD:
+			
+			if (key == null) {
+			    key = tokens.sval;
+			    // break;
+			}
+			
+			// fall-thru
+		    //case '"':
+			//if (debugout != null)
+			//    debugout.println("DEBUG DIGEST-MD5: Received => "
+			//	 	 + key + "='" + tokens.sval + "'");
+			if (map.containsKey(key)) {  // concatenate multiple values
+			    ?{'x:} String valObj = map.get(key);
+			    ?{'x:} String val = valObj != null  
+			                      ? valObj + "," + tokens.sval
+			                      : null;
+				map.put(key, val);
+			} else {
+			    map.put(key, tokens.sval);
+			}
+			key = null;
+			// break;
+		    // }
+		}
+		
+		return map;
+		
+    }
+    
+    private static ?{'x:} char[]<{'x:}> digits = null;
+    // ISSUE 117
+    // TODO compileArrayInit not yet implemented 
+    /*{
+		'0', '1', '2', '3', '4', '5', '6', '7',
+		'8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+    };
+    */
+    /**
+    * Convert a byte array to a string of hex digits representing the bytes.
+    */
+    private static ?p !p <policy p> String toHex(?p byte[]<p> bytes) {
+    		try {
+				?p char[]<p> result = new char[bytes.length * 2]<p>;
+		
+				for (int index = 0, i = 0; index < bytes.length; index++) {
+					int temp = bytes[index] & 0xFF;
+					result[i++] = digits[temp >> 4];
+					result[i++] = digits[temp & 0xF];
+				}
+				return new String(result);
+    		} catch (ArrayIndexOutOfBoundsException ex) { return null;
+    		} catch (NullPointerException ex) { return null; }
+    }
+    
+}

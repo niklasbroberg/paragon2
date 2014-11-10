@@ -1,0 +1,7 @@
+public class ReturnStmtBlock {
+  public int f() {
+    {
+      int x;
+    }
+  }
+}

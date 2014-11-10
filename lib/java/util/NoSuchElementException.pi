@@ -1,0 +1,11 @@
+package java.util;
+
+public native class NoSuchElementException extends RuntimeException {
+    
+    public NoSuchElementException() {
+    }
+
+    public NoSuchElementException(?policyof(this) String s) {
+    }
+}
+

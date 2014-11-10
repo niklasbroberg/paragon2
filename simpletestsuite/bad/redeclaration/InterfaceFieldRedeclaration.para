@@ -1,0 +1,4 @@
+public interface InterfaceFieldRedeclaration {
+  public static final int x = 0;
+  public static final int x = 1;
+}

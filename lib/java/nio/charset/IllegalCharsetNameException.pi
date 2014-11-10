@@ -1,0 +1,4 @@
+package java.nio.charset;
+
+public native class IllegalCharsetNameException extends java.lang.Exception {
+}

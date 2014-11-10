@@ -1,0 +1,10 @@
+package java.nio.charset;
+
+public native class Charset {
+
+  public static final ?policyof(name) Charset forName(String name) 
+  throws !policyof(name) IllegalCharsetNameException,
+          !policyof(name) UnsupportedCharsetException,
+          !policyof(name) IllegalArgumentException;
+
+}

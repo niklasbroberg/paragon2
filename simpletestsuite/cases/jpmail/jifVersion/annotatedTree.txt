@@ -1,0 +1,308 @@
+What JPmail looks like before compilation.
+
+
++-- build.xml              // Ant build file
+
++-- demo                   // Data for demo
+|   +-- addnewuser.sh      // Create a new user and corresponding certificate signed by root CA, call: sh addnewuser.sh newUsername newPassword 
+                           // Use same password for certificate as keystore, when importing rootCA say yes, although default is no, password cacert is jpmail
+|   +-- certs-alice        // User Alice
+|   |   +-- aliceCert.der  // Public Key, binary encoded, view with: openssl x509 -inform DER -in certs/bobCert.der -text -noout
+|   |   +-- aliceCert.pem  // Base64 encoded - View with: openssl x509 -in certs/bonoCert.pem -text -noout
+|   |   +-- aliceCSR.pem   // Certificate Signing Request file, not sure why needed to keep it.
+|   |   +-- bobCert.der    // Bob's public key
+|   |   +-- bobCert.pem    // ... again ?
+|   |   +-- bonoCert.der   // Bono's public key
+|   |   +-- cacert.pem     // Certificate of root
+|   |   +-- .keystore      // Private key
+|   +-- certs-bob          // Similar for Bob
+|   |   +-- aliceCert.der
+|   |   +-- aliceCert.pem
+|   |   +-- bobCert.der
+|   |   +-- bobCert.pem
+|   |   +-- bonoCert.der
+|   |   +-- cacert.pem
+|   |   +-- .keystore
+|   +-- certs-bono         // Similar for Bono
+|   |   +-- aliceCert.der  
+|   |   +-- bobCert.der    
+|   |   +-- bonoCert.der   
+|   |   +-- bonoCert.pem   
+|   |   +-- bonoCSR.pem    
+|   |   +-- cacert.pem     
+|   |   +-- .keystore     
+|   +-- demoCA                   // CA's public key
+|   |   +-- cacert.pem           // Certificates signed by CA, in both forms
+|   |   +-- certs
+|   |   |   +-- aliceCert.der
+|   |   |   +-- aliceCert.pem
+|   |   |   +-- bobCert.der
+|   |   |   +-- bobCert.pem
+|   |   |   +-- bonoCert.der
+|   |   |   +-- bonoCert.pem
+|   |   +-- crl                  // Does not seem to be used
+|   |   +-- index.txt            // Some sort of settings file, not used AFAIK
+|   |   +-- index.txt.attr       // Not used AFAIK
+|   |   +-- newcerts       // This is where certificates get copied to for signing with addnewuser.sh 
+|   |   |   +-- 01.pem     // i.e. these files do no longer serve any purpose I think
+|   |   |   +-- 02.pem
+|   |   |   +-- 03.pem
+|   |   |   +-- 04.pem
+|   |   |   +-- 05.pem
+|   |   |   +-- 06.pem
+|   |   |   +-- 07.pem
+|   |   |   +-- aliceCSR.pem
+|   |   |   +-- bobCSR.pem
+|   |   |   +-- bonoCSR.pem
+|   |   +-- openssl.cnf    // OpenSSL configuration file
+|   |   +-- private        // CA's private key
+|   |   |   +-- cakey.pem  // Password: jpmail
+|   |   +-- serial         // Serial code for generating newcerts (current at 08)
+|   +-- passwd-alice               // Alice's keystore password
+|   |   +-- password-keystore      // passwordre
+|   |   +-- password-keystore_iv   // initialization vectorre_iv
+|   |   +-- password-keystore_key  // ... symmetric key?
+|   +-- passwd-bob         
+|   |   +-- password-keystorere
+|   |   +-- password-keystore_ivre_iv
+|   |   +-- password-keystore_keyre_key
+|   +-- passwd-bono        
+|   |   +-- password-keystorere
+|   |   +-- password-keystore_ivre_iv
+|   |   +-- password-keystore_keyre_key
+|   +-- password-pop3       // Current user (bono)'s pop3 password, encrypted
+|   +-- password-pop3_iv   
+|   +-- password-pop3_key  
+|   +-- password-smtp       // Current user's smtp pasword, encrypted
+|   +-- password-smtp_iv
+|   +-- password-smtp_key
+|   +-- publishcerts.sh     // Copy all public keys to user's folders
+
++-- INSTALL.txt             // Installation instructions
+
++-- jifcrypto                         // Crypto stuff
+|   +-- jars                          // Bouncycastle providing jar
+|   |   +-- bcprov-jdk14-131.jar
+|   +-- src
+|       +-- crypto                    // jif API to various crypto operations. Uses jif signatures for java.security provided in sig-src foldor
+|           +-- AESClosure.jif        // Simple closure performing and declassifying encryption of provided plaintext (i.e. call to AES.encrypt() )
+|           +-- AES.jif               // 4 operations: generate new key, encrypt String, encrypt byte[], decrypt Ciphertext
+|           +-- Ciphertext.jif        // Two constructors, with(out) IV, one function to write ciphertext and IV to file (i.e. wrapper for pwd and pwd_iv for pop3 and smtp and keystore)
+|           +-- DeclassKeyClosure.jif // Simple wrapper declassifying a byte array
+|           +-- DESClosure.jif        // Simple closure performing and declassifying encryption of provided plaintext (i.e. call to DES.encrypt() )
+|           +-- DES.jif               // Similar as AES.jif but for DES
+|           +-- DESStringClosure.jif  // Converts String to byte[], otherwise similar to DESClosure (DES/AES.encrypt(String) not used at all?)
+|           +-- MD5Closure.jif        // Closure for computing and declassifying call to md5.digest(plaintext) -- both md5 and plaintext provided to closure
+|           +-- RSAClosure.jif        // Simple closure performing and declassifying encryption of provided plaintext (i.e. call to RSA.encrypt() )
+|           +-- RSA.jif               // Functions to generate keypair, get public/private key from inputstream, encrypt String/byte[], decrypt Ciphertext, plus a long commented out main, testing stuff
+|           +-- RSAMakeKeys.jif       // Just a main function, creating pub/priv key for arg[0] -- not used ?
+|           +-- TripleDESClosure.jif  // Simple closure performing and declassifying encryption of provided plaintext (i.e. call to TripleDES.encrypt() )
+|           +-- TripleDES.jif         // Functions for getting new key, encrypting String/byte[], decrypting Cyphertext
+                                      // clearly copy of AES, judging from comments; probably AES/DES/TripleDES can be parametrized on type; but only 1 is used anyway I think
+
++-- jifpol
+|   +-- com
+|   |   +-- sun
+|   |       +-- mail
+|   |           +-- util
+|   |               +-- BASE64DecoderStream.class  // Guess that should not be here
+|   |               +-- BASE64DecoderStream.java   // Just copied from SUN
+|   |               +-- BASE64EncoderStream.class
+|   |               +-- BASE64EncoderStream.java
+|   +-- jifpolicytool
+|   |   +-- Declassifier.java  // TODO I suspect it is used by the two classes below to generate declassify statements?
+|   |   +-- Parser.java        // Very long file the in an ugly way creates a new JifPolicy file from a basic policy file such as found in jifpol/policies.  Will be placed in jifpol/polsrc/policy
+|   |   +-- Principal.java     // Similar, creating a new Principal. Will be placed in jifpol/polsrc/policy
+|   +-- jif-updates            // Extensions to standard jif 2.0.1, real source
+|   |   +-- lib-src
+|   |   |   +-- jif
+|   |   |       +-- lang
+|   |   |           +-- AbstractPrincipal.jif // Updates original with possibility to exclude principals in chain search
+|   |   +-- rt-src             // Extensions to the jif runtime
+|   |   |   +-- jif
+|   |   |       +-- lang
+|   |   |       |   +-- Principal.java        // Adds function for finding chat up to 'exclude' Principal[] (note: interface, i.e. adds abstract function)
+|   |   |       |   +-- PrincipalUtil.java    // Adds findDelegatesChain with 'exclude'
+|   |   |       +-- runtime
+|   |   |           +-- AuthKey.java          // New file, given password and keystore gets certificate and checks it
+|   |   |           +-- FileSystem.java       // Seems like just some architectural changes, making NativePrincipal a factory
+|   |   |           +-- NativePrincipal.java  // Becomes a factory, makes sure to only create 1 principal for each UNIX user requested, adds findChainUpto function
+|   |   |           +-- Runtime.java          // Gets the runtime associated with running principal p, throws exception if p does not have a trusted private key. Uses AuthKey to determine this.
+|   |   +-- sig-src            // Corresponding signatures
+|   |       +-- java
+|   |       |   +-- security            // Curious, exactly the same as in sig-src/ on root 
+|   |       |       +-- Key.jif
+|   |       |       +-- PrivateKey.jif
+|   |       |       +-- PublicKey.jif
+|   |       +-- jif
+|   |           +-- lang                // Adding new methods
+|   |           |   +-- Principal.jif
+|   |           |   +-- PrincipalUtil.jif
+|   |           +-- runtime             // Why in different folder?
+|   |               +-- Runtime.jif
+|   +-- policies  // policies that are compiled with jifpolicytool/Parser into a JifPolicy
+|   |   +-- basic_policy.txt  // policy used in shipped version of JPmail, three users, two groups
+|   |   +-- CA-HOWTO.txt      // How to create a new CA and users, seems to be from before the addnewuser.sh script, or perhaps meant for a more (real) distributed setting
+|   |   +-- ca_policy.txt     // Seems like something to make JPmail even bigger, but never finished?
+|   |   +-- simple_policy_alt.txt  // More sample policies
+|   |   +-- simple_policy.txt
+|   +-- src
+|       +-- crypto
+|       |   +-- RSASelfClosure.jif // similar to jifcrypto.crypto.RSAClosure, but ensures private key and data have the same label
+|       +-- policy
+|       |   +-- AddDelClosureL.jif // Lets the caller of the closure add delegation to the provided principal (used in generated policies?)
+|       |   +-- KeyPrincipal.jif   // extends AbstractPrincipal to contain a public (and possibly also private) key.
+|       |   +-- MainPrincipal.jif  // extends KeyPrincipal, used for bootstrapping; overwrites isAuthorized method to only addDelegatesClosure (ie judged from policy file)
+|       |   +-- NOTES              // Really a collection of personal notes, probably should not have been in release.
+|       |   +-- PolicyStore.jif    // Store for principals and their label, managed by special principal manager P (of type ManagerPrincipal -- does not exist?) -- is this really used anywhere?? In RSA maybe?
+|       |   +-- PolicyUtil.jif     // Helper functions for invoking addDelegationClosures
+|       |   +-- PrincipalWrapper.jif  // Wraps a principal with a name and a label as a JifObject 
+|       |   +-- README             // Again loads of notes, might be helpful not exactly organized.
+|       +-- util
+|           +-- DeclassifyHelper.jif // Copied from Aslan's MentalPoker. Declassifies various data structures
+|           +-- Password.jif         // Gets password from password/_iv/_key files. -- apparently DES encrypted, so AES / 3DES are not used? Also has function to set passwords
+                                     // By jif label + jif runtime requires that permission on file = readable only by (UNIX) user
+
++-- jpmail
+|   +-- JPmail.ai  // Corel Trace Drawing ?
+|   +-- JPmail_icon.jpg // Logo icon size
+|   +-- JPmail.jpg      // Logo
+|   +-- src
+|       +-- jif
+|       |   +-- net
+|       |       +-- JifSocketFactory.jif // curious factory that seems to only forward calls to the Socket constructor.
+|       +-- pop3
+|       |   +-- ContentDisposition.jif  // Pass lines starting with Content-Disposition:, used by MimeParts
+|       |   +-- ContentType.jif         // Pass lines starting with Content-Type:
+|       |   +-- JPMailMessage.jif       // Structure of JPMails, with function to convert to encryped MimeMailMessage  (also used by smtp package)
+|       |   +-- MailReaderCrypto.jif    // Main file for reading mail. Several large functions for connecting, getting number of mails, displaying all mails
+|       |   +-- MimeHeader.jif          // Data structure
+|       |   +-- MimeMailMessage.jif     // Data structure
+|       |   +-- MimePart7bit.jif        // Data structure
+|       |   +-- MimePartBase64.jif      // Data structure
+|       |   +-- MimePartBody.jif        // Data structure
+|       |   +-- MimePartHeader.jif      // Data structure
+|       |   +-- MimePart.jif            // Data structure
+|       |   +-- TODO                    // cryptic list, not sure what is done and what not
+|       +-- smtp
+|       |   +-- DeclassMsgBodyClosure.jif  // Closure for only declassification
+|       |   +-- DeclassStringClosure.jif   // Closure for only declassification (same functionality is in DeclassifyHelper?)
+|       |   +-- DigestMD5.jif              // Provides functions for performing MD5 authentication with smtp server -- does not seem to work?
+|       |   +-- EmailDisclaimerClosure.jif // Closure for only declassification, contains disclaimer
+|       |   +-- EmailHdrDeclassClosure.jif // Closure for only declassification
+|       |   +-- EmailRSAClosure.jif-bak    // Seems not used?
+|       |   +-- MailSenderCrypto.jif       // Main file for sending mail. Like for pop reading, several large functions for connecting, writing, sending 
+|       |   +-- TODO                       // Itemized list
+|       +-- util
+|           +-- NewPassword.jif    // Helps setting a new password/_iv/_key
+
++-- LICENSE  // PSU + BouncyCastle license
+
++-- mail.properties // Properties read for the current client, used when creating getmail / sendmail scripts
+
++-- policy.properties // Tells where to find the policy to be parsed and where to put the generated jif code
+
++-- README // Instructions
+
++-- sig-src // A whole lot of signature files
+|   +-- com
+|   |   +-- sun
+|   |       +-- mail
+|   |           +-- util
+|   |               +-- BASE64DecoderStream.jif
+|   |               +-- BASE64EncoderStream.jif
+|   +-- java
+|   |   +-- io
+|   |   |   +-- BufferedOutputStream.jif
+|   |   |   +-- BufferedWriter.jif
+|   |   |   +-- ByteArrayInputStream.jif
+|   |   |   +-- ByteArrayOutputStream.jif
+|   |   |   +-- FilterInputStream.jif
+|   |   |   +-- FilterOutputStream.jif
+|   |   |   +-- OutputStreamWriter.jif
+|   |   |   +-- PrintWriter.jif
+|   |   |   +-- StreamTokenizer.jif
+|   |   |   +-- StringReader.jif
+|   |   |   +-- UnsupportedEncodingException.jif
+|   |   |   +-- Writer.jif
+|   |   +-- lang
+|   |   |   +-- Boolean.jif
+|   |   |   +-- Character.jif
+|   |   |   +-- Math.jif
+|   |   |   +-- StringBuffer.jif
+|   |   |   +-- System.jif
+|   |   +-- math
+|   |   |   +-- BigInteger.jif
+|   |   +-- net
+|   |   |   +-- InetAddress.jif
+|   |   |   +-- Socket.jif
+|   |   |   +-- UnknownHostException.jif
+|   |   +-- security
+|   |   |   +-- DigestException.jif
+|   |   |   +-- InvalidAlgorithmParameterException.jif
+|   |   |   +-- InvalidKeyException.jif
+|   |   |   +-- KeyFactory.jif
+|   |   |   +-- KeyFactorySpi.jif
+|   |   |   +-- Key.jif
+|   |   |   +-- KeyPairGenerator.jif
+|   |   |   +-- KeyPair.jif
+|   |   |   +-- MessageDigest.jif
+|   |   |   +-- NoSuchAlgorithmException.jif
+|   |   |   +-- NoSuchProviderException.jif
+|   |   |   +-- PrivateKey.jif
+|   |   |   +-- Provider.jif
+|   |   |   +-- PublicKey.jif
+|   |   |   +-- SecureRandom.jif
+|   |   |   +-- SignatureException.jif
+|   |   |   +-- Signature.jif
+|   |   |   +-- spec
+|   |   |       +-- AlgorithmParameterSpec.jif
+|   |   |       +-- EncodedKeySpec.jif
+|   |   |       +-- InvalidKeySpecException.jif
+|   |   |       +-- KeySpec.jif
+|   |   |       +-- PKCS8EncodedKeySpec.jif
+|   |   |       +-- X509EncodedKeySpec.jif
+|   |   +-- sql
+|   |   |   +-- Connection.jif
+|   |   |   +-- Date.jif
+|   |   |   +-- DriverManager.jif
+|   |   |   +-- PreparedStatement.jif
+|   |   |   +-- ResultSet.jif
+|   |   |   +-- SQLException.jif
+|   |   |   +-- Statement.jif
+|   |   +-- text
+|   |   |   +-- FieldPosition.jif
+|   |   |   +-- ParseException.jif
+|   |   |   +-- ParsePosition.jif
+|   |   |   +-- SimpleDateFormat.jif
+|   |   +-- util
+|   |       +-- Date.jif
+|   |       +-- NoSuchElementException.jif
+|   |       +-- Random.jif
+|   |       +-- StringTokenizer.jif
+|   +-- javax
+|   |   +-- crypto
+|   |   |   +-- BadPaddingException.jif
+|   |   |   +-- Cipher.jif
+|   |   |   +-- IllegalBlockSizeException.jif
+|   |   |   +-- KeyGenerator.jif
+|   |   |   +-- NoSuchPaddingException.jif
+|   |   |   +-- SecretKey.jif
+|   |   |   +-- spec
+|   |   |       +-- IvParameterSpec.jif
+|   |   |       +-- SecretKeySpec.jif
+|   |   +-- mail
+|   |   |   +-- internet
+|   |   |       +-- MailDateFormat.jif
+|   |   +-- net
+|   |       +-- SocketFactory.jif
+|   |       +-- ssl
+|   |           +-- SSLSocketFactory.jif
+|   +-- org
+|       +-- bouncycastle
+|           +-- jce
+|               +-- provider
+|                   +-- BouncyCastleProvider.jif
+
+
+76 directories, 227 files

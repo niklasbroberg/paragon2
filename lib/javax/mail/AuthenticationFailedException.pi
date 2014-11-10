@@ -1,0 +1,4 @@
+package javax.mail;
+
+public native class AuthenticationFailedException extends java.lang.Exception {
+}

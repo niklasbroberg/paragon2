@@ -1,0 +1,11 @@
+public class TypeMethod {
+
+  public typemethod policy foo(Object a) {
+    return {a: };
+  }
+
+    public static final Object alice = new Object();
+
+    public ?foo(alice) int x;
+
+}

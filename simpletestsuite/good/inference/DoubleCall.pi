@@ -1,0 +1,7 @@
+public class DoubleCall
+{
+  void m(int y)
+  ;
+  void n(int x)
+  ;
+}

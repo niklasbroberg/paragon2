@@ -1,0 +1,3 @@
+In the context of class LocalPolicyOf:
+In the context of method moo:
+policyof may only be used in signatures and policy modifiers: policyof(s)

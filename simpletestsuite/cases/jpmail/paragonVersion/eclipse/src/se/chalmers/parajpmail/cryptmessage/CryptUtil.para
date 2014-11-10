@@ -1,0 +1,43 @@
+package se.chalmers.parajpmail.cryptmessage;
+
+import java.math.BigInteger;
+
+public class CryptUtil {
+
+  // TODO Should not have write effect here! -- Escape analysis required...
+  public static final !p ?p <policy p> byte[]<p> fromHex(?p String s) 
+  {
+      int len = s.length();
+      byte[]<p> data = new byte[len / 2]<p>;
+      for (int i = 0; i < len; i += 2) {
+          data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                               + Character.digit(s.charAt(i+1), 16));
+      }
+      return data;
+  }
+  
+  public static final ?p <policy p> String toHex(?p byte[]<p> bytes) {
+      BigInteger bi = new BigInteger(1, bytes);
+      return String.format("%0" + (bytes.length << 1) + "X", bi);
+  }
+  
+    
+  /*
+  public static final !policyof(s) ?policyof(s) byte[]<policyof(s)> fromHex(String s) 
+  {
+      int len = s.length();
+      byte[]<policyof(s)> data = new byte[len / 2]<policyof(s)>;
+      for (int i = 0; i < len; i += 2) {
+          data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                               + Character.digit(s.charAt(i+1), 16));
+      }
+      return data;
+  }
+  
+  public static final ?policyof(bytes) String toHex(byte[]<policyof(bytes)> bytes) {
+      BigInteger bi = new BigInteger(1, bytes);
+      return String.format("%0" + (bytes.length << 1) + "X", bi);
+  }
+  */
+
+}

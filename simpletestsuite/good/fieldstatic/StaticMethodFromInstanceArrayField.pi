@@ -1,0 +1,6 @@
+public class StaticMethodFromInstanceArrayField
+{
+  private int[] a = stat();
+  private static int[] stat()
+  ;
+}

@@ -1,0 +1,9 @@
+public class ReturnTryFinally {
+  public int f() {
+    try {
+    }
+    finally {
+    }
+  }
+}
+

@@ -1,0 +1,22 @@
+public class OpeningLock {
+
+  public static final lock A;
+
+  public static final lock B(Object);
+
+  public static final policy p = {Object x : A};
+
+  public static final ?p int foo() {
+
+    ?p int x = 4;
+    ?p int y = 5;
+
+    open A;
+
+    x = y;
+
+    return x;
+
+  }
+
+}

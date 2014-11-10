@@ -1,0 +1,13 @@
+public class CatchParent {
+
+
+    public static
+    void foo()
+    {
+        try {
+            throw new NullPointerException();
+        } catch (Exception e) {
+        }
+    }
+
+}

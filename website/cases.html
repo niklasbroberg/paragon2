@@ -1,0 +1,123 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta charset="UTF-8">
+		<title>Paragon</title>
+		<link rel="stylesheet" type="text/css" href="style.css" />
+	</head>
+	<body>
+		<div id="centerpane">
+			<div id="header">
+				Paragon
+				<hr />
+			</div>
+			<div id="leftpane">
+				<div id="infopane">
+					<p class="first">
+						<span class="bold">Main Developer</span> <br />
+						Niklas Broberg
+					</p>
+					<p>
+                        <span class="bold">Contributors</span> <br />
+						David Sands <br />
+						Bart van Delft <br />
+                        Yannick Zakowski <br />
+                        Javed Nazir <br />
+                        Filippo Del Tedesco <br />
+					</p>
+				</div>	
+				<div id="links">
+					<div class="link">
+						<a href="index.html">
+							Home
+						</a>
+					</div>
+					<div class="link">
+						<a href="download.html">
+							 Download Paragon
+						</a>
+					</div>
+                    <div class="link">
+						<a href="cases.html">
+							 > Case Studies
+						</a>
+					</div>
+					<div class="link">
+						<a href="tutorials.html">
+							 Tutorials
+						</a>
+					</div>
+				</div>			
+			</div>
+			<div id="rightpane">
+                <p>
+                    The following case studies have been performed using Paragon so far:
+                </p>
+                <p>
+                </p>
+                <h3>
+                    Sealed Bids Auction
+                </h3>
+				<p>
+					The sealed bids auction is an example where bidders can place a bid
+                    that remains secret until the auction is over and can only flow
+                    to the other bidders if their bid is the winning bid.
+				</p>
+                <p>
+                    Download the sealed bid auction
+                    <a href="sealedbids.zip">here</a> and
+                    run under Linux <span class="code">make</span>, possibly followed by 
+                    <span class="code">make java</span>. Note that at this moment runtime
+                    lock querying is not correctly translated into Java files which makes
+                    it not possible to compile them.
+                </p>
+                <p>
+                    A more detailed description can be found in
+                    <a href="draft_paragon.pdf">this</a> draft paper on Paragon.
+                </p>
+                <p>
+                </p>
+                <h3>
+                    Mental Poker
+                </h3>
+				<p>
+					A Paragon implementation of the first large program written in Jif,
+                    which was described 
+                    <a href="http://www.springerlink.com/content/5clup4c2332rw06g/">here</a> by Askarov and Sabelfeld.
+                    There are two versions of the Paragon implementation.
+				</p>
+                <p>
+                    <a href="mentalPokerParagonv1.zip">Version 1</a>
+                    is an almost direct translation of the original work with
+                    only a few differences (in particular having a trusted
+                    declassifier and providing static guarantees instead of
+                    Jif's seal pattern).
+                </p>
+                <p>
+                    <a href="mentalPokerParagonv2.zip">Version 2</a>
+                    uses more of the expressive power of Paragon and where the
+                    original version had the same policy for all sensitive data, 
+                    more flexible policies are here depending on how the data is used.
+                    A description can be found in
+                    <a href="draft_paragon.pdf">this</a> draft paper on Paragon.
+                </p>
+                <p>
+                    To compile, make sure that 
+                    Paragon is installed and the runtime jar is located in the top
+                    directory of the extracted zip file (see 
+                    <a href="download.html">Download Paragon</a>).
+                    Under Windows the example can be built by executing 
+                    <span class="code">make.bat</span>, under Linux by running
+                    <span class="code">make</span>, possibly followed by 
+                    <span class="code">make java</span>.
+                    The resulting Mental Poker class files can then be run calling
+                    <span class="code">binder.py</span>.
+                </p>
+            </div>
+			<div id="footer">
+				<hr />
+				Chalmers University, G&ouml;teborg, Sweden
+			</div>
+		</div>
+	</body>
+</html>

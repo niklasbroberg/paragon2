@@ -1,0 +1,3 @@
+public native class SecurityException extends java.lang.Exception {
+
+}

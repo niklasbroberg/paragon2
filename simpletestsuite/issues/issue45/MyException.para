@@ -1,0 +1,11 @@
+
+// Exception itself is not recognized, but adding this line doesnt help:
+import java.lang.Exception;
+
+
+// need to specify full path:
+public class MyException extends java.lang.Exception {
+
+
+   // compiling gives panic.
+}

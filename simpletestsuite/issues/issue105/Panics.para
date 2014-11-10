@@ -1,0 +1,30 @@
+public class Panics {
+
+    public final Object id = new Object();
+	
+    public final policy p = { id : } ;
+	
+	void foo() {
+	
+		Panics c;
+		if (c != null) {
+			// Panic:
+			?{c.id:} int x1;
+		
+			// Panic:
+			?c.p int x2;
+		
+			// No such policy:
+			policy q = c.p;
+			?q int x3;
+		
+			// Works but seems to give different actor in the end:
+			final Object a = c.id;
+			?{a:} int x4 = 4;
+			?{a:} int y = x4;
+
+			String[]<c.p> x5;
+		}
+	}
+
+}

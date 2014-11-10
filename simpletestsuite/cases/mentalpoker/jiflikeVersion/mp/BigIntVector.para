@@ -1,0 +1,113 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import mp.*;
+
+public class BigIntVector <policy p> 
+extends ArrayList<p> 
+implements DataFieldAttribute<p> 
+{
+
+	/**
+	 * 
+	 */
+	public BigIntVector() {
+		super();
+	}
+	
+	/**
+	 * @param initialCapacity
+	 */
+	 // why the write effect?
+	 // jif.util.ArrayList has it on ensureCapacity, but do not see why.
+	 // probably because of system.arraycopy call
+     public !p BigIntVector(?p int initialCapacity) {
+        super();
+        ensureCapacity(initialCapacity);
+	   }
+    
+	/* (non-Javadoc)
+	 * @see poker.DataFieldAttribute#toByteArray()
+	 */
+     public !p ?p byte[]<p> toByteArray() {       
+		int size = this.byteLength();
+		byte []<p> retval = new byte[size]<p>;
+		int i = 0;
+        try {
+            for (int j = 0 ; j < size; j++) {
+                try  {
+                    byte []<p> x_i = this.getBI(i).toByteArray();
+                    System.<p>arraycopy(x_i, 0, retval, i, x_i.length);
+                } catch (NullPointerException e) {
+                } catch (ArrayStoreException e) {
+                }
+            }
+            return retval;
+        }catch(IndexOutOfBoundsException ignored) {            
+        }
+        return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see poker.DataFieldAttribute#byteLength()
+	 */
+     public ?p int byteLength() {
+       
+		int n = this.size();
+		int size = 0;
+        try {
+            for (int j = 0; j < size; j++) {
+                    DABigInteger<p> x =  this.getBI(j);
+                    if (x != null)
+                        size += (int) Math.ceil((x.bitLength() + 1)/8.0);
+            }
+            return size;
+        } catch (IndexOutOfBoundsException ignored) {
+        } catch (ArithmeticException ignored) {
+        }
+        // unreachable
+        return 0;
+	}
+	
+
+    
+
+	/**
+	 * returns the BigInteger stored in the value
+	 * @param i
+	 * @return
+	 */
+     public ?(p*policyof(i)) DABigInteger<p> getBI(int i)
+     throws !(p + policyof(i)) IndexOutOfBoundsException {
+		 try {
+         	return (DABigInteger<p>) (this.get(i)); // note: arraylist doesnt have generics
+        } catch (ClassCastException e) { return null; } 
+	 }
+     
+     
+     public ?p String toString() {
+        try {
+            int n = this.size();
+            String s = "{";
+            for (int i = 0; i < n; i++ ){
+                DABigInteger<p> bi = this.getBI(i);
+                s+=bi.toString();
+                if (i < n- 1) 
+                    s+= ",";
+            }
+            s += "}";
+            return s;
+        } catch (NullPointerException ignored) {
+        } catch (IndexOutOfBoundsException ignored ) {
+        }
+        return "";
+	}
+	
+     
+}
+
+

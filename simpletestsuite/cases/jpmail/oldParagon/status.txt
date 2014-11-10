@@ -1,0 +1,42 @@
+:: Additional files:
+  jif/DLM.para
+
+:: Completely translated .jif files:
+  com/sun/mail/util/BASE64DecoderStream.pi
+  com/sun/mail/util/BASE64EncoderStream.pi
+  crypto/MD5Closure.para
+  jif/lang/Closure.para
+  org/bouncycastle/jce/provider/BouncyCastleProvider.pi
+  
+:: Translated modulo issues:
+  smtp/DigestMD5.para
+
+:: In progress:
+  smtp/MailSenderCrypto.jif
+  policy/PolicyStore.jif
+  jif/util/LinkedList.jif
+
+:: Not yet translated:
+  pop3/ContentDisposition.jif
+  pop3/MimeHeader.jif
+  pop3/MimePartBody.jif
+  pop3/ContentType.jif
+  pop3/MimeMailMessage.jif
+  pop3/MimePartHeader.jif
+  pop3/JPMailMessage.jif
+  pop3/MimePart7bit.jif
+  pop3/MimePart.jif
+  pop3/MailReaderCrypto.jif
+  pop3/MimePartBase64.jif
+  smtp/DeclassMsgBodyClosure.jif
+  smtp/EmailDisclaimerClosure.jif
+  smtp/DeclassStringClosure.jif
+  smtp/EmailHdrDeclassClosure.jif
+  util/NewPassword.jif
+  
+:: Ambitions:
+  Addressing assumptions made by JPmail (list here)
+  GUI
+  Some of the jif.util actually implement Sets etc., we currently use
+    just the .pi files. Would be nice to try the same in Paragon (and
+    see if we find anything where it differs..)

@@ -1,0 +1,25 @@
+package jif.lang;
+
+import jif.DLM;
+
+// Paragonized
+
+/**
+ * A <code>Closure</code> is code to be executed that needs the authority
+ * of the principal P. The label L is a lower bound on the side-effects
+ * of the closure.<p>
+ * 
+ * To execute a closure, a @link{Capability Capability} must be obtained
+ * through the runtime interface. A capability can only be obtained
+ * if the principal P grants authority to invoke this closure.
+ */
+public interface Closure<actor a, policy p>  {
+    /**
+     * The code that requires the authority of the principal P.
+     * The label {L} is a lower bound on the side-effects
+     * of the code.
+     */
+    ~DLM.RunsFor(a)
+    !p
+	?policyof(this) Object invoke();
+}

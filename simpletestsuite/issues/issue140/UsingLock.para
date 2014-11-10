@@ -1,0 +1,6 @@
+public class UsingLock {
+
+    public final policy pol = 
+    	   { (Object y) Object x : DefineLock.MyLock(x, y) } ;
+
+}

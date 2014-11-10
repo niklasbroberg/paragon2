@@ -1,0 +1,5 @@
+public class InstanceMethodFromStaticField {
+  private static int x = inst();
+
+  private int inst() { return 1; }
+}

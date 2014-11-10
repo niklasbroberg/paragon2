@@ -1,0 +1,13 @@
+import java.util.List;
+
+public class Foo<policy p> {
+
+    public void foo() {
+
+        List<p> list = null; 
+        Bar<p> el = (Bar<p>) list.get(0);
+        el.bar(el);
+    }  
+
+
+}

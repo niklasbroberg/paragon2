@@ -1,0 +1,7 @@
+package java.security;
+
+public native class GeneralSecurityException extends java.lang.Exception {
+
+  public GeneralSecurityException(?policyof(this) String msg) { }
+
+}

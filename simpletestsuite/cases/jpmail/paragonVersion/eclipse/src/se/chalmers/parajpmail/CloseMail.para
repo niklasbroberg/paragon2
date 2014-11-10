@@ -1,0 +1,17 @@
+package se.chalmers.parajpmail;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+
+public class CloseMail implements ActionListener<{SimpleUnixRuntime.currentUser:}> {
+
+  public CloseMail() { }
+
+  public !{SimpleUnixRuntime.currentUser:} void
+          actionPerformed(?{SimpleUnixRuntime.currentUser:} ActionEvent e) {
+      SimpleUnixRuntime.exit(0);
+  }
+
+}

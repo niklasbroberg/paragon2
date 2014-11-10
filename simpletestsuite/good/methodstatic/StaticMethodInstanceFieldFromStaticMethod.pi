@@ -1,0 +1,8 @@
+public class StaticMethodInstanceFieldFromStaticMethod
+{
+  private static void stat()
+  ;
+  public int x = 1;
+  private static StaticMethodInstanceFieldFromStaticMethod stat1()
+  ;
+}

@@ -1,0 +1,7 @@
+public class ReturnDoWhileEmpty {
+  public int f() {
+    do {
+    } while (false);
+    return 1;
+  }
+}

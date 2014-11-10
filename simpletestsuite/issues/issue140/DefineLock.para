@@ -1,0 +1,6 @@
+public class DefineLock {
+
+  public lock MyLock(Object, Object) 
+    { (Object x, Object y) MyLock(x, y) : MyLock(y, x) };
+
+}

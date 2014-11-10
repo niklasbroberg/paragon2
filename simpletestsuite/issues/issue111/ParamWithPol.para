@@ -1,0 +1,5 @@
+public class ParamWithPol<?{Object x:} actor Object a> {
+
+  public final Object b = a;
+
+}

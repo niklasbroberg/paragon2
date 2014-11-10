@@ -1,0 +1,6 @@
+public class InstanceObjectMethodFromStaticMethod {
+  public static void stat() {
+    Object obj = new Object();
+    obj.toString();
+  }
+}

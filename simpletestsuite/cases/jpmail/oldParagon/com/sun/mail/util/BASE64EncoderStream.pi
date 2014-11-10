@@ -1,0 +1,41 @@
+
+// Paragonized
+
+/* This is Jif signature for a Java class.
+ *
+ * This file provides a Jif signature for Jif code 
+ * to be compiled against. However, this signature is 
+ * disregarded at runtime, and instead the standard 
+ * Java class files are used.
+ *
+ * Methods are marked as native to avoid the need to
+ * provide an implementation for them.
+ */
+package com.sun.mail.util;
+
+import java.io.FilterOutputStream;
+import java.io.OutputStream;
+import java.io.IOException;
+
+public class BASE64EncoderStream<policy p> extends FilterOutputStream<p> {
+    
+    public BASE64EncoderStream(?p OutputStream<p> out, ?p int bytesPerLine) {
+    }
+
+    public BASE64EncoderStream(?p OutputStream<p> out) {
+    }
+
+    public !p native void write(?p byte[]<p> b, ?p int off, ?p int len)
+      throws !p IOException;
+    public !p native void write(?p byte[]<p> b) 
+      throws !p IOException;
+    public !p native void write(?p int c) 
+      throws !p IOException;
+    public !p native void flush() 
+      throws !p IOException;
+    // ERROR cannot have close as method name (confused with lock)
+    // public !p native void close() 
+    //  throws !p IOException;
+    public native static ?p byte[]<p> encode(?p byte[]<p> inbuf);
+   
+}

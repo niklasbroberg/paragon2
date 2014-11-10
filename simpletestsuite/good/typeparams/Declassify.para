@@ -1,0 +1,10 @@
+class Declassify {
+
+  private lock Declassify;
+  private static final policy dec = {Object x: Declassify};
+
+  public static ?TO <A, policy TO>
+    A declassify(?(TO*dec) A x) {
+      open Declassify { return x; } 
+  }
+}

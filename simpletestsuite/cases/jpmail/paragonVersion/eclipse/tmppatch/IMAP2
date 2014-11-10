@@ -1,0 +1,11 @@
+--- src/se/chalmers/parajpmail/IMAP.java.bck	2013-02-04 17:12:08.667158726 +0100
++++ src/se/chalmers/parajpmail/IMAP.java	2013-02-04 17:12:20.015158684 +0100
+@@ -10,7 +10,7 @@
+ import javax.mail.Store;
+ public class IMAP
+ {
+-  static final private se.chalmers.paragon.Lock DeclassPassword = se.chalmers.paragon.Lock.newLock("DeclassPassword", 0);
++  static final private se.chalmers.paragon.Lock DeclassPassword = se.chalmers.paragon.Lock.newLock("se.chalmers.parajpmail.IMAP.DeclassPassword", 0);
+   public static final se.chalmers.paragon.Policy passwordPol = se.chalmers.paragon.Policy.newPolicy("passwordPol", se.chalmers.paragon.Policy.newPClause(se.chalmers.paragon.Actor.newActorVariable(0), se.chalmers.paragon.Atom.newAtom(DeclassPassword)));
+   public static se.chalmers.parajpmail.CryptedMail[] readmail(final se.chalmers.paragon.Policy p, java.lang.String server, java.lang.String username, java.lang.String password) throws java.lang.NullPointerException, javax.mail.MessagingException, se.chalmers.parajpmail.ParaJPMailException
+   {

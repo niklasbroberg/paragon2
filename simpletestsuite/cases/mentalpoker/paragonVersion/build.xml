@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Mental Poker" default="usage" basedir=".">
+  <description>Builds Mental Poker.</description>
+  <property name="build.dir" value="./" />
+  <property name="src.dir" location="${build.dir}/src" />
+  <property name="bin.dir" location="${build.dir}/bin" />
+  <property name="lib.dir" location="${build.dir}/lib" />
+
+  <!-- Path to find standard .pi files -->
+  <property name="pipath.base" location="/home/bart/Documents/paragon/lib" />
+
+  <!-- Path to find the runtime jars -->
+  <path id="javac-classpath">
+    <fileset dir="${lib.dir}">
+      <include name="*.jar" />
+    </fileset>
+  </path>
+
+  <target name="usage">
+    <echo message="Available targets are:" />
+    <echo message="clean            - Cleans up." />
+    <echo message="mpoker           - Compiles Mental Poker (=parac+javac)." />
+    <echo message="parac            - Compiles Paragon files only." />
+    <echo message="javac            - Compiles generated Java files only." />
+  </target>
+
+  <target name="clean" description="Remove .java, .pi and .class files">
+    <delete includeEmptyDirs="true" failonerror="false">
+      <fileset dir="${src.dir}">
+        <include name="**/*.java" />
+        <include name="**/*.pi" />
+        <exclude name="**/Channel.pi" />
+        <exclude name="**/Channel.java" />
+        <exclude name="**/Debug.pi" />
+        <exclude name="**/Debug.java" />
+      </fileset>
+      <fileset dir="${bin.dir}" />
+    </delete>
+  </target>
+
+  <target name="parac">
+    <exec executable="parac">
+      <arg value="-p" />
+      <arg value="${pipath.base}:${src.dir}" />
+      <arg value="${src.dir}/mp/MPException.para" /> 
+      <arg value="${src.dir}/mp/DataFieldAttribute.para" />
+      <arg value="${src.dir}/mp/DABigInteger.para" />
+      <arg value="${src.dir}/mp/BigIntPair.para" />
+      <arg value="${src.dir}/mp/BigIntVector.para" />
+      <arg value="${src.dir}/mp/CRT.para" />
+      <arg value="${src.dir}/mp/Digest.para" />
+      <arg value="${src.dir}/mp/PermutationMatrix.para" />
+      <arg value="${src.dir}/mp/CardVector.para" />
+      <arg value="${src.dir}/mp/DataField.para" />
+      <arg value="${src.dir}/mp/DAVector.para" />
+      <arg value="${src.dir}/mp/DNCLink.para" />
+      <arg value="${src.dir}/mp/PHInteger.para" />
+      <arg value="${src.dir}/mp/PHIntVector.para" />
+      <arg value="${src.dir}/mp/PHEPermutationMatrix.para" />
+      <arg value="${src.dir}/mp/EncryptedCardVector.para" />
+      <arg value="${src.dir}/mp/PHCrypto.para" />
+      <arg value="${src.dir}/mp/SerializeWriteHelper.para" />
+      <arg value="${src.dir}/mp/SerializeReadHelper.para" />
+      <arg value="${src.dir}/mp/DNCChain.para" />
+      <arg value="${src.dir}/mp/GameState.para" />
+      <arg value="${src.dir}/mp/TrustedSigner.para" />
+      <arg value="${src.dir}/mp/TrustedRevealer.para" />
+      <arg value="${src.dir}/mp/TrustedEncrypter.para" />
+      <arg value="${src.dir}/mp/Player.para" />
+      <arg value="${src.dir}/mp/Communicator.para" />
+      <arg value="${src.dir}/mp/Main.para" />
+    </exec>
+  </target>
+
+  <target name="javac">
+    <mkdir dir="${bin.dir}" />
+    <javac srcdir="${src.dir}" destdir="${bin.dir}" debug="true" includeAntRuntime="false">
+      <classpath refid="javac-classpath" />
+      <include name="**/*.java" />
+    </javac>
+  </target>
+
+  <target name="mpoker" depends="parac, javac">
+  </target>
+</project>

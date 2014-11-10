@@ -1,0 +1,18 @@
+package javax.crypto;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.InvalidParameterException;
+
+public native class KeyGenerator {
+
+    public static final ?policyof(algorithm) KeyGenerator getInstance(String algorithm)
+    throws !policyof(algorithm) ?policyof(algorithm) NullPointerException, // ISSUE 123 ...
+            !policyof(algorithm) ?policyof(algorithm) NoSuchAlgorithmException;
+            
+            
+    public final !(policyof(this)*policyof(keysize)) void init(int keysize)
+    throws !(policyof(this)*policyof(keysize)) InvalidParameterException;
+    
+    public final ?policyof(this) SecretKey generateKey();
+
+}

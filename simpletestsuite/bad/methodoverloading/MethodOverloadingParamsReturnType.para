@@ -1,0 +1,5 @@
+public class MethodOverloadingParamsReturnType {
+  public void f(int i) {}
+
+  public int f(int i) { return 1; }
+}

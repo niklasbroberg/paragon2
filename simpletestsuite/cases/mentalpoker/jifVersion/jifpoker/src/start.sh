@@ -1,0 +1,1 @@
+./binder.py | grep -v "\-\-"

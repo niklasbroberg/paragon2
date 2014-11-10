@@ -1,0 +1,21 @@
+public class Bad3 {
+
+    public static final Object Alice = new Object();
+    
+    public static final lock Declassified(Object);
+    
+    public static final policy secret = { Object y : Declassified(y) };
+    
+    public static final policy alice =  { Alice : };
+    
+    public static final ?alice int aliceData;
+    
+    public static final ?secret int secretData;
+    
+    !secret public static void bar() {
+    
+        secretData = aliceData;
+    
+    }
+
+}

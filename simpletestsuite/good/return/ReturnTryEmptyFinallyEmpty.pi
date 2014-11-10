@@ -1,0 +1,5 @@
+public class ReturnTryEmptyFinallyEmpty
+{
+  public int f()
+  ;
+}

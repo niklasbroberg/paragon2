@@ -1,0 +1,29 @@
+public class LockProperties {
+
+    public lock L(Object,Object) {
+	(Object x, Object y, Object z)
+	    L(x,y) : L(x,z), L(z,y) };
+
+    public transitive lock M(Object, Object);
+
+    public static final Object alice = new Object();
+    public static final Object bob = new Object();
+    public static final Object charlie = new Object();
+
+    public void fooL() {
+      open L(alice, bob);
+      open L(bob, charlie);
+      ?{ Object x  : L(alice, x) } int x = 3;
+      ?{ charlie : }          int y = x;
+    }
+
+    // ISSUE should work just like fooL
+    // transitive keyword not processed.
+    public void fooM() {
+      open M(alice, bob);
+      open M(bob, charlie);
+      ?{ Object x  : M(alice, x) } int x = 3;
+      ?{ charlie : }          int y = x;
+    }
+
+}

@@ -1,0 +1,8 @@
+import javax.crypto.SecretKey;
+
+public class Defining
+{
+  // Only works if .pi file is rewritten with
+  // no explicit javax.crypto path here but as import instead.
+  public SecretKey i;
+}

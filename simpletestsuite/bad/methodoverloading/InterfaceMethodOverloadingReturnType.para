@@ -1,0 +1,4 @@
+public interface InterfaceMethodOverloadingReturnType {
+  public void f();
+  public int f();
+}

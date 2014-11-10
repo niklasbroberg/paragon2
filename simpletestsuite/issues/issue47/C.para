@@ -1,0 +1,13 @@
+public class C {
+
+    public void foo() {
+    
+        int[] myArray;
+        
+        for (int i : myArray) {
+            ;
+        }
+    
+    }
+
+}

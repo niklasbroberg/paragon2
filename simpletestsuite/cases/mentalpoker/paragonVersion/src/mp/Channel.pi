@@ -1,0 +1,15 @@
+package mp;
+
+import java.io.*;
+
+public class Channel  {
+ 
+  public final static actor channel;
+  
+  public final static policy channelP = { channel : } ;
+  
+  public static final ?channelP PrintStream<channelP> out;
+  
+  public static final ?channelP InputStream<channelP> in;
+  
+}

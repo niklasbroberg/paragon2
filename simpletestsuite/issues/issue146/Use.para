@@ -1,0 +1,8 @@
+public class Use {
+
+  public void foo() {
+
+    Object y = Define.aData;
+  }
+
+}

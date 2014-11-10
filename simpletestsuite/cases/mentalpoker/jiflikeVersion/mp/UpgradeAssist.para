@@ -1,0 +1,171 @@
+package mp;
+
+import java.util.ArrayList;
+
+public class UpgradeAssist {
+
+    public static final policy declas = {'x : TrustedDeclassifier.Declassify};
+    public static final policy endgame = {'x : GameState.GameEnded };
+    
+    ////
+    // CardVector
+    ////
+
+    public static !(from*declas+from*endgame) ?(from*declas+from*endgame) 
+    <policy from> CardVector<from*declas+from*endgame>
+    upgrade(?from CardVector<from> cv) {
+        try {
+            BigIntVector<from> v = cv.getValueVector();
+            BigIntVector<from*declas+from*endgame> u = UpgradeAssist.<from>upgrade(v);
+            return new CardVector<from*declas+from*endgame>(u);
+         } catch (IllegalArgumentException e) {
+            return null;
+        }    
+    }
+    
+    ////
+    // BigIntVector
+    ////
+    
+    public static !(from*declas+from*endgame) ?(from*declas+from*endgame) 
+    <policy from> BigIntVector<from*declas+from*endgame>
+    upgrade(?from BigIntVector<from> iv) {
+   
+        BigIntVector<from*declas+from*endgame> result = new BigIntVector<from*declas+from*endgame>();
+        result.ensureCapacity(iv.size());
+        for (int i = 0; i < iv.size(); i++)  {
+            try { 
+                result.add(UpgradeAssist.<from>upgrade(iv.getBI(i)));
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        } 
+        
+        return result;
+    
+    }
+    
+    ////
+    // DABigInteger
+    ////
+    
+    public static ?(from*declas+from*endgame) !(from*declas+from*endgame) 
+    <policy from> DABigInteger<from*declas+from*endgame>
+    upgrade(?from DABigInteger<from> bi) {
+    
+        try {
+            return new DABigInteger<from*declas+from*endgame>(bi.getValue());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    
+    }
+    
+    ////
+    // EncryptedCardVector
+    ////
+    
+    public static ?(from*declas+from*endgame) !from
+    <policy from> EncryptedCardVector<from*declas+from*endgame>
+    upgrade(?from EncryptedCardVector<from> ecv) {
+    
+        try {
+            PHIntVector<from> v = ecv.getValueVector();
+            PHIntVector<from*declas+from*endgame> u = 
+               UpgradeAssist.<from>upgrade(v);
+            return new EncryptedCardVector<from*declas+from*endgame>(u);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    
+    }
+    
+    ////
+    // PHIntVector
+    ////
+    
+    public static ?(from*declas+from*endgame) !from 
+    <policy from> PHIntVector<from*declas+from*endgame>
+    upgrade(?from PHIntVector<from> phi) {
+        
+        PHIntVector<from*declas+from*endgame> res = 
+            new PHIntVector<from*declas+from*endgame>();
+        res.ensureCapacity(phi.size());
+        for (int i = 0; i < phi.size(); i++)
+            try {
+                 res.add(UpgradeAssist.<from>upgrade(phi.getPHI(i)));
+            } catch (IndexOutOfBoundsException e) {
+            }
+        return res;
+    }
+    
+    ////
+    // PHInteger
+    ////
+    
+    public static ?(from*declas+from*endgame) !from 
+    <policy from> PHInteger<from*declas+from*endgame>
+    upgrade(?from PHInteger<from> phi) {
+        
+        ArrayList<from*declas+from*endgame> res = 
+            new ArrayList<from*declas+from*endgame>();
+        res.ensureCapacity(phi.size());
+        for (int i = 0; i < phi.size(); i++)
+            try {
+                 res.add(UpgradeAssist.<from>upgrade(phi.getBigIntPair(i)));
+            } catch (IndexOutOfBoundsException e) {
+            }
+        return new PHInteger<from*declas+from*endgame>(res);
+    }
+    
+    ////
+    // BigIntPair
+    ////
+    
+    public static ?(from*declas+from*endgame) !(from*declas+from*endgame) 
+    <policy from> BigIntPair<from*declas+from*endgame>
+    upgrade(?from BigIntPair<from> bip) {
+    
+        return new BigIntPair<from*declas+from*endgame>(
+             UpgradeAssist.<from>upgrade(bip.getX()),
+             UpgradeAssist.<from>upgrade(bip.getY())
+          );
+        
+    }
+    
+    ////
+    // PermutationMatrix
+    ////
+    
+    public static ?(from*declas+from*endgame) !(from*declas+from*endgame) 
+    <policy from> PermutationMatrix<from*declas+from*endgame>
+    upgrade(?from PermutationMatrix<from> pm) {
+    
+        return new PermutationMatrix<from*declas+from*endgame>(
+             UpgradeAssist.<from>upgrade(pm.getMatrix())
+          );
+        
+    }
+    
+    ////
+    // ArrayList
+    ////
+    
+    public static ?(from*declas+from*endgame) !(from*declas+from*endgame) 
+    <policy from> ArrayList<from*declas+from*endgame>
+    upgrade(?from ArrayList<from> pm) {
+    
+        ArrayList<from*declas+from*endgame> res = 
+            new ArrayList<from*declas+from*endgame>();
+        res.ensureCapacity(pm.size());
+        for (int i = 0; i < pm.size(); i++) {
+          try {
+             res.add(pm.get(i));
+          } catch (IndexOutOfBoundsException e) {
+          }
+        }
+        return res;
+        
+    }
+    
+
+}

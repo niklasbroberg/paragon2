@@ -1,0 +1,213 @@
+package se.chalmers.parajpmail;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.nio.file.NoSuchFileException;
+import java.security.GeneralSecurityException;
+import java.security.PublicKey;
+import java.security.PrivateKey;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.border.LineBorder;
+import javax.swing.event.ListSelectionEvent;
+import se.chalmers.parajpmail.cryptmessage.AESEncryption;
+import se.chalmers.parajpmail.cryptmessage.ASymPol;
+import se.chalmers.parajpmail.cryptmessage.CryptUtil;
+import se.chalmers.parajpmail.cryptmessage.DESEncryption;
+import se.chalmers.parajpmail.cryptmessage.MailBody;
+import se.chalmers.parajpmail.cryptmessage.RSAEncryption;
+import se.chalmers.parajpmail.jpmailpol.GlobalPol;
+import se.chalmers.parajpmail.jpmailpol.JPMailPolicy;
+import se.chalmers.parajpmail.runtime.Debug;
+import se.chalmers.parajpmail.runtime.JPMailRuntime;
+import se.chalmers.parajpmail.runtime.JPMailUserID;
+import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+import se.chalmers.parajpmail.runtime.UnixFile;
+public class ReadMail implements javax.swing.event.ListSelectionListener
+{
+  public static final se.chalmers.paragon.Policy toMe = se.chalmers.paragon.Policy.newPolicy("toMe", se.chalmers.paragon.Policy.newPClause(se.chalmers.parajpmail.runtime.SimpleUnixRuntime.currentUser));
+  private static java.lang.String decrypt(se.chalmers.parajpmail.CryptedMail mail, se.chalmers.parajpmail.UserSettings userSettings) throws se.chalmers.parajpmail.ParaJPMailException
+  {
+    if (mail.getASymMode() == se.chalmers.parajpmail.CryptedMail.RSA) {
+                                                                        try
+                                                                        {
+                                                                          java.security.PrivateKey key = userSettings.getPrivateKey(mail.getToUser());
+                                                                          byte[] skey = se.chalmers.parajpmail.cryptmessage.RSAEncryption.decrypt(toMe, key, se.chalmers.parajpmail.cryptmessage.CryptUtil.fromHex(toMe, mail.getSymmKey()));
+                                                                          byte[] siv = se.chalmers.parajpmail.cryptmessage.RSAEncryption.decrypt(toMe, key, se.chalmers.parajpmail.cryptmessage.CryptUtil.fromHex(toMe, mail.getSymmIV()));
+                                                                          if (mail.getSymMode() == se.chalmers.parajpmail.CryptedMail.AES) {
+                                                                                                                                             return se.chalmers.parajpmail.cryptmessage.AESEncryption.decrypt(toMe, mail.getSymmEncBody(), skey, siv);
+                                                                                                                                           } else if (mail.getSymMode() == se.chalmers.parajpmail.CryptedMail.DES) {
+                                                                                                                                                                                                                     return se.chalmers.parajpmail.cryptmessage.DESEncryption.decrypt(toMe, mail.getSymmEncBody(), skey, siv);
+                                                                                                                                                                                                                   } else {
+                                                                                                                                                                                                                            throw new se.chalmers.parajpmail.ParaJPMailException("Unsupported symm " + "encryption: " + mail.getSymMode());
+                                                                                                                                                                                                                          }
+                                                                        }
+                                                                        catch (java.security.GeneralSecurityException e)
+                                                                        {
+                                                                          throw new se.chalmers.parajpmail.ParaJPMailException(e.getMessage());
+                                                                        }
+                                                                      } else {
+                                                                               throw new se.chalmers.parajpmail.ParaJPMailException("Unsupported asymm encryption" + mail.getASymMode());
+                                                                             }
+  }
+  private javax.swing.JTextArea message;
+  private javax.swing.DefaultListModel listModel = new javax.swing.DefaultListModel();
+  private javax.swing.JList list;
+  private java.lang.String[] decrMessages;
+  public void valueChanged(javax.swing.event.ListSelectionEvent e)
+  {
+    int mid = list.getSelectedIndex();
+    message.setText(decrMessages[mid]);
+  }
+  private void initGUI()
+  {
+    list = new javax.swing.JList(listModel);
+    list.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+    list.addListSelectionListener(this);
+    javax.swing.JScrollPane listScrollPane = new javax.swing.JScrollPane(list);
+    listScrollPane.setPreferredSize(new java.awt.Dimension(800, 200));
+    this.message = new javax.swing.JTextArea();
+    this.message.setBorder(new javax.swing.border.LineBorder(new java.awt.Color(100, 100, 100)));
+    this.message.setMargin(new java.awt.Insets(10, 10, 10, 10));
+    this.message.setLineWrap(true);
+    this.message.setEditable(false);
+    javax.swing.JScrollPane sp = new javax.swing.JScrollPane(this.message);
+    sp.setPreferredSize(new java.awt.Dimension(800, 300));
+    sp.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+    javax.swing.JPanel p = new javax.swing.JPanel();
+    javax.swing.JButton compose = new javax.swing.JButton("Compose");
+    p.add(compose);
+    javax.swing.JButton closeB = new javax.swing.JButton("Close");
+    closeB.addActionListener(new se.chalmers.parajpmail.CloseMail());
+    p.add(closeB);
+    javax.swing.JButton about = new javax.swing.JButton("About");
+    about.addActionListener(new se.chalmers.parajpmail.About());
+    p.add(about);
+    javax.swing.JFrame f = new javax.swing.JFrame("ParaJPMail");
+    f.setLayout(new java.awt.GridBagLayout());
+    java.awt.GridBagConstraints gbc = new java.awt.GridBagConstraints();
+    gbc.gridx = 0;
+    gbc.gridy = 0;
+    f.add(listScrollPane, gbc);
+    gbc.gridy += 1;
+    f.add(sp, gbc);
+    gbc.gridy += 1;
+    f.add(p, gbc);
+    f.pack();
+    f.setResizable(false);
+    f.setVisible(true);
+    f.setDefaultCloseOperation(javax.swing.JFrame.EXIT_ON_CLOSE);
+  }
+  public void readAllMail() throws se.chalmers.parajpmail.ParaJPMailException
+  {
+    try
+    {
+      try
+      {
+        java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(se.chalmers.parajpmail.runtime.SimpleUnixRuntime.in));
+        se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.print("Policy filepath: ");
+        java.lang.String policyFilePath = se.chalmers.parajpmail.Util.readLine(se.chalmers.parajpmail.jpmailpol.GlobalPol.publ, in);
+        se.chalmers.parajpmail.Util.parsePolicy(policyFilePath);
+        se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.print("JPMail username: ");
+        java.lang.String jpmailUserName = se.chalmers.parajpmail.Util.readLine(se.chalmers.parajpmail.jpmailpol.GlobalPol.publ, in);
+        final se.chalmers.paragon.ConcreteActor jpmailUser = se.chalmers.parajpmail.runtime.JPMailRuntime.getActorOf(new se.chalmers.parajpmail.runtime.JPMailUserID(jpmailUserName));
+        if (se.chalmers.parajpmail.jpmailpol.JPMailPolicy.DelegatesTo.isOpen(jpmailUser, se.chalmers.parajpmail.runtime.SimpleUnixRuntime.currentUser)) {
+                                                                                                                                                        } else {
+                                                                                                                                                                 throw new se.chalmers.parajpmail.ParaJPMailException("JPMail user " + jpmailUserName + " is not known to delegate to this UNIX user.");
+                                                                                                                                                               }
+        se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.print("Settings file:   ");
+        java.lang.String userSettingsFile = se.chalmers.parajpmail.Util.readLine(se.chalmers.parajpmail.jpmailpol.GlobalPol.publ, in);
+        if (!se.chalmers.parajpmail.Util.checkPermissions(userSettingsFile, "rw-------")) {
+                                                                                            throw new se.chalmers.parajpmail.ParaJPMailException("The permissions of this file " + "should be set to 600 - and the file should exist.");
+                                                                                          }
+        se.chalmers.parajpmail.UserSettings userSettings = se.chalmers.parajpmail.Util.parseSettings(userSettingsFile);
+        se.chalmers.parajpmail.CryptedMail[] rmail = se.chalmers.parajpmail.IMAP.readmail(se.chalmers.parajpmail.jpmailpol.GlobalPol.publ, userSettings.getIMAPServer(), userSettings.getIMAPUsername(), userSettings.getIMAPPassword());
+        java.lang.String s = "";
+        if (rmail.length != 0) s = "s";
+        decrMessages = new java.lang.String[rmail.length];
+        se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.println("Inbox contains " + rmail.length + " message" + s + ".");
+        for (int i = 0 ; i < rmail.length ; i++) {
+                                                   se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.println("Message " + i + ":");
+                                                   if (rmail[i] == null) {
+                                                                           this.listModel.addElement("Not a ParaJPMail mail");
+                                                                           continue;
+                                                                         }
+                                                   se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.println("From user: " + rmail[i].getFromUser() + " - " + rmail[i].getFromAddress());
+                                                   se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.println("To user: " + rmail[i].getToUser());
+                                                   this.listModel.addElement(rmail[i].getFromUser() + " (" + rmail[i].getFromAddress() + ") - " + rmail[i].getSubject());
+                                                   final se.chalmers.paragon.ConcreteActor to = se.chalmers.parajpmail.runtime.JPMailRuntime.getActorOf(new se.chalmers.parajpmail.runtime.JPMailUserID(rmail[i].getToUser().trim()));
+                                                   if (se.chalmers.parajpmail.jpmailpol.JPMailPolicy.DelegatesTo.isOpen(to, jpmailUser)) {
+                                                                                                                                           try
+                                                                                                                                           {
+                                                                                                                                             decrMessages[i] = decrypt(rmail[i], userSettings);
+                                                                                                                                           }
+                                                                                                                                           catch (se.chalmers.parajpmail.ParaJPMailException e)
+                                                                                                                                           {
+                                                                                                                                             decrMessages[i] = "Error decrypting: " + e.getMessage() + "\nDo you have access to the private key for the " + "intended receiver " + rmail[i].getToUser() + "?";
+                                                                                                                                           }
+                                                                                                                                         } else {
+                                                                                                                                                  decrMessages[i] = "Current user " + jpmailUserName + " does " + "not have the delegation to read this message " + "intended for " + rmail[i].getToUser() + ".";
+                                                                                                                                                }
+                                                 }
+        initGUI();
+      }
+      catch (java.lang.NullPointerException e)
+      {
+        throw new se.chalmers.parajpmail.ParaJPMailException("Nullpointer: " + e.getMessage());
+      }
+    }
+    catch (javax.mail.MessagingException e)
+    {
+      throw new se.chalmers.parajpmail.ParaJPMailException("MessagingException: " + e.getMessage());
+    }
+  }
+  public ReadMail ()
+  {
+  }
+  public static void main(java.lang.String[] args)
+  {
+    try
+    {
+      try
+      {
+        java.security.Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+      }
+      catch (java.lang.NullPointerException e)
+      {
+        se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.println("Bouncy Castle Provider could not " + "be registered.");
+        se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.println(e.getMessage());
+        se.chalmers.parajpmail.runtime.SimpleUnixRuntime.exit(1);
+      }
+    }
+    catch (java.lang.SecurityException e)
+    {
+      se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.println("Bouncy Castle Provider could not " + "be registered.");
+      se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.println(e.getMessage());
+      se.chalmers.parajpmail.runtime.SimpleUnixRuntime.exit(1);
+    }
+    try
+    {
+      (new se.chalmers.parajpmail.ReadMail()).readAllMail();
+    }
+    catch (se.chalmers.parajpmail.ParaJPMailException e)
+    {
+      se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.println("ParaJPMailException:");
+      se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.println(e.getMessage());
+      se.chalmers.parajpmail.runtime.SimpleUnixRuntime.out.println("Exiting");
+      se.chalmers.parajpmail.runtime.SimpleUnixRuntime.exit(1);
+    }
+  }
+}

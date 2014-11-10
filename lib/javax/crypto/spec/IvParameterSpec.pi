@@ -1,0 +1,9 @@
+package javax.crypto.spec;
+
+public native class IvParameterSpec {
+
+  public IvParameterSpec(?policyof(this) byte[]<policyof(this)> iv)
+  throws !policyof(this) NullPointerException 
+  {}
+  
+}

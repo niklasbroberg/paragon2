@@ -1,0 +1,204 @@
+package se.chalmers.parajpmail.cryptmessage;
+
+import java.nio.charset.Charset;
+
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+import java.security.InvalidParameterException;
+import java.security.NoSuchAlgorithmException;
+import java.security.Security;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+
+import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+
+/**
+* Pretty much a copy of AESEncryption
+**/
+public class DESEncryption<policy dataPol, policy symkeyPol> {
+
+  private lock DESEncrypted;
+  
+  private static final ?{'x:} int KEYBITLENGTH = 56; // 192 and 256 bits may not be available in certain countries
+  private static final ?{'x:} String ALGORITHM = "DES";
+  private static final ?{'x:} String CIPHERMODE = "DES/CBC/PKCS7Padding";
+  
+  public static final policy encPol = { 'x : DESEncrypted };
+  
+  // Considering key and init vector as a pair that is the secret.
+  private final ?(dataPol*symkeyPol) SecretKey symmetricKey;
+  private final ?(dataPol*symkeyPol) byte[]<dataPol*symkeyPol> iv;
+  private final ?dataPol String result;
+  
+  
+  
+  private DESEncryption(?(dataPol*symkeyPol) SecretKey symmetricKey 
+                        , ?(dataPol*symkeyPol) byte[]<dataPol*symkeyPol> iv
+                        , ?dataPol String result) 
+  {
+    this.symmetricKey = symmetricKey;
+    this.iv = iv;
+    this.result = result;
+  }  
+  
+  public final ?dataPol String getResult() 
+  {
+    return this.result;
+  }
+  
+  public final ?(dataPol*symkeyPol) byte[]<dataPol*symkeyPol> getIV() 
+  {
+    return this.iv;
+  }
+  
+  public final ?(dataPol*symkeyPol)  byte[]<dataPol*symkeyPol> getSymKey()
+  {
+    return this.symmetricKey.getEncoded();
+  }
+  /**
+  * The symmetric key has policy dataPol*encPol during encryption. It is only upgraded to be
+  * dataPol*symkeyPol at the very end. This removes the need of the caller to explicitly 
+  * declassify the influence of the symmetric key on the encrypted result. I consider this
+  * safe since the caller would do so anyway and this method could potentially hide the key
+  * inside the encrypted result; i.e. the method is trusted anyway.
+  *
+  * We convert each exception to a GeneralSecurityException, for ease of handling error outside
+  * the class.
+  **/
+  public static !dataPol ?dataPol <policy dataPol, policy symkeyPol> DESEncryption<dataPol, symkeyPol>
+  encrypt(?(dataPol*encPol) String data)
+  throws !dataPol ?dataPol GeneralSecurityException
+  {
+    try 
+    {
+      KeyGenerator kgen = KeyGenerator.getInstance(ALGORITHM);
+      kgen.init(KEYBITLENGTH); // Actually, this write effect should not affect the method's write effect..
+      SecretKey symmetricKey = kgen.generateKey();
+      
+      byte[]<dataPol*encPol> input = data.getBytes(SimpleUnixRuntime.UTF8);
+      Cipher c = Cipher.getInstance(CIPHERMODE);
+      c.init(Cipher.ENCRYPT_MODE, symmetricKey);
+      byte[]<dataPol*encPol> result = c.doFinal(input);
+      
+      open DESEncrypted {
+        // Declassifying result
+        String declResult = CryptUtil.<dataPol*encPol>toHex(result);
+        // Declassifying IV
+        int length = c.getIV().length;
+        byte[] declIV = new byte[length];
+        for (int i = 0; i < length; i++)
+          declIV[i] = c.getIV()[i];
+        // Upgrading symmetric key and iv.
+        return new DESEncryption<dataPol, symkeyPol>(symmetricKey, declIV, declResult);
+      } 
+      
+    } catch (NoSuchPaddingException e) // ISSUE 124 - paragon doesn't understand subtyping here
+    {
+      open DESEncrypted { throw new GeneralSecurityException(e.getMessage()); }
+    } catch (?(dataPol*encPol) NullPointerException e)
+    {
+      GeneralSecurityException a = new GeneralSecurityException("Unexpected Nullpointer in constructor AESEncryption: "
+        + "Should not happen, because we provide a string constant.\n" + e.getMessage());
+      open DESEncrypted { throw a; }
+    } catch (InvalidParameterException e) // Means 128 bit is not available, let's convert that error
+    {
+      open DESEncrypted { throw new GeneralSecurityException(e.getMessage()); }
+    } catch (InvalidKeyException e) // ISSUE 124
+    {
+      open DESEncrypted { throw e; }
+    } catch (IllegalStateException e) // ISSUE 124 + converting to GSE.
+    {
+      open DESEncrypted { throw new GeneralSecurityException("Illegal state (should not happen, was initialized): " + e.getMessage()); }
+    } catch (IllegalBlockSizeException e)
+    {
+      open DESEncrypted { throw e; }
+    } catch (BadPaddingException e)  
+    {
+      open DESEncrypted { throw e; }
+    } catch (?(dataPol*encPol) NoSuchAlgorithmException e) // ISSUE 124 - but even more curious conversion is needed??
+    {
+      open DESEncrypted { throw new GeneralSecurityException(e.getMessage()); }
+    } 
+      
+  }
+  
+  // TODO better parametrization / policyof(args) ?
+  public static !p ?p <policy p>
+  String decrypt(?p String data, ?p byte[]<p> keyByte, ?p byte[]<p> iv)
+  throws !p ?p GeneralSecurityException
+  {
+    try
+    {
+      SecretKey key = new SecretKeySpec(keyByte, 0, keyByte.length, ALGORITHM);
+      ?p Cipher c = Cipher.getInstance(CIPHERMODE);
+      c.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(iv));
+      byte[]<p> dataBytes = CryptUtil.<p>fromHex(data);      
+      return new String(c.doFinal(dataBytes), SimpleUnixRuntime.UTF8);
+    } catch (NullPointerException e)
+    {
+      throw new GeneralSecurityException(e.getMessage());
+    } catch (NoSuchAlgorithmException e)
+    {
+      throw new GeneralSecurityException(e.getMessage());
+    } catch (NoSuchPaddingException e)
+    {
+      throw new GeneralSecurityException(e.getMessage());
+    } catch (InvalidKeyException e)
+    {
+      throw new GeneralSecurityException(e.getMessage());
+    } catch (IllegalStateException e)
+    {
+      throw new GeneralSecurityException(e.getMessage());
+    } catch (IllegalBlockSizeException e)
+    {
+      throw new GeneralSecurityException(e.getMessage());
+    } catch (BadPaddingException e)
+    {
+      throw new GeneralSecurityException(e.getMessage());
+    } catch (IllegalArgumentException e)
+    {
+      throw new GeneralSecurityException(e.getMessage());
+    } catch (ArrayIndexOutOfBoundsException e)
+    {
+      throw new GeneralSecurityException(e.getMessage());
+    }
+  }
+  
+  
+  public static !{'x:} void test() {
+    try {
+      
+      DESEncryption<{'x:}, {'x:}> e = DESEncryption.<{'x:},{'x:}>encrypt("Testing 5-6-7-8!");
+      System.out.println("Encrypted: " + e.getResult());
+      String back = DESEncryption.<{'x:}>decrypt(e.getResult(), e.getSymKey(), e.getIV());
+      System.out.println("Decrypted: " + back);
+    } catch (?{'x:DESEncrypted} GeneralSecurityException e) {
+      open DESEncrypted {
+        System.out.println("ERROR: " + e.getMessage());
+      }
+    } 
+  }
+
+  public static !{'x:} void main(String[] arg) {
+    try {
+      Security.addProvider(new BouncyCastleProvider());
+    } catch (NullPointerException e) {
+      System.out.println("ERROR: " + e.getMessage());
+    } catch (SecurityException e) {
+      System.out.println("ERROR: " + e.getMessage());
+    }
+    DESEncryption.test();
+
+  }
+  
+
+}

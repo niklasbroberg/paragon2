@@ -1,0 +1,7 @@
+package se.chalmers.paragon.java.util;
+
+public final native class ArrayMap<K, policy pKey, V, policy pValue> 
+  extends Map<K, pKey, V, pValue>
+{
+    public ArrayMap() { }
+}

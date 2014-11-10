@@ -1,0 +1,273 @@
+package se.chalmers.parajpmail;
+
+import java.security.PublicKey;
+
+import se.chalmers.parajpmail.jpmailpol.GlobalPol;
+
+import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+import se.chalmers.parajpmail.runtime.UnixFile;
+
+import java.io.FileInputStream;
+
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.Certificate;
+
+/**
+ * Rather simple class for storing and retrieiving user's settings.
+ * However, it also ensures that the correct policies are applied on the user's data.
+ *
+ * In this class I placed the policies on the data in the top with their field declarations.
+ * Now we only need to change the policy for a field in one place.
+ * (of course since all getters and setters are available we could just have made all
+ * fields public, but OO dictates otherwise).
+ */
+public class UserSettings {
+
+  // POLICIES AND FIELDS
+
+  // The location of the keystore file is not considered secret
+  public static final policy keyStorePolicy = GlobalPol.publ;
+  private ?keyStorePolicy String keyStoreFile;
+
+  private lock KeyStorePWDLock;
+
+  // The password to the keystore can only leak when retrieving the data within. 
+  public static final policy keyStorePwdPolicy = 
+    { SimpleUnixRuntime.currentUser: // This one is everywhere in order to print error messages back to the user
+    ; GlobalPol.network: KeyStorePWDLock 
+    };
+  private ?keyStorePwdPolicy String keyStorePwd;
+
+  public static final policy privateKeyPolicy = {SimpleUnixRuntime.currentUser:}; // Only used locally  
+  public static final policy publicKeyPolicy = GlobalPol.publ;
+
+  private ?GlobalPol.publ KeyStore<privateKeyPolicy, publicKeyPolicy> keystore;
+
+  // For both IMAP and Smtp, share policies on server, uname, password
+  public static final policy mailServerPolicy = GlobalPol.publ;
+  private ?mailServerPolicy String IMAPServer;
+  private ?mailServerPolicy String smtpServer;
+
+  public static final policy mailUsernamePolicy = GlobalPol.publ;
+  private ?mailServerPolicy String IMAPUsername;
+  private ?mailServerPolicy String smtpUsername;
+
+  public static final policy smtpPasswordPolicy = GlobalPol.publ * SMTPMail.passwordPol;
+  private ?smtpPasswordPolicy String smtpPassword;
+
+  public static final policy popPasswordPolicy = GlobalPol.publ * IMAP.passwordPol;
+  private ?popPasswordPolicy String IMAPPassword;
+
+  // CONSTRUCTOR
+
+  public UserSettings() {
+  }
+
+
+  // GETTERS / SETTERS  
+
+  public !keyStorePolicy void setKeyStoreFile(?keyStorePolicy String keyStoreFile) {
+    this.keyStoreFile = keyStoreFile;
+  }
+
+  public ?keyStorePolicy String getKeyStoreFile() {
+    return this.keyStoreFile;
+  }
+
+  public !keyStorePwdPolicy void setKeyStorePwd(?keyStorePwdPolicy String keyStorePwd) {
+    this.keyStorePwd = keyStorePwd;
+  }
+
+  public ?keyStorePwdPolicy String getKeyStorePwd() {
+    return this.keyStorePwd;
+  }
+
+  public !mailServerPolicy void setSMTPServer(?mailServerPolicy String smtpServer) {
+    this.smtpServer = smtpServer;
+  }
+
+  public ?mailServerPolicy String getSMTPServer() {
+    return this.smtpServer;
+  }
+
+  public !mailUsernamePolicy void setSMTPUsername(?mailUsernamePolicy String smtpUsername) {
+    this.smtpUsername = smtpUsername;
+  }
+
+  public ?mailUsernamePolicy String getSMTPUsername() {
+    return this.smtpUsername;
+  }
+  
+  public !smtpPasswordPolicy void setSMTPPassword(?smtpPasswordPolicy String smtpPassword) {
+    this.smtpPassword = smtpPassword;
+  }
+
+  public ?smtpPasswordPolicy String getSMTPPassword() {
+    return this.smtpPassword;
+  }
+  
+  public !mailServerPolicy void setIMAPServer(?mailServerPolicy String IMAPServer) {
+      this.IMAPServer = IMAPServer;
+  }
+  
+  public ?mailServerPolicy String getIMAPServer() {
+    return this.IMAPServer;
+  }
+
+  public !mailUsernamePolicy void setIMAPUsername(?mailUsernamePolicy String IMAPUsername) {
+    this.IMAPUsername = IMAPUsername;
+  }
+
+  public ?mailUsernamePolicy String getIMAPUsername() {
+    return this.IMAPUsername;
+  }
+  
+  public !popPasswordPolicy void setIMAPPassword(?popPasswordPolicy String IMAPPassword) {
+    this.IMAPPassword = IMAPPassword;
+  }
+
+  public ?popPasswordPolicy String getIMAPPassword() {
+    return this.IMAPPassword;
+  }
+    
+  public !GlobalPol.publ void setKeyStore(?GlobalPol.publ KeyStore<privateKeyPolicy, publicKeyPolicy> keystore) {
+    this.keystore = keystore;
+  }
+  
+  public ?GlobalPol.publ KeyStore<privateKeyPolicy, publicKeyPolicy> getKeyStore() {
+    return this.keystore;
+  }
+  
+  public ?publicKeyPolicy PublicKey getPublicKey(?GlobalPol.publ String alias) 
+    throws !GlobalPol.publ ?GlobalPol.publ java.security.GeneralSecurityException {
+    if (this.keystore == null)
+      throw new java.security.GeneralSecurityException("Keystore not loaded");
+    try {
+      ?publicKeyPolicy Certificate cert = keystore.getCertificate(alias);
+      return cert.getPublicKey();
+    } catch(java.security.KeyStoreException e) {
+      throw new java.security.GeneralSecurityException(e.getMessage());
+    }
+  }
+
+  public ?privateKeyPolicy PrivateKey getPrivateKey(?GlobalPol.publ String alias) 
+    throws !privateKeyPolicy ?privateKeyPolicy java.security.GeneralSecurityException {
+    if (this.keystore == null)
+      throw new java.security.GeneralSecurityException("Keystore not loaded");
+    try {
+      return (PrivateKey) keystore.getKey(alias, keyStorePwd.toCharArray());
+    } catch(java.security.KeyStoreException e) {
+      throw new java.security.GeneralSecurityException(e.getMessage());
+    } catch(java.security.NoSuchAlgorithmException e) {
+      throw new java.security.GeneralSecurityException(e.getMessage());
+    } catch(java.security.UnrecoverableKeyException e) {
+      throw new java.security.GeneralSecurityException(e.getMessage());
+    }
+  }
+
+  // PARSER
+
+  public static final String COMMENT = "//";
+  public static final String SEPARATOR = "=";
+  
+  public static !GlobalPol.publ UserSettings parse(?GlobalPol.publ String content) 
+  throws !GlobalPol.publ ?GlobalPol.publ ParsingException {
+    
+    try {
+    
+      UserSettings result = new UserSettings();
+      
+      String[] lines = content.split("\n");
+      
+      for (int i = 0; i < lines.length; i++) {
+
+        try {
+          
+          String line = lines[i];
+          
+          if (line.startsWith(COMMENT))
+            continue;
+
+          if (line.contains(COMMENT))
+            line = line.substring(line.indexOf(COMMENT));
+
+          if (!line.contains(SEPARATOR))
+            continue;
+            
+          String[] keyvalue = line.split(SEPARATOR);
+          String key = keyvalue[0].trim();
+          String value = keyvalue[1].trim();            
+          
+          // Switch not supported yet ISSUE
+          
+          if (key.equals("keystoreLocation"))
+            result.setKeyStoreFile(value);
+          else if (key.equals("keystorePassword"))
+            result.setKeyStorePwd(value);
+          else if (key.equals("imapServer"))
+            result.setIMAPServer(value);
+          else if (key.equals("imapUsername"))
+            result.setIMAPUsername(value);
+          else if (key.equals("imapPassword"))
+            result.setIMAPPassword(value);
+          else if (key.equals("smtpServer"))
+            result.setSMTPServer(value);
+          else if (key.equals("smtpUsername"))
+            result.setSMTPUsername(value);
+          else if (key.equals("smtpPassword"))
+            result.setSMTPPassword(value);
+        
+        } catch (StringIndexOutOfBoundsException e) { 
+          throw new ParsingException("Parse error in line " + i + ": " + lines[i] + 
+            "(" + e.getMessage() + ")");
+        } catch (NullPointerException e) {
+          throw new ParsingException("Got nullpointer exception in parsing line " + i);
+        }
+        
+      }
+      result.setKeyStore(result.parseKeyStoreFile()); 
+      return result;
+    } catch (NullPointerException e) {
+      throw new ParsingException("Unhandled nullpointer exception.");
+    }
+    
+    
+  }
+  
+  
+  
+  
+  public !GlobalPol.publ ?GlobalPol.publ KeyStore<privateKeyPolicy, publicKeyPolicy> parseKeyStoreFile()
+  throws !GlobalPol.publ ?GlobalPol.publ ParsingException {
+    if (getKeyStoreFile() == null)
+      throw new ParsingException("No keystore file specified");
+    // TODO check unix permissions as in UnixFile approach?
+    try
+    {
+      // TODO report ISSUE, panic when forgetting param here on lhs
+      FileInputStream<GlobalPol.publ> fIn = new FileInputStream<GlobalPol.publ>(getKeyStoreFile());
+      ?GlobalPol.publ KeyStore<privateKeyPolicy, publicKeyPolicy> keystore = 
+          KeyStore.<privateKeyPolicy, publicKeyPolicy>getInstance("JKS"); // Java Key Store
+      open KeyStorePWDLock {
+        // Declassifying keystore pwd.
+        ?GlobalPol.publ String dPwd = getKeyStorePwd();
+        keystore.load(fIn, dPwd.toCharArray());
+      }
+      return keystore; // TODO report ISSUE, not checked if it matched return type param. types?
+    } catch (java.io.FileNotFoundException e) {
+      throw new ParsingException(e.getMessage());
+    } catch (java.io.IOException e) {
+      throw new ParsingException(e.getMessage());
+    } catch (java.lang.SecurityException e) {
+      throw new ParsingException(e.getMessage());
+    } catch (java.security.KeyStoreException e) {
+      throw new ParsingException(e.getMessage());
+    } catch (java.security.NoSuchAlgorithmException e) {
+      throw new ParsingException(e.getMessage());
+    } catch (java.security.cert.CertificateException e) {
+      throw new ParsingException(e.getMessage());
+    }
+  }
+
+}

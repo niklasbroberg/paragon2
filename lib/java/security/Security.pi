@@ -1,0 +1,9 @@
+package java.security;
+
+public native class Security {
+
+  public static ?policyof(provider) int addProvider(Provider provider)
+  throws !policyof(provider) NullPointerException, 
+          !policyof(provider) SecurityException;
+
+}

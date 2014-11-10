@@ -1,0 +1,4 @@
+76c76
+<                       java.lang.String declResult = se.chalmers.parajpmail.cryptmessage.CryptUtil.toHex(dataPol * encPol, result);
+---
+>                       java.lang.String declResult = se.chalmers.parajpmail.cryptmessage.CryptUtil.toHex(dataPol.join(encPol), result);

@@ -1,0 +1,7 @@
+package java.io;
+
+public native class FilterOutputStream<policy p> extends java.io.OutputStream<p> {
+	
+	public FilterOutputStream() { }
+	
+}

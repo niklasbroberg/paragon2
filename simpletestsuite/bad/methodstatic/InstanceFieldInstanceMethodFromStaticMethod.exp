@@ -1,0 +1,3 @@
+In the context of class InstanceFieldInstanceMethodFromStaticMethod:
+In the context of method stat:
+Non-static field obj cannot be referenced from a static context

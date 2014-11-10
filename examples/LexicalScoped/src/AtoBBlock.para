@@ -1,0 +1,26 @@
+/**
+ * A block of code manipulating test data. We prefer this to be an anonymous
+ * instance of the FlowBlock class there where the flow-construct of LexicalFlow
+ * is called, but Paragon does not yet support these.
+ **/
+public class AtoBBlock implements 
+        FlowBlock<TestData.levelA, TestData.levelB, 
+                     LexicalFlow.pol(TestData.levelB)> {
+
+    /**
+     * The current compiler does not implicitly assume the existence of an empty
+     * constructor as is custom in Java, hence we define it explicitly.
+     **/
+    public AtoBBlock() { }
+
+    /**
+     * Implementation of the go-method. Theoretically the write effect and
+     * expected lock state could be inferred from this class's type and the
+     * modifiers on the implemented interface, but the compiler does not yet
+     * support this, so they are given explicitly. 
+     **/
+    public !LexicalFlow.pol(TestData.levelB) 
+            ~LockCirc.Flow(TestData.levelA, TestData.levelB) void go() {
+        TestData.dataB = TestData.dataA;
+    }
+}

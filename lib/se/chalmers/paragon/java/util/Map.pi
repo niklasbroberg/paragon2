@@ -1,0 +1,95 @@
+package se.chalmers.paragon.java.util;
+ 
+ /* Added paragon policies.
+  * - Bart van Delft
+  *
+  * Like java.util.Map, but more restrictive in types of get etc. - i.e.
+  * you are not allowed to throw many errors when implementing this 
+  * native class.
+  */
+  
+public native interface Map<K, policy pKey, V, policy pValue> {
+    // Query Operations
+
+    ?policyof(this) int size();
+
+    ?policyof(this) boolean isEmpty();
+
+    ?(pKey*policyof(key)) boolean containsKey(K key);
+
+    ?(pValue*policyof(value)) boolean containsValue(V value);
+
+    ?(pValue*policyof(key)*pKey) V get(K key);
+
+    // Modification Operations
+
+    !(policyof(this))
+    ?(pValue*pKey) V put(?pKey K key, ?pValue V value);
+
+    !policyof(this)
+    ?(pValue*pKey*policyof(key)) V remove(K key);
+
+
+    // Bulk Operations
+
+
+     // TODO Paragon (wildcards not yet supported)
+    // !policyof(this)
+    // void putAll(Map<? extends K, ? extends V, pKey, pValue> m)
+    // throws !policyof(this) UnsupportedOperationException,
+    //        !(pKey*pValue*policyof(this)) ClassCastException,
+    //        !(pKey*pValue*policyof(this)) NullPointerException,
+    //        !(pKey*pValue*policyof(this)) IllegalArgumentException;
+
+
+    !policyof(this)
+    void clear();
+
+
+    // Views
+
+   
+    // TODO Paragon 
+    // Set<K> keySet();
+
+    // TODO Paragon 
+    // Collection<V> values();
+
+  
+    // TODO Paragon 
+    // Set<Map.Entry<K, V>> entrySet();
+
+  
+    // TODO Paragon, inner types not supported
+    // native interface Entry<K,V,policy pKey, policy pValue> {
+       
+        // TODO Paragon 
+        // K getKey();
+
+      
+        // TODO Paragon 
+        // V getValue();
+
+       
+        // TODO Paragon 
+        // V setValue(V value);
+
+       
+        // TODO Paragon 
+        // boolean equals(Object o);
+
+      
+        // TODO Paragon 
+        // int hashCode();
+    // }
+
+    // Comparison and hashing
+
+   
+    // TODO Paragon 
+    // boolean equals(Object o);
+
+   
+    // TODO Paragon 
+    // int hashCode();
+}

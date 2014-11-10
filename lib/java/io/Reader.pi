@@ -1,0 +1,38 @@
+/*
+ * This is a Jif signature for the Java native class. It provides Jif label
+ * annotations for the Java native class, allowing it to be usable by Jif
+ * code. There is no automated check that the signature provided here
+ * agrees with the actual Java code.
+ * */
+package java.io;
+
+public abstract native class Reader<policy p> {
+    
+
+    protected Reader() {}
+    
+    public ?p !p native int read() 
+      throws !p IOException;
+      
+    public native !(policyof(cbuf)*p) ?(policyof(cbuf)*p) // TODO meet vs join issue again, not going to repeat this anymore... - when deciding to change to meet, check all .pi files for it.
+    // TODO similar for the missing policy on array elements. 
+    int read(?p char[] cbuf) 
+      throws !(policyof(cbuf)*p) IOException;
+      
+    abstract public !(policyof(cbuf)*p) ?(policyof(cbuf)*p)
+    int read(?p char[] cbuf, ?p int off, ?p int len) 
+      throws !(policyof(cbuf)*p) IOException;
+      
+    public ?p !p native long skip(?p long n) 
+      throws !p IOException;
+    public ?p native boolean ready()
+      throws !p IOException;
+    public ?p native boolean markSupported();
+    public ?p native void mark(?p int readAheadLimit)
+      throws !p IOException;
+    public ?p native void reset() 
+      throws !p IOException;
+    // TODO ISSUE -- cannot use name close because of lock modifier
+    // abstract public ?p void close()
+    //   throws !p IOException;
+}

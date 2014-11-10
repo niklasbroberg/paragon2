@@ -1,0 +1,38 @@
+--- JPMailMessage.jif.bck	2012-12-17 20:51:26.803847508 +0100
++++ JPMailMessage.jif	2012-12-17 20:53:47.847852021 +0100
+@@ -131,7 +131,7 @@
+     			String{*lbl} disclaimerBody = "";
+     			EmailDisclaimerClosure[rcptP,lbl]{*lbl} edc = new EmailDisclaimerClosure[rcptP,lbl](getBody());
+     			try {
+-    				disclaimerBody = (String)principalUtil.authorize(rcptP,null,edc,lbl).invoke();
++    				disclaimerBody = (String)PrincipalUtil.authorize(rcptP,null,edc,lbl).invoke();
+     			} catch (ClassCastException ignore) {
+     			} catch (NullPointerException e) { success = false; } // failed to authorize
+ 
+@@ -165,7 +165,7 @@
+ 				if (debug != null) debug.println("Trying AES...");
+ 	    			AESClosure[rcptP,lbl]{*lbl} ac = new AESClosure[rcptP,lbl](key,bodyBytes);    			
+ 	    			try {
+-	    				encBody = (Ciphertext)principalUtil.authorize(rcptP,null,ac,lbl).invoke();
++	    				encBody = (Ciphertext)PrincipalUtil.authorize(rcptP,null,ac,lbl).invoke();
+ 	    			} catch (ClassCastException ignore) {
+ 	    			} catch (NullPointerException ignore) { success = false; } // means we didn't get authorization
+ 	    			if (!success) {
+@@ -180,7 +180,7 @@
+ 					if (debug != null) debug.println("Trying DES...");
+ 		    			DESClosure[rcptP,lbl]{*lbl} dc = new DESClosure[rcptP,lbl](key,bodyBytes);    			
+ 		    			try {
+-		    				encBody = (Ciphertext)principalUtil.authorize(rcptP,null,dc,lbl).invoke();
++		    				encBody = (Ciphertext)PrincipalUtil.authorize(rcptP,null,dc,lbl).invoke();
+ 		    			} catch (ClassCastException ignore) {
+ 		    			} catch (NullPointerException ignore) { success = false; } // means we didn't get authorization
+ 	    			}	    				
+@@ -215,7 +215,7 @@
+ 					byte{*lbl}[]{*lbl} keyBits = null;
+ 					
+ 					try {
+-						keyBits = ((Ciphertext)principalUtil.authorize(rcptP,null,rsaClo,lbl).invoke()).encText;
++						keyBits = ((Ciphertext)PrincipalUtil.authorize(rcptP,null,rsaClo,lbl).invoke()).encText;
+ 					} catch (NullPointerException ignore) {  // would mean the authorization failed
+ 					} catch (ClassCastException ignore) {} 
+ 	    	

@@ -1,0 +1,6 @@
+public class C <policy p>
+{
+  public ?p int foo()
+  ;
+  public C(){}
+}

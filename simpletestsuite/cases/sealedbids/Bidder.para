@@ -1,0 +1,29 @@
+public class Bidder {
+
+	public final Object id;
+	
+	public final policy bidpol = 
+	  { id : ;
+	    Object y : BidLocks.AuctionClosed, BidLocks.HasBid(y), BidLocks.Winner(id) ;
+	    Object y : BidLocks.DetermineWinner }; 
+	    
+	public ?bidpol int bid;
+	
+	public final Channel<bidpol,id> chan;
+
+    
+	Bidder(?bidpol int bid) {
+		this.bid = bid;
+                chan = new Channel<bidpol,id>(bid);
+	}
+    
+    
+	+BidLocks.HasBid(id)
+	!{Object x:}
+	void getBid() throws !{Object x:} NoBidExc {
+		bid = chan.get();
+		open BidLocks.HasBid(id);
+	}
+	
+}
+

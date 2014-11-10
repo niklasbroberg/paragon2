@@ -1,0 +1,20 @@
+package se.chalmers.parajpmail.runtime;
+
+import java.nio.file.NoSuchFileException;
+import java.security.KeyStore;
+
+public class JPMailRuntime {
+
+  // looks up, or creates if not exists, the actor for this jpmail user.
+  public static final actor getActorOf(JPMailUserID id);
+  
+  // look up user, look up public key in keystore
+  // throw exception if not signed by CA.
+  public static <actor jpmailUser> void loadPublicKey(KeyStore keystore)
+  throws !policyof(keystore) SecurityException ; 
+  
+  // returns 400, 644 etc.
+  public static ?policyof(file) String getFilePermissions(String file) 
+  throws !policyof(file) NoSuchFileException ;
+
+}

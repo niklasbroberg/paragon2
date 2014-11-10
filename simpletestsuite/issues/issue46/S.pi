@@ -1,0 +1,6 @@
+public class S<actor Object a> {
+
+    // Note, error if constructor is not present:
+    public S() {}
+
+}

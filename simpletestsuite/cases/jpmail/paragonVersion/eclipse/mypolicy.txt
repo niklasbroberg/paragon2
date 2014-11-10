@@ -1,0 +1,19 @@
+// first testing policy...
+
+bart -> OS.bart
+
+bart allows DESEncrypt
+bart allows RSAEncrypt
+
+niklas -> OS.bart
+
+niklas allows AESEncrypt
+niklas allows RSAEncrypt
+
+pablo allows DESEncrypt
+pablo allows RSAEncrypt
+
+// Help for input:
+// /home/bart/Documents/paragon/simpletestsuite/cases/jpmail/paragonVersion/eclipse/mypolicy.txt
+//
+//

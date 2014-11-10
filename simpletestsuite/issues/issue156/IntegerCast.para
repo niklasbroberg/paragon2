@@ -1,0 +1,17 @@
+public class IntegerCast {
+
+  // Both should work
+
+  public void a() {
+
+      int x = 4;
+      Integer i = x;
+  }
+
+  public void b() {
+
+      int x = 4;
+      Integer i = (Integer) x;
+  }
+
+}

@@ -1,0 +1,138 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import java.security.*;
+
+/**
+ * Permutation matrix homomorphically encrypted
+ */
+public class PHEPermutationMatrix<policy p> {
+	public ?p PHIntVector<p> matrix;
+
+//	/** 
+//	 * Protocol 3
+//	 * @param mx
+//	 * @param d
+//	 * @param e
+//	 * @param z
+//	 */
+    public !p PHEPermutationMatrix(?p PermutationMatrix<p>  mx, 
+    ?p PHIntVector<p> d,
+    ?p PHIntVector<p> e, 
+    ?p DABigInteger<p> z_i, 
+    ?p DABigInteger<p> z_j)
+    throws  
+    !p MPException, 
+    !p IllegalArgumentException {
+        
+        if (mx == null || d == null|| e == null || z_i == null || z_j == null) {
+            throw new IllegalArgumentException("One of the arguments is null") ;
+        }
+		
+    ?p String sha1 = "SHA1PRNG";
+		
+		try {
+			int s = d.size();
+			int t = mx.getMatrix().size();
+
+			this.matrix = new PHIntVector<p>();
+            this.matrix.ensureCapacity(t);
+
+			for (int k = 0; k < t; k++) {
+				BigIntVector<p> mxRowK = (BigIntVector<p>) mx.getMatrix().get(k);
+				PHIntVector<p> rowk = new PHIntVector<p>();
+                rowk.ensureCapacity(t);
+				for (int l = 0; l < t; l++) {
+					
+                    DABigInteger<p> p_kl = (DABigInteger<p>) mxRowK.get(l);
+
+
+					// compute p_kl
+
+					// 1) generate a pseudorandom 
+					// value g, such that 1 <= g <= s
+					// 
+					
+					
+					int g = 1 + (int) Math.round((s - 2) * Math.random());
+
+
+					
+					// 2) randomly pick g values {d1, ... dg}
+					// of the set D and add them to obtain 
+					// h = d_1 + ... + d_g
+
+					PHInteger<p> h = null;
+
+					for (int ii = 0; ii < g; ii++) {
+						int jj = (int) Math.round((s - 2) * Math.random());
+						PHInteger<p> temp = d.getPHI(jj);
+						if (ii == 0)
+							h = temp;
+						else
+							h = h.add(temp);
+
+					}
+
+// 
+
+					// 
+					// 3) Generate a pseudorandom value c such that
+					// c mod z_i /= 0 and compute 
+					// h' =  c*h
+                    DABigInteger<p> c = DABigInteger.<p>ZERO();
+
+					try {
+					  c = new DABigInteger<p>(2, SecureRandom
+									.getInstance(sha1));
+						while ((c.mod(z_i).compareTo(DABigInteger.<p>ZERO()) == 0) ||
+								 (c.compareTo(z_i) >= 0)) {
+							// bit length size consideration for c 
+							c = new DABigInteger<p>(2, SecureRandom
+									.getInstance(sha1));
+						} ;
+
+					} catch (NullPointerException exc) {
+						// exc.printStackTrace();
+						// System.exit(-1);
+					}
+
+					PHInteger<p> h_ = h.mult(c);
+
+
+					PHInteger<p> pc_kl = null;
+					// If p_kl mod z_j = 0, then pc_kl = h'
+
+					if (p_kl.mod(z_j).compareTo(DABigInteger.<p>ZERO()) == 0) {
+						pc_kl = h_;
+					} else {
+						// If p_kl mod z_j /= 0, then 
+						// a) generate a pseudorandom value g' such that 1 <= g<= s
+						int g_ = (int) Math.round((s - 1) * Math.random());
+						// b) pc_kl = h' + e_g', where e_g' is the
+						// g'-the element of the set E
+						PHInteger<p> e_g_ = e.getPHI(g_);
+						
+						pc_kl = h_.add(e_g_);
+					}
+					rowk.add(pc_kl);
+				}
+				matrix.add(rowk);
+
+			}
+		} catch (NullPointerException ex) { throw new MPException("NPE");
+        } catch (IndexOutOfBoundsException ex) { throw new MPException("IOB");
+        } catch (ClassCastException ex) { throw new MPException("CCE");
+        } catch (ArithmeticException ex) { throw new MPException("AE");
+        } catch (NoSuchAlgorithmException ex) { throw new MPException("NSAE");
+        }
+	}
+
+	public ?p PHIntVector<p> getMatrix() {
+		return this.matrix;
+	}
+}
+

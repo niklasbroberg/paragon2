@@ -1,0 +1,49 @@
+package javax.crypto;
+
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Key;
+
+import javax.crypto.spec.IvParameterSpec;
+
+public native class Cipher {
+
+    public static final ?{'x:} int ENCRYPT_MODE;
+    public static final ?{'x:} int DECRYPT_MODE;
+
+    public static final ?policyof(algorithm) Cipher 
+    getInstance(String algorithm) // Doesnt throw nullpe?
+    throws !policyof(algorithm) ?policyof(algorithm) NullPointerException, // ISSUE 123...
+           !policyof(algorithm) ?policyof(algorithm) NoSuchAlgorithmException,
+           !policyof(algorithm) ?policyof(algorithm) NoSuchPaddingException;
+
+    public static final ?(policyof(algorithm)*policyof(provider)) Cipher 
+    getInstance(String algorithm, String provider)
+    throws !policyof(provider) ?policyof(provider) NoSuchProviderException,
+           !(policyof(algorithm)*policyof(provider)) ?(policyof(algorithm)*policyof(provider)) NoSuchAlgorithmException,
+           !(policyof(algorithm)*policyof(provider)) ?(policyof(algorithm)*policyof(provider)) NoSuchPaddingException,
+           !policyof(provider) ?policyof(provider) IllegalArgumentException;
+            
+    public final !policyof(this) void
+    init(?policyof(this) int opcode, ?policyof(this) Key key) 
+    throws !policyof(this) InvalidKeyException;
+   
+    public final !policyof(this) void
+    init(?policyof(this) int opcode, ?policyof(this) Key key, ?policyof(this) IvParameterSpec iv) 
+    throws !policyof(this) InvalidKeyException;
+    
+    public final ?policyof(this) byte[]<policyof(this)> 
+    doFinal()
+    throws !policyof(this) IllegalStateException,
+            !policyof(this) IllegalBlockSizeException,
+            !policyof(this) BadPaddingException;
+            
+    public final ?policyof(this) byte[]<policyof(this)> getIV();
+    
+    public final ?policyof(this) byte[]<policyof(this)> doFinal(?policyof(this) byte[]<policyof(this)> input)
+    throws !policyof(this) ?policyof(this) IllegalStateException,
+           !policyof(this) ?policyof(this) IllegalBlockSizeException,
+           !policyof(this) ?policyof(this) BadPaddingException;
+
+}

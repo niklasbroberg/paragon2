@@ -1,0 +1,6 @@
+public class Policy {
+
+  public static final policy bottom = { Object x: };
+  public static final policy top = { : };
+
+}

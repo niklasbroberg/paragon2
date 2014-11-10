@@ -1,0 +1,276 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ */
+package mp;
+import java.io.PrintStream;
+
+public class SerializeWriteHelper[label L] {
+    
+    
+    private final PrintStream[L]{L} stream;
+    
+    public SerializeWriteHelper(PrintStream[L]{L} stream):{L}
+    throws IllegalArgumentException{
+        if (stream == null)
+            throw new IllegalArgumentException("stream is null");
+        this.stream = stream;
+    }
+    
+    public void writeBigInt{L}(DABigInteger[L]{L} x)
+    throws SecurityException{
+        PrintStream[L] stream = this.stream;
+        if (stream == null) return;
+        
+        stream.print("###BIGINT\t");
+        stream.println(x==null? "NULL" : x.toString());
+    }
+    
+
+    public void writeBigIntPair{L}(BigIntPair[L]{L} x):{L}
+    throws SecurityException{
+        PrintStream[L] stream = this.stream;
+        if (stream == null) return;
+        
+        stream.print("###BIGINTPAIR\t");
+        if (x == null) {
+            stream.println("NULL");
+            return;
+        } else {
+            stream.println("2");
+        }
+        
+        writeBigInt(x.getX());
+        writeBigInt(x.getY());
+    }
+    
+    
+    public void writePHInt{L}(PHInteger[L]{L} x):{L}
+    throws SecurityException {
+        PrintStream[L] stream = this.stream;
+        if (stream  == null) return;
+        stream.print("###PHINT\t");
+        if (x == null) {
+            stream.println("NULL");
+            return;
+        }
+        int t = x.size();
+        stream.println(t);
+     
+        try {
+            for (int i = 0; i < t; i++)
+                writeBigIntPair(x.getBigIntPair(i));
+        } catch (IndexOutOfBoundsException ignored) {}
+        
+    }
+    
+    public void writePHIntVector{L}(PHIntVector[L]{L} x):{L}  
+    throws SecurityException {
+        PrintStream[L] stream = this.stream;
+        if (stream  == null) return;
+        stream.print("###PHINTVECTOR\t");
+        if (x == null) {
+            stream.println("NULL");
+            return;
+        }
+        int t = x.size();
+        stream.println(t);
+        try {
+            for (int i = 0; i < t; i++)
+                writePHInt(x.getPHI(i));
+        } catch (IndexOutOfBoundsException ignored) {}
+    }
+    
+    
+    public void writeBigIntVector{L}(BigIntVector[L]{L} x):{L}  
+    throws SecurityException {
+        PrintStream[L] stream = this.stream;
+        if (stream  == null) return;
+        stream.print("###BIGINTVECTOR\t");
+        if (x == null) {
+            stream.println("NULL");
+            return;
+        }
+        int t = x.size();
+        stream.println(t);
+        try {
+            for (int i = 0; i < t; i++)
+                writeBigInt(x.getBI(i));
+        } catch (IndexOutOfBoundsException ignored) {}
+    }
+    
+    public void writeCardVector{L}(CardVector[L]{L} x):{L}  
+    throws SecurityException {
+        PrintStream[L] stream = this.stream;
+        if (stream  == null) return;
+        stream.print("###CARDVECTOR\t");
+        if (x == null) {
+            stream.println("NULL");
+            return;
+        }
+        stream.println("VALUE");
+        writeBigIntVector(x.getValueVector());        
+    }
+    
+    
+    public void writeEncCardVector{L}(EncryptedCardVector[L]{L} x):{L}  
+    throws SecurityException {
+        PrintStream[L] stream = this.stream;
+        if (stream  == null) return;
+        stream.print("###ENCCARDVECTOR\t");
+        if (x == null) {
+            stream.println("NULL");
+            return;
+        }
+        stream.println("VALUE");
+        writePHIntVector(x.getValueVector());        
+    }
+    
+    public void writeByteArray{L}(byte[]{L} x):{L}
+    throws SecurityException {
+        PrintStream[L] stream = this.stream;
+        if (stream  == null) return;
+        stream.print("###BYTEARRAY\t");
+        if (x == null) {
+            stream.println("NULL");
+            return;
+        }
+        int t = x.length;
+        stream.println(t);
+        stream.print("###BYTES\t");
+        try {
+            for (int i = 0; i < t; i++) { 
+                 stream.print(x[i]);
+                 stream.print(" ");
+            }                
+        } catch (ArrayIndexOutOfBoundsException ignored) {
+        }
+        stream.println();
+    }
+    
+    public void writeDigest{L}(Digest[L]{L} x):{L}
+    throws SecurityException{
+        PrintStream[L] stream = this.stream;
+        if (stream  == null) return;
+        stream.print("###DIGEST\t");
+        if (x == null) {
+            stream.println("NULL");
+            return;
+        }
+        
+        stream.println("VALUE");
+        writeByteArray(x.toByteArray());
+
+    }
+    
+    
+        
+    public void writeAttribute{L}(
+    DataFieldAttribute[L]{L} attrib):{L} throws SecurityException {       
+        try {
+            if (attrib instanceof EncryptedCardVector[L]) {
+                 writeEncCardVector((EncryptedCardVector[L]) attrib);
+            } else if (attrib instanceof CardVector[L] ) {
+                 writeCardVector((CardVector[L]) attrib);
+            } else if (attrib instanceof BigIntVector[L]) {
+                 writeBigIntVector((BigIntVector[L]) attrib);
+            } else if (attrib instanceof PHIntVector[L]) {
+                 writePHIntVector((PHIntVector[L]) attrib);
+            } else if (attrib instanceof PHInteger[L]) {
+                 writePHInt((PHInteger[L]) attrib);
+            } else if (attrib instanceof DABigInteger[L]) {
+                 writeBigInt((DABigInteger[L]) attrib);
+            } else if (attrib instanceof Digest[L]) {
+                 writeDigest((Digest[L]) attrib);
+            } else if (attrib instanceof DAVector[L]) {
+                writeDAVector((DAVector[L]) attrib);
+            }
+        } catch (ClassCastException ignored) {}                 
+    }
+    
+    public void writeDAVector{L}(DAVector[L]{L} x):{L} throws SecurityException{
+        PrintStream[L] stream = this.stream;
+        if (stream  == null) return;
+        stream.print("###DAVECTOR\t");
+        if (x == null) {
+            stream.println("NULL");
+            return;
+        }
+        
+        int t = x.size();
+        stream.println(t);
+
+        try {
+            for (int i = 0; i < t; i++)
+                writeAttribute((DataFieldAttribute[L])x.get(i));
+        } catch (ClassCastException e) {
+        } catch (IndexOutOfBoundsException e) {
+        }
+        
+        
+    }
+    public void writeDNCLink{L}(DNCLink[L]{L} link):{L} throws SecurityException{
+        PrintStream[L] stream = this.stream;
+        if (stream  == null) return;
+        stream.print("###DNCLINK\t");
+        if (link == null) {
+            stream.println("NULL");
+            return;
+        }
+        stream.println(link.getk());
+        writeDataField(link.getData());
+        stream.println("###CHAINVALUE\t");
+        writeByteArray(link.getChainingValue());
+        
+    }
+    
+    
+    public void writeDataField{L}(DataField[L]{L} data):{L}
+    throws SecurityException{
+        PrintStream[L] stream = this.stream;
+        if (stream  == null) return;
+        stream.print("###DATAFIELD\t");
+        if (data == null) {
+            stream.println("NULL");
+            return;
+        }
+        
+        stream.print(data.getPlayerName());
+        stream.print(" ");
+        stream.print(data.getTimestamp());
+        stream.print(" ");
+        stream.println(data.getInfo());
+        writeAttribute(data.getAttrib());
+        
+                
+    }
+    
+    public void writeMatrix{L}(PermutationMatrix[L]{L} matrix):{L}
+    throws SecurityException{
+        PrintStream[L] stream = this.stream;
+        if (stream == null) return;
+        
+        stream.print("###MATRIX\t");
+        if (matrix == null) {
+            stream.println("NULL");
+            return;
+        }
+        
+        jif.util.ArrayList[L] m = matrix.getMatrix();
+        if (m == null) {
+            stream.println("NULL");
+            return;
+        }
+        
+        int t = m.size();
+        stream.println(t);
+        for (int i = 0; i <t ;i++) {
+            try {
+                BigIntVector[L] rowi = (BigIntVector[L])m.get(i);
+                writeBigIntVector(rowi);
+            } catch (IndexOutOfBoundsException ignored){
+            } catch (ClassCastException ignored) {
+            }
+        }
+    }
+}
+

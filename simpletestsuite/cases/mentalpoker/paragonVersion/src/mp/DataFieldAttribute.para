@@ -1,0 +1,29 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ * Adapted to paragon
+ */
+package mp;
+
+// Note: so far no need to parametrize?
+public interface DataFieldAttribute<policy p>
+{
+
+    public static final int EncryptedCardVector = 0;
+    public static final int CardVector = 1;
+    public static final int BigIntVector = 2;
+    public static final int PHIntVector = 3;
+    public static final int PHInteger = 4;
+    public static final int DABigInteger = 5;
+    public static final int Digest = 6;
+    public static final int DAVector = 7;
+    
+
+    public ?p int getType();
+    // Direct translation from JIF-MP
+    // TODO: lookup reasoning for this signature.
+    public !p ?p byte[]<p> toByteArray(); // throws exception?
+    public ?p int byteLength();
+    public ?p String toString();
+}
+

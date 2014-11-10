@@ -1,0 +1,94 @@
+/*
+ * Copyright (c) 1995, 2010, Oracle and/or its affiliates. All rights reserved.
+ * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
+ *
+ * This code is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 only, as
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
+ *
+ * This code is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ * version 2 for more details (a copy is included in the LICENSE file that
+ * accompanied this code).
+ *
+ * You should have received a copy of the GNU General Public License version
+ * 2 along with this work; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
+ * or visit www.oracle.com if you need additional information or have any
+ * questions.
+ */
+ 
+package java.util;
+
+
+
+
+// Official imports:
+
+/*
+import java.io.*;
+import java.util.concurrent.atomic.AtomicLong;
+import sun.misc.Unsafe;
+*/
+
+// Not using {this} as jif-version does, because that seems to be unsafe.
+// Although all used fields are final, they are objects themselves that can
+// modify their fields in turn. We do not annotate the underlying native classes, hence
+// this might not be so clear.
+
+// Not having native in signature as jif-version does, because the Java
+// version doesn't either.
+
+// Since every method updates the seed (and other, non-final fields in the 
+// native class used through computation), they also all have a write effect.
+// JifMP should have had a begin label here as well.
+
+// Only listing public methods.
+
+
+public native class Random<policy p>
+// implements java.io.Serializable
+{
+
+    public Random()
+    {
+    }
+    
+    public Random(?p long seed) 
+    {
+    }
+    
+    // ISSSUE synchronized keyword not parsed
+    // synchronized 
+    public !p void setSeed(?p long seed);
+    
+    // Here we do not only have a write effect because of the updatet of the
+    // seed, but also because data gets written into the provided array.   
+    public !p void nextBytes(?p byte[]<p> bytes);
+
+    public !p ?p int nextInt();
+
+    // JifMP does not list the exception here (thrown when n <= 0)
+    public !p ?(p*policyof(n)) int nextInt(int n) 
+    throws !policyof(n) IllegalArgumentException;
+    
+    public !p ?p long nextLong() ;
+
+    public !p ?p boolean nextBoolean() ;
+    
+    public !p ?p float nextFloat() ;
+    
+    public !p ?p double nextDouble() ;
+    
+    // Write effect because it uses nextDouble, as well as writes to local
+    // fields.
+    // ISSSUE synchronized keyword not parsed
+    // synchronized 
+    public !p ?p double nextGaussian() ;
+
+}

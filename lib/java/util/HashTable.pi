@@ -1,0 +1,8 @@
+package java.util;
+
+public native class HashTable<K,V,policy pK, policy pV> {
+
+  public !policyof(this) ?pV V put(?pK K key,?pV V value)
+  throws !(pV*pK) java.lang.NullPointerException;
+
+}

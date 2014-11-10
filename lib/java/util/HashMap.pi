@@ -1,0 +1,9 @@
+public native class HashMap<K,V> {
+
+  public HashMap() { }
+  
+  public V get(K k);
+  
+  public V put(K k, V v);
+
+}

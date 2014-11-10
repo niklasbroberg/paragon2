@@ -1,0 +1,21 @@
+package se.chalmers.parajpmail.jpmailpol;
+
+import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+
+public class GlobalPol {
+
+  // TODO, move somewhere better?
+  public lock Receiver(act);
+
+  public static final actor network;
+  public static final policy publ =
+    { network:
+    ; SimpleUnixRuntime.currentUser: };
+    
+  public static final actor screen;
+  public static final policy toScreen =
+    { SimpleUnixRuntime.currentUser : };
+  
+  public static final policy publScreen = publ+toScreen;
+
+}

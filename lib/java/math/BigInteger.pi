@@ -1,0 +1,97 @@
+package java.math;
+
+import java.util.Random; 
+
+public native class BigInteger
+{
+
+  public static final ?{Object x:} 
+  java.math.BigInteger ZERO;
+
+  public static final ?{Object x:} 
+  java.math.BigInteger ONE;
+  
+  public BigInteger(?policyof(this) int signum, ?policyof(this) byte[]<policyof(this)> magnitude) {}
+  
+  public ?policyof(this) int bitLength();
+  
+  public ?policyof(this) String toString();
+  
+  public ?policyof(this) int hashCode();
+
+  public ?(policyof(val) * policyof(this)) 
+  java.math.BigInteger modInverse(java.math.BigInteger val) 
+  throws !(policyof(val) * policyof(this)) 
+  java.lang.ArithmeticException
+  ;
+  
+  public ?(policyof(this)*policyof(o))
+  int compareTo(java.math.BigInteger o);
+  
+ 
+  public 
+  BigInteger(?policyof(this) int numBits, 
+             ?policyof(this) Random<policyof(this)> rnd) 
+    throws !policyof(this) IllegalArgumentException {      
+  }
+  
+  public BigInteger(?policyof(this) String s)
+  throws !policyof(this) NumberFormatException { }
+  
+  public BigInteger(?policyof(this) String s
+                                    ,?policyof(this) int i)
+  throws !policyof(this) NumberFormatException { }
+  
+  public BigInteger(?policyof(this) byte[]<policyof(this)> s)
+  throws !policyof(this) NumberFormatException { }
+  
+  public ?(policyof(this)*policyof(val)) 
+  java.math.BigInteger multiply( java.math.BigInteger val) 
+  ;
+  
+  public ?(policyof(this)*policyof(val))
+  java.math.BigInteger subtract( java.math.BigInteger val) 
+  ;
+ 
+  public ?(policyof(this)*policyof(val))
+  java.math.BigInteger divide( java.math.BigInteger val) 
+  ;
+ 
+  public ?(policyof(this)*policyof(val)) 
+  java.math.BigInteger add( java.math.BigInteger val) 
+  ; 
+  
+  public ?(policyof(this)*policyof(val))
+  java.math.BigInteger mod(?{:} java.math.BigInteger val) 
+  throws !(policyof(this)*policyof(val)) 
+  java.lang.ArithmeticException;
+  
+  /*
+  public ?({'x:}) 
+  java.math.BigInteger subtract(?{:} java.math.BigInteger val) 
+  throws !({'x:}) 
+  java.lang.ArithmeticException
+  ;
+  
+  public ?({'x:}) 
+  java.math.BigInteger add(?{:} java.math.BigInteger val) 
+  throws !({'x:}) 
+  java.lang.ArithmeticException
+  ;
+  */
+  
+  public ?policyof(this) byte[]<policyof(this)> toByteArray() ;
+  
+  public !p static <policy p> BigInteger<p> 
+  probablePrime(?p int bitLength, ?p Random<p> rnd)
+  throws !p ArithmeticException;
+  
+  public !policyof(this)
+  BigInteger(?policyof(this) int numBits, 
+             ?policyof(this) int certainty, 
+             ?policyof(this) Random<policyof(this)> rnd) 
+   throws !policyof(this) ArithmeticException {}
+   
+  public static ?policyof(val) BigInteger valueOf(long val);
+    
+}

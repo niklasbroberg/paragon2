@@ -1,0 +1,6 @@
+public class ReturnExpStmt {
+  public int f() {
+    int x;
+    x = 1;
+  }
+}

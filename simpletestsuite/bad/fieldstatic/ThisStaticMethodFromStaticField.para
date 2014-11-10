@@ -1,0 +1,5 @@
+public class ThisStaticMethodFromStaticField {
+  private static int x = this.stat();
+
+  private static int stat() { return 1; }
+}

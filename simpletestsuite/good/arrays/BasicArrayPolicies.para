@@ -1,0 +1,17 @@
+import se.chalmers.paragon.*;
+
+public class BasicArrayPolicies {
+
+    public static final Object alice = new Object();
+    
+    public static final policy apol = {alice:};
+
+    public ?apol int[]<apol> myArray;
+    
+    public void foo() {
+    
+        ?apol int j = myArray[0];
+    
+    }
+
+}

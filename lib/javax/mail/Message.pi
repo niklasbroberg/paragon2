@@ -1,0 +1,48 @@
+package javax.mail;
+
+public native class Message<policy p> implements javax.mail.Part<p> {
+
+  public !p void setFrom(?p javax.mail.Address address)
+  throws !p ?p javax.mail.MessagingException,
+         !p ?p javax.mail.IllegalWriteException,
+         !p ?p java.lang.IllegalStateException;
+
+  // HACK . INNER TYPES NOT SUPPORTED
+  public !p void setRecipient(?p javax.mail.RecipientType rt,
+                              ?p javax.mail.Address address)
+  throws !p ?p javax.mail.MessagingException,
+         !p ?p javax.mail.IllegalWriteException,
+         !p ?p java.lang.IllegalStateException;
+
+  // HACK ctd. -- turns out not to work :-/
+  public static final ?{Object x:} javax.mail.RecipientType RecipientType;
+
+  public !p void setSubject(?p String subject)
+  throws !p ?p javax.mail.MessagingException,
+         !p ?p javax.mail.IllegalWriteException,
+         !p ?p java.lang.IllegalStateException;
+
+  public !p void setHeader(?p String header_name,
+                           ?p String header_value)
+  throws !p ?p javax.mail.MessagingException,
+         !p ?p javax.mail.IllegalWriteException,
+         !p ?p java.lang.IllegalStateException;
+
+  public !p void setText(?p String text)
+  throws !p ?p javax.mail.MessagingException,
+         !p ?p javax.mail.IllegalWriteException,
+         !p ?p java.lang.IllegalStateException;
+  
+   public ?p Object getContent()
+                  throws ?p !p java.io.IOException,
+                         ?p !p MessagingException;  
+  
+  public ?p String[]<p> getHeader(?p String header_name)
+                   throws ?p !p MessagingException;
+                   
+  public abstract ?p String getSubject()
+                           throws ?p !p MessagingException;
+
+  public abstract ?p Address[]<p> getFrom()
+                           throws ?p !p MessagingException;
+}

@@ -1,0 +1,27 @@
+/**
+ * Class encapsulating simple declassification.
+ **/
+public class SimpleDeclassify {
+
+  // Information can flow to any actor
+  public static final policy low = {'x:};
+
+  // Lock used to protect high information
+  private lock Declassify;
+
+  // Information can flow to any actor if we are in the delcassify context
+  public static final policy high = {'x : Declassify };
+
+  /**
+   * Only method exported to allow declassification; i.e. all declassification
+   * points can be identified by calls to this method. Takes an arbitrary object
+   * of policy High, enters the declassification context and returns that object
+   * declassified to policy Low.
+   **/
+  public static ?low <A> A declassify(?high A x) {
+      open Declassify {
+          return x;
+      }
+  }
+
+}

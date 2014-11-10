@@ -1,0 +1,2 @@
+In fallback context. When checking interface FileInterfaceMismatch1:
+Interface FileInterfaceMismatch1 is public, should be declared in a file named FileInterfaceMismatch1.para

@@ -1,0 +1,7 @@
+public class Reflexivity
+{
+  lock A(java.lang.Object, java.lang.Object) {(java.lang.Object x) Reflexivity.A(x,x):};
+  public static final java.lang.Object alice = new java.lang.Object();
+  void foo()
+  ;
+}

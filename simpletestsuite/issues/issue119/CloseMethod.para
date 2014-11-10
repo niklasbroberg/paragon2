@@ -1,0 +1,17 @@
+public class CloseMethod {
+
+  // syntax errors on open and close
+
+  // Changing name to e.g. closed works
+  public void close() {
+
+  }
+
+  // Changing name to e.g. opened works
+  public void open() {
+
+  }
+
+}
+
+

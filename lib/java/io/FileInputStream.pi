@@ -1,0 +1,9 @@
+package java.io;
+
+public native class FileInputStream<policy p> extends java.io.InputStream<p>
+{
+  public FileInputStream(?p final String name)
+  throws ?p !p FileNotFoundException,
+         ?p !p SecurityException {}
+
+}

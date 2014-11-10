@@ -1,0 +1,1037 @@
+// This file was generated AUTOMATICALLY from a template file Thu Jun 03 21:08:46 PDT 2004
+/* @(#)Character.java.template	1.7 03/01/13
+ *
+ * Copyright 1994-2002 Sun Microsystems, Inc. All Rights Reserved.
+ *
+ * This software is the proprietary information of Sun Microsystems, Inc.
+ * Use is subject to license terms.
+ *
+ */
+
+package java.lang;
+
+
+public final
+class Character extends Object implements java.io.Serializable {
+    
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    /**
+     * The minimum radix available for conversion to and from strings.
+     * The constant value of this field is the smallest value permitted
+     * for the radix argument in radix-conversion methods such as the
+     * <code>digit</code> method, the <code>forDigit</code>
+     * method, and the <code>toString</code> method of class
+     * <code>Integer</code>.
+     *
+     * @see     java.lang.Character#digit(char, int)
+     * @see     java.lang.Character#forDigit(int, int)
+     * @see     java.lang.Integer#toString(int, int)
+     * @see     java.lang.Integer#valueOf(java.lang.String)
+     */
+    public static final int MIN_RADIX = 2;
+
+    /**
+     * The maximum radix available for conversion to and from strings.
+     * The constant value of this field is the largest value permitted
+     * for the radix argument in radix-conversion methods such as the
+     * <code>digit</code> method, the <code>forDigit</code>
+     * method, and the <code>toString</code> method of class
+     * <code>Integer</code>.
+     *
+     * @see     java.lang.Character#digit(char, int)
+     * @see     java.lang.Character#forDigit(int, int)
+     * @see     java.lang.Integer#toString(int, int)
+     * @see     java.lang.Integer#valueOf(java.lang.String)
+     */
+    public static final int MAX_RADIX = 36;
+
+    /**
+     * The constant value of this field is the smallest value of type
+     * <code>char</code>, <code>'&#92;u0000'</code>.
+     *
+     * @since   1.0.2
+     */
+    public static final char   MIN_VALUE = '\u0000';
+
+    /**
+     * The constant value of this field is the largest value of type
+     * <code>char</code>, <code>'&#92;uFFFF'</code>.
+     *
+     * @since   1.0.2
+     */
+    public static final char   MAX_VALUE = '\uffff';
+
+    /**
+     * The <code>Class</code> instance representing the primitive type
+     * <code>char</code>.
+     *
+     * @since   1.1
+     */
+    // public static final Class TYPE = Class.getPrimitiveClass("char");
+
+   /*
+    * Normative general types
+    */
+
+   /*
+    * General character types
+    */
+
+   /**
+    * General category "Cn" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        UNASSIGNED                  = 0;
+
+   /**
+    * General category "Lu" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        UPPERCASE_LETTER            = 1;
+
+   /**
+    * General category "Ll" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        LOWERCASE_LETTER            = 2;
+
+   /**
+    * General category "Lt" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        TITLECASE_LETTER            = 3;
+
+   /**
+    * General category "Lm" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        MODIFIER_LETTER             = 4;
+
+   /**
+    * General category "Lo" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        OTHER_LETTER                = 5;
+
+   /**
+    * General category "Mn" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        NON_SPACING_MARK            = 6;
+
+   /**
+    * General category "Me" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        ENCLOSING_MARK              = 7;
+
+   /**
+    * General category "Mc" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        COMBINING_SPACING_MARK      = 8;
+
+   /**
+    * General category "Nd" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        DECIMAL_DIGIT_NUMBER        = 9;
+
+   /**
+    * General category "Nl" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        LETTER_NUMBER               = 10;
+
+   /**
+    * General category "No" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        OTHER_NUMBER                = 11;
+
+   /**
+    * General category "Zs" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        SPACE_SEPARATOR             = 12;
+
+   /**
+    * General category "Zl" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        LINE_SEPARATOR              = 13;
+
+   /**
+    * General category "Zp" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        PARAGRAPH_SEPARATOR         = 14;
+
+   /**
+    * General category "Cc" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        CONTROL                     = 15;
+
+   /**
+    * General category "Cf" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        FORMAT                      = 16;
+
+   /**
+    * General category "Co" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        PRIVATE_USE                 = 18;
+
+   /**
+    * General category "Cs" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        SURROGATE                   = 19;
+
+   /**
+    * General category "Pd" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        DASH_PUNCTUATION            = 20;
+
+   /**
+    * General category "Ps" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        START_PUNCTUATION           = 21;
+
+   /**
+    * General category "Pe" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        END_PUNCTUATION             = 22;
+
+   /**
+    * General category "Pc" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        CONNECTOR_PUNCTUATION       = 23;
+
+   /**
+    * General category "Po" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        OTHER_PUNCTUATION           = 24;
+
+   /**
+    * General category "Sm" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        MATH_SYMBOL                 = 25;
+
+   /**
+    * General category "Sc" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        CURRENCY_SYMBOL             = 26;
+
+   /**
+    * General category "Sk" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        MODIFIER_SYMBOL             = 27;
+
+   /**
+    * General category "So" in the Unicode specification.
+    * @since   1.1
+    */
+    public static final byte
+        OTHER_SYMBOL                = 28;
+
+   /**
+    * General category "Pi" in the Unicode specification.
+    * @since   1.4
+    */
+    public static final byte
+        INITIAL_QUOTE_PUNCTUATION   = 29;
+
+   /**
+    * General category "Pf" in the Unicode specification.
+    * @since   1.4
+    */
+    public static final byte
+        FINAL_QUOTE_PUNCTUATION     = 30;
+
+    /**
+     * Error or non-char flag
+     * @since 1.4
+     */
+     static final char CHAR_ERROR = '\uFFFF';
+
+
+    /**
+     * Undefined bidirectional character type. Undefined <code>char</code>
+     * values have undefined directionality in the Unicode specification.
+     * @since 1.4
+     */
+     public static final byte DIRECTIONALITY_UNDEFINED = -1;
+
+    /**
+     * Strong bidirectional character type "L" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_LEFT_TO_RIGHT = 0;
+
+    /**
+     * Strong bidirectional character type "R" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_RIGHT_TO_LEFT = 1;
+
+    /**
+    * Strong bidirectional character type "AL" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC = 2;
+
+    /**
+     * Weak bidirectional character type "EN" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_EUROPEAN_NUMBER = 3;
+
+    /**
+     * Weak bidirectional character type "ES" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_EUROPEAN_NUMBER_SEPARATOR = 4;
+
+    /**
+     * Weak bidirectional character type "ET" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_EUROPEAN_NUMBER_TERMINATOR = 5;
+
+    /**
+     * Weak bidirectional character type "AN" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_ARABIC_NUMBER = 6;
+
+    /**
+     * Weak bidirectional character type "CS" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_COMMON_NUMBER_SEPARATOR = 7;
+
+    /**
+     * Weak bidirectional character type "NSM" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_NONSPACING_MARK = 8;
+
+    /**
+     * Weak bidirectional character type "BN" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_BOUNDARY_NEUTRAL = 9;
+
+    /**
+     * Neutral bidirectional character type "B" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_PARAGRAPH_SEPARATOR = 10;
+
+    /**
+     * Neutral bidirectional character type "S" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_SEGMENT_SEPARATOR = 11;
+
+    /**
+     * Neutral bidirectional character type "WS" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_WHITESPACE = 12;
+
+    /**
+     * Neutral bidirectional character type "ON" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_OTHER_NEUTRALS = 13;
+
+    /**
+     * Strong bidirectional character type "LRE" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_LEFT_TO_RIGHT_EMBEDDING = 14;
+
+    /**
+     * Strong bidirectional character type "LRO" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_LEFT_TO_RIGHT_OVERRIDE = 15;
+
+    /**
+     * Strong bidirectional character type "RLE" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_RIGHT_TO_LEFT_EMBEDDING = 16;
+
+    /**
+     * Strong bidirectional character type "RLO" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_RIGHT_TO_LEFT_OVERRIDE = 17;
+
+    /**
+     * Weak bidirectional character type "PDF" in the Unicode specification.
+     * @since 1.4
+     */
+    public static final byte DIRECTIONALITY_POP_DIRECTIONAL_FORMAT = 18;
+
+    // Maximum character handled by internal fast-path code which
+    // avoids initializing large tables.
+    // Note: performance of this "fast-path" code may be sub-optimal
+    // in negative cases for some accessors due to complicated ranges.
+    // Should revisit after optimization of table initialization.
+    private static final int FAST_PATH_MAX = 255;
+
+    /**
+     * Instances of this class represent particular subsets of the Unicode
+     * character set.  The only family of subsets defined in the
+     * <code>Character</code> class is <code>{@link Character.UnicodeBlock
+     * UnicodeBlock}</code>.  Other portions of the Java API may define other
+     * subsets for their own purposes.
+     *
+     * @since 1.2
+     */
+    // public static class Subset  {
+// 
+        // private String name;
+// 
+        // /**
+         // * Constructs a new <code>Subset</code> instance.
+         // *
+         // * @exception NullPointerException if name is <code>null</code>
+         // * @param  name  The name of this subset
+         // */
+        // protected Subset(String name) {
+            // if (name == null) {
+                // throw new NullPointerException("name");
+            // }
+            // this.name = name;
+        // }
+// 
+        // /**
+         // * Compares two <code>Subset</code> objects for equality.
+         // * This method returns <code>true</code> if and only if
+         // * <code>this</code> and the argument refer to the same
+         // * object; since this method is <code>final</code>, this
+         // * guarantee holds for all subclasses.
+         // */
+        // public final boolean equals(Object obj) {
+            // return (this == obj);
+        // }
+// 
+        // /**
+         // * Returns the standard hash code as defined by the
+         // * <code>{@link Object#hashCode}</code> method.  This method
+         // * is <code>final</code> in order to ensure that the
+         // * <code>equals</code> and <code>hashCode</code> methods will
+         // * be consistent in all subclasses.
+         // */
+        // public final int hashCode() {
+            // return super.hashCode();
+        // }
+// 
+        // /**
+         // * Returns the name of this subset.
+         // */
+        // public final String toString() {
+            // return name;
+        // }
+    // }
+
+    /**
+     * A family of character subsets representing the character blocks in the
+     * Unicode specification. Character blocks generally define characters
+     * used for a specific script or purpose. A character is contained by
+     * at most one Unicode block.
+     *
+     * @since 1.2
+     */
+    // public static final class UnicodeBlock extends Subset {
+// 
+        // private UnicodeBlock(String name) {
+            // super(name);
+        // }
+// 
+        // /**
+         // * Constant for the Unicode character block of the same name.
+         // */
+        // public static final UnicodeBlock
+            // BASIC_LATIN
+                // = new UnicodeBlock("BASIC_LATIN"),
+            // LATIN_1_SUPPLEMENT
+                // = new UnicodeBlock("LATIN_1_SUPPLEMENT"),
+            // LATIN_EXTENDED_A
+                // = new UnicodeBlock("LATIN_EXTENDED_A"),
+            // LATIN_EXTENDED_B
+                // = new UnicodeBlock("LATIN_EXTENDED_B"),
+            // IPA_EXTENSIONS
+                // = new UnicodeBlock("IPA_EXTENSIONS"),
+            // SPACING_MODIFIER_LETTERS
+                // = new UnicodeBlock("SPACING_MODIFIER_LETTERS"),
+            // COMBINING_DIACRITICAL_MARKS
+                // = new UnicodeBlock("COMBINING_DIACRITICAL_MARKS"),
+            // GREEK
+                // = new UnicodeBlock("GREEK"),
+            // CYRILLIC
+                // = new UnicodeBlock("CYRILLIC"),
+            // ARMENIAN
+                // = new UnicodeBlock("ARMENIAN"),
+            // HEBREW
+                // = new UnicodeBlock("HEBREW"),
+            // ARABIC
+                // = new UnicodeBlock("ARABIC"),
+            // DEVANAGARI
+                // = new UnicodeBlock("DEVANAGARI"),
+            // BENGALI
+                // = new UnicodeBlock("BENGALI"),
+            // GURMUKHI
+                // = new UnicodeBlock("GURMUKHI"),
+            // GUJARATI
+                // = new UnicodeBlock("GUJARATI"),
+            // ORIYA
+                // = new UnicodeBlock("ORIYA"),
+            // TAMIL
+                // = new UnicodeBlock("TAMIL"),
+            // TELUGU
+                // = new UnicodeBlock("TELUGU"),
+            // KANNADA
+                // = new UnicodeBlock("KANNADA"),
+            // MALAYALAM
+                // = new UnicodeBlock("MALAYALAM"),
+            // THAI
+                // = new UnicodeBlock("THAI"),
+            // LAO
+                // = new UnicodeBlock("LAO"),
+            // TIBETAN
+                // = new UnicodeBlock("TIBETAN"),
+            // GEORGIAN
+                // = new UnicodeBlock("GEORGIAN"),
+            // HANGUL_JAMO
+                // = new UnicodeBlock("HANGUL_JAMO"),
+            // LATIN_EXTENDED_ADDITIONAL
+                // = new UnicodeBlock("LATIN_EXTENDED_ADDITIONAL"),
+            // GREEK_EXTENDED
+                // = new UnicodeBlock("GREEK_EXTENDED"),
+            // GENERAL_PUNCTUATION
+                // = new UnicodeBlock("GENERAL_PUNCTUATION"),
+            // SUPERSCRIPTS_AND_SUBSCRIPTS
+                // = new UnicodeBlock("SUPERSCRIPTS_AND_SUBSCRIPTS"),
+            // CURRENCY_SYMBOLS
+                // = new UnicodeBlock("CURRENCY_SYMBOLS"),
+            // COMBINING_MARKS_FOR_SYMBOLS
+                // = new UnicodeBlock("COMBINING_MARKS_FOR_SYMBOLS"),
+            // LETTERLIKE_SYMBOLS
+                // = new UnicodeBlock("LETTERLIKE_SYMBOLS"),
+            // NUMBER_FORMS
+                // = new UnicodeBlock("NUMBER_FORMS"),
+            // ARROWS
+                // = new UnicodeBlock("ARROWS"),
+            // MATHEMATICAL_OPERATORS
+                // = new UnicodeBlock("MATHEMATICAL_OPERATORS"),
+            // MISCELLANEOUS_TECHNICAL
+                // = new UnicodeBlock("MISCELLANEOUS_TECHNICAL"),
+            // CONTROL_PICTURES
+                // = new UnicodeBlock("CONTROL_PICTURES"),
+            // OPTICAL_CHARACTER_RECOGNITION
+                // = new UnicodeBlock("OPTICAL_CHARACTER_RECOGNITION"),
+            // ENCLOSED_ALPHANUMERICS
+                // = new UnicodeBlock("ENCLOSED_ALPHANUMERICS"),
+            // BOX_DRAWING
+                // = new UnicodeBlock("BOX_DRAWING"),
+            // BLOCK_ELEMENTS
+                // = new UnicodeBlock("BLOCK_ELEMENTS"),
+            // GEOMETRIC_SHAPES
+                // = new UnicodeBlock("GEOMETRIC_SHAPES"),
+            // MISCELLANEOUS_SYMBOLS
+                // = new UnicodeBlock("MISCELLANEOUS_SYMBOLS"),
+            // DINGBATS
+                // = new UnicodeBlock("DINGBATS"),
+            // CJK_SYMBOLS_AND_PUNCTUATION
+                // = new UnicodeBlock("CJK_SYMBOLS_AND_PUNCTUATION"),
+            // HIRAGANA
+                // = new UnicodeBlock("HIRAGANA"),
+            // KATAKANA
+                // = new UnicodeBlock("KATAKANA"),
+            // BOPOMOFO
+                // = new UnicodeBlock("BOPOMOFO"),
+            // HANGUL_COMPATIBILITY_JAMO
+                // = new UnicodeBlock("HANGUL_COMPATIBILITY_JAMO"),
+            // KANBUN
+                // = new UnicodeBlock("KANBUN"),
+            // ENCLOSED_CJK_LETTERS_AND_MONTHS
+                // = new UnicodeBlock("ENCLOSED_CJK_LETTERS_AND_MONTHS"),
+            // CJK_COMPATIBILITY
+                // = new UnicodeBlock("CJK_COMPATIBILITY"),
+            // CJK_UNIFIED_IDEOGRAPHS
+                // = new UnicodeBlock("CJK_UNIFIED_IDEOGRAPHS"),
+            // HANGUL_SYLLABLES
+                // = new UnicodeBlock("HANGUL_SYLLABLES"),
+            // SURROGATES_AREA
+                // = new UnicodeBlock("SURROGATES_AREA"),
+            // PRIVATE_USE_AREA
+                // = new UnicodeBlock("PRIVATE_USE_AREA"),
+            // CJK_COMPATIBILITY_IDEOGRAPHS
+                // = new UnicodeBlock("CJK_COMPATIBILITY_IDEOGRAPHS"),
+            // ALPHABETIC_PRESENTATION_FORMS
+                // = new UnicodeBlock("ALPHABETIC_PRESENTATION_FORMS"),
+            // ARABIC_PRESENTATION_FORMS_A
+                // = new UnicodeBlock("ARABIC_PRESENTATION_FORMS_A"),
+            // COMBINING_HALF_MARKS
+                // = new UnicodeBlock("COMBINING_HALF_MARKS"),
+            // CJK_COMPATIBILITY_FORMS
+                // = new UnicodeBlock("CJK_COMPATIBILITY_FORMS"),
+            // SMALL_FORM_VARIANTS
+                // = new UnicodeBlock("SMALL_FORM_VARIANTS"),
+            // ARABIC_PRESENTATION_FORMS_B
+                // = new UnicodeBlock("ARABIC_PRESENTATION_FORMS_B"),
+            // HALFWIDTH_AND_FULLWIDTH_FORMS
+                // = new UnicodeBlock("HALFWIDTH_AND_FULLWIDTH_FORMS"),
+            // SPECIALS
+                // = new UnicodeBlock("SPECIALS");
+// 
+        // /**
+         // * Constant for the Unicode character block of the same name.
+         // *
+         // * @since 1.4
+         // */
+        // public static final UnicodeBlock
+            // SYRIAC
+                // = new UnicodeBlock("SYRIAC"),
+            // THAANA
+                // = new UnicodeBlock("THAANA"),
+            // SINHALA
+                // = new UnicodeBlock("SINHALA"),
+            // MYANMAR
+                // = new UnicodeBlock("MYANMAR"),
+            // ETHIOPIC
+                // = new UnicodeBlock("ETHIOPIC"),
+            // CHEROKEE
+                // = new UnicodeBlock("CHEROKEE"),
+            // UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS
+                // = new UnicodeBlock("UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS"),
+            // OGHAM
+                // = new UnicodeBlock("OGHAM"),
+            // RUNIC
+                // = new UnicodeBlock("RUNIC"),
+            // KHMER
+                // = new UnicodeBlock("KHMER"),
+            // MONGOLIAN
+                // = new UnicodeBlock("MONGOLIAN"),
+            // BRAILLE_PATTERNS
+                // = new UnicodeBlock("BRAILLE_PATTERNS"),
+            // CJK_RADICALS_SUPPLEMENT
+                // = new UnicodeBlock("CJK_RADICALS_SUPPLEMENT"),
+            // KANGXI_RADICALS
+                // = new UnicodeBlock("KANGXI_RADICALS"),
+            // IDEOGRAPHIC_DESCRIPTION_CHARACTERS =
+                // new UnicodeBlock("IDEOGRAPHIC_DESCRIPTION_CHARACTERS"),
+            // BOPOMOFO_EXTENDED
+                // = new UnicodeBlock("BOPOMOFO_EXTENDED"),
+            // CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A
+                // = new UnicodeBlock("CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A"),
+            // YI_SYLLABLES
+                // = new UnicodeBlock("YI_SYLLABLES"),
+            // YI_RADICALS
+                // = new UnicodeBlock("YI_RADICALS");
+// 
+        // private static final char blockStarts[] = {
+            // '\u0000', // Basic Latin
+            // '\u0080', // Latin-1 Supplement
+            // '\u0100', // Latin Extended-A
+            // '\u0180', // Latin Extended-B
+            // '\u0250', // IPA Extensions
+            // '\u02B0', // Spacing Modifier Letters
+            // '\u0300', // Combining Diacritical Marks
+            // '\u0370', // Greek
+            // '\u0400', // Cyrillic
+            // '\u0500', // unassigned
+            // '\u0530', // Armenian
+            // '\u0590', // Hebrew
+            // '\u0600', // Arabic
+            // '\u0700', // Syriac
+            // '\u0750', // unassigned
+            // '\u0780', // Thaana
+            // '\u07C0', // unassigned
+            // '\u0900', // Devanagari
+            // '\u0980', // Bengali
+            // '\u0A00', // Gurmukhi
+            // '\u0A80', // Gujarati
+            // '\u0B00', // Oriya
+            // '\u0B80', // Tamil
+            // '\u0C00', // Telugu
+            // '\u0C80', // Kannada
+            // '\u0D00', // Malayalam
+            // '\u0D80', // Sinhala
+            // '\u0E00', // Thai
+            // '\u0E80', // Lao
+            // '\u0F00', // Tibetan
+            // '\u1000', // Myanmar
+            // '\u10A0', // Georgian
+            // '\u1100', // Hangul Jamo
+            // '\u1200', // Ethiopic
+            // '\u1380', // unassigned
+            // '\u13A0', // Cherokee
+            // '\u1400', // Unified Canadian Aboriginal Syllabics
+            // '\u1680', // Ogham
+            // '\u16A0', // Runic
+            // '\u1700', // unassigned
+            // '\u1780', // Khmer
+            // '\u1800', // Mongolian
+            // '\u18B0', // unassigned
+            // '\u1E00', // Latin Extended Additional
+            // '\u1F00', // Greek Extended
+            // '\u2000', // General Punctuation
+            // '\u2070', // Superscripts and Subscripts
+            // '\u20A0', // Currency Symbols
+            // '\u20D0', // Combining Marks for Symbols
+            // '\u2100', // Letterlike Symbols
+            // '\u2150', // Number Forms
+            // '\u2190', // Arrows
+            // '\u2200', // Mathematical Operators
+            // '\u2300', // Miscellaneous Technical
+            // '\u2400', // Control Pictures
+            // '\u2440', // Optical Character Recognition
+            // '\u2460', // Enclosed Alphanumerics
+            // '\u2500', // Box Drawing
+            // '\u2580', // Block Elements
+            // '\u25A0', // Geometric Shapes
+            // '\u2600', // Miscellaneous Symbols
+            // '\u2700', // Dingbats
+            // '\u27C0', // unassigned
+            // '\u2800', // Braille Patterns
+            // '\u2900', // unassigned
+            // '\u2E80', // CJK Radicals Supplement
+            // '\u2F00', // Kangxi Radicals
+            // '\u2FE0', // unassigned
+            // '\u2FF0', // Ideographic Description Characters
+            // '\u3000', // CJK Symbols and Punctuation
+            // '\u3040', // Hiragana
+            // '\u30A0', // Katakana
+            // '\u3100', // Bopomofo
+            // '\u3130', // Hangul Compatibility Jamo
+            // '\u3190', // Kanbun
+            // '\u31A0', // Bopomofo Extended
+            // '\u31C0', // unassigned
+            // '\u3200', // Enclosed CJK Letters and Months
+            // '\u3300', // CJK Compatibility
+            // '\u3400', // CJK Unified Ideographs Extension A
+            // '\u4DB6', // unassigned
+            // '\u4E00', // CJK Unified Ideographs
+            // '\uA000', // Yi Syllables
+            // '\uA490', // Yi Radicals
+            // '\uA4D0', // unassigned
+            // '\uAC00', // Hangul Syllables
+            // '\uD7A4', // unassigned
+            // '\uD800', // Surrogates
+            // '\uE000', // Private Use
+            // '\uF900', // CJK Compatibility Ideographs
+            // '\uFB00', // Alphabetic Presentation Forms
+            // '\uFB50', // Arabic Presentation Forms-A
+            // '\uFE00', // unassigned
+            // '\uFE20', // Combining Half Marks
+            // '\uFE30', // CJK Compatibility Forms
+            // '\uFE50', // Small Form Variants
+            // '\uFE70', // Arabic Presentation Forms-B
+            // '\uFEFF', // Specials
+            // '\uFF00', // Halfwidth and Fullwidth Forms
+            // '\uFFF0', // Specials
+            // '\uFFFE', // non-characters
+        // };
+// 
+        // private static final UnicodeBlock[] blocks = {
+            // BASIC_LATIN,
+            // LATIN_1_SUPPLEMENT,
+            // LATIN_EXTENDED_A,
+            // LATIN_EXTENDED_B,
+            // IPA_EXTENSIONS,
+            // SPACING_MODIFIER_LETTERS,
+            // COMBINING_DIACRITICAL_MARKS,
+            // GREEK,
+            // CYRILLIC,
+            // null,
+            // ARMENIAN,
+            // HEBREW,
+            // ARABIC,
+            // SYRIAC,
+            // null,
+            // THAANA,
+            // null,
+            // DEVANAGARI,
+            // BENGALI,
+            // GURMUKHI,
+            // GUJARATI,
+            // ORIYA,
+            // TAMIL,
+            // TELUGU,
+            // KANNADA,
+            // MALAYALAM,
+            // SINHALA,
+            // THAI,
+            // LAO,
+            // TIBETAN,
+            // MYANMAR,
+            // GEORGIAN,
+            // HANGUL_JAMO,
+            // ETHIOPIC,
+            // null,
+            // CHEROKEE,
+            // UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS,
+            // OGHAM,
+            // RUNIC,
+            // null,
+            // KHMER,
+            // MONGOLIAN,
+            // null,
+            // LATIN_EXTENDED_ADDITIONAL,
+            // GREEK_EXTENDED,
+            // GENERAL_PUNCTUATION,
+            // SUPERSCRIPTS_AND_SUBSCRIPTS,
+            // CURRENCY_SYMBOLS,
+            // COMBINING_MARKS_FOR_SYMBOLS,
+            // LETTERLIKE_SYMBOLS,
+            // NUMBER_FORMS,
+            // ARROWS,
+            // MATHEMATICAL_OPERATORS,
+            // MISCELLANEOUS_TECHNICAL,
+            // CONTROL_PICTURES,
+            // OPTICAL_CHARACTER_RECOGNITION,
+            // ENCLOSED_ALPHANUMERICS,
+            // BOX_DRAWING,
+            // BLOCK_ELEMENTS,
+            // GEOMETRIC_SHAPES,
+            // MISCELLANEOUS_SYMBOLS,
+            // DINGBATS,
+            // null,
+            // BRAILLE_PATTERNS,
+            // null,
+            // CJK_RADICALS_SUPPLEMENT,
+            // KANGXI_RADICALS,
+            // null,
+            // IDEOGRAPHIC_DESCRIPTION_CHARACTERS,
+            // CJK_SYMBOLS_AND_PUNCTUATION,
+            // HIRAGANA,
+            // KATAKANA,
+            // BOPOMOFO,
+            // HANGUL_COMPATIBILITY_JAMO,
+            // KANBUN,
+            // BOPOMOFO_EXTENDED,
+            // null,
+            // ENCLOSED_CJK_LETTERS_AND_MONTHS,
+            // CJK_COMPATIBILITY,
+            // CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A,
+            // null,
+            // CJK_UNIFIED_IDEOGRAPHS,
+            // YI_SYLLABLES,
+            // YI_RADICALS,
+            // null,
+            // HANGUL_SYLLABLES,
+            // null,
+            // SURROGATES_AREA,
+            // PRIVATE_USE_AREA,
+            // CJK_COMPATIBILITY_IDEOGRAPHS,
+            // ALPHABETIC_PRESENTATION_FORMS,
+            // ARABIC_PRESENTATION_FORMS_A,
+            // null,
+            // COMBINING_HALF_MARKS,
+            // CJK_COMPATIBILITY_FORMS,
+            // SMALL_FORM_VARIANTS,
+            // ARABIC_PRESENTATION_FORMS_B,
+            // SPECIALS,
+            // HALFWIDTH_AND_FULLWIDTH_FORMS,
+            // SPECIALS,
+            // null,
+        // };
+// 
+        // /**
+         // * Returns the object representing the Unicode block containing the
+         // * given character, or <code>null</code> if the character is not a
+         // * member of a defined block.
+         // *
+         // * @param   c  The character in question
+         // * @return  The <code>UnicodeBlock</code> instance representing the
+         // *          Unicode block of which this character is a member, or
+         // *          <code>null</code> if the character is not a member of any
+         // *          Unicode block
+         // */
+        // public static UnicodeBlock of(char c) {
+            // int top, bottom, current;
+            // bottom = 0;
+            // top = blockStarts.length;
+            // current = top/2;
+            // // invariant: top > current >= bottom && ch >= unicodeBlockStarts[bottom]
+            // while (top - bottom > 1) {
+                // if (c >= blockStarts[current]) {
+                    // bottom = current;
+                // } else {
+                    // top = current;
+                // }
+                // current = (top + bottom) / 2;
+            // }
+            // return blocks[current];
+        // }
+    // }
+
+    /**
+     * The value of the <code>Character</code>.
+     *
+     * @serial
+     */
+    // private char value;
+
+    /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    private static final long serialVersionUID = 3786198910865385080L;
+
+    /**
+     * Constructs a newly allocated <code>Character</code> object that
+     * represents the specified <code>char</code> value.
+     *
+     * @param  value   the value to be represented by the 
+     *			<code>Character</code> object.
+     */
+    public Character(char{this} value) {  }
+  
+    public native char{this} charValue() ;
+
+ 
+    public native int{this} hashCode() ;
+
+    
+    public native boolean{this;obj} equals(Object obj) ;
+
+
+    public native String{this} toString() ;
+
+    
+    public native static String{c} toString(char c) ;
+
+
+
+    public native static boolean{ch} isLowerCase(char ch) ;
+
+
+    public native static boolean{ch} isUpperCase(char ch) ;
+
+   
+    public native static boolean{ch} isTitleCase(char ch) ;
+
+    
+    public native static boolean{ch} isDigit(char ch) ;
+
+    
+    public native static boolean{ch} isDefined(char ch) ;
+
+    
+    public native static boolean{ch} isLetter(char ch) ;
+
+   
+    public native static boolean{ch} isLetterOrDigit(char ch) ;
+
+    
+    public native static boolean{ch} isJavaLetter(char ch) ;
+
+   
+    public native static boolean{ch} isJavaLetterOrDigit(char ch) ;
+
+   
+    public native static boolean{ch} isJavaIdentifierStart(char ch) ;
+
+   
+    public native static boolean{ch} isJavaIdentifierPart(char ch) ;
+
+    
+    public native static boolean{ch} isUnicodeIdentifierStart(char ch) ;
+
+
+    public native static boolean{ch} isUnicodeIdentifierPart(char ch) ;
+
+  
+    public native static boolean{ch} isIdentifierIgnorable(char ch) ;
+
+ 
+    public native static char{ch} toLowerCase(char ch) ;
+
+  
+    public native static char{ch} toUpperCase(char ch) ;
+
+ 
+    public native static char{ch} toTitleCase(char ch) ;
+
+ 
+    public native static int{ch;radix} digit(char ch, int radix) ;
+
+   
+    public native static int{ch} getNumericValue(char ch) ;
+
+ 
+    public native static boolean{ch} isSpace(char ch) ;
+
+ 
+    public native static boolean{ch} isSpaceChar(char ch) ;
+
+
+    public native static boolean{ch} isWhitespace(char ch) ;
+
+ 
+    public native static boolean{ch} isISOControl(char ch) ;
+
+   
+    public native static int{ch} getType(char ch) ;
+
+  
+    public native static char{digit;radix} forDigit(int digit, int radix) ;
+
+ 
+    public native static byte{ch} getDirectionality(char ch) ;
+
+  
+    public native static boolean{ch} isMirrored(char ch) ;
+
+
+    public native int{this;anotherCharacter} compareTo(Character anotherCharacter) ;
+
+    
+    public native int{this;o} compareTo(Object o) ;
+
+}
+

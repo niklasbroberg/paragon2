@@ -1,0 +1,13 @@
+package java.lang;
+
+public native class Character {
+
+    public static ?policyof(c) boolean isWhitespace(Character c);
+    
+    public static ?(policyof(ch)*policyof(radix)) int digit(char ch, int radix);
+    
+    // Actually this should not be needed, since Java casts it...
+    public static ?(policyof(ch)*policyof(radix)) int digit(Character ch, int radix);
+    
+
+}

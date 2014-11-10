@@ -1,0 +1,9 @@
+public class UnaryActor
+{
+  public static final java.lang.Object alice = new java.lang.Object();
+  public static ?{java.lang.Object x:} final lock myLock(java.lang.Object);
+  public static final policy p = {java.lang.Object x: UnaryActor.myLock(x)};
+  public static final policy apol = {alice:};
+  public static void foo()
+  ;
+}

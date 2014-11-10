@@ -1,0 +1,4 @@
+public class UseNative
+{
+  public MyNative<{:}> mn;
+}

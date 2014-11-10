@@ -1,0 +1,7 @@
+package se.chalmers.parajpmail;
+
+public class ParsingException extends java.lang.Exception {
+
+  public ParsingException(?policyof(this) String msg) {}
+
+}

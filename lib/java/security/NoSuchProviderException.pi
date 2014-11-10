@@ -1,0 +1,17 @@
+/*
+ * @(#)NoSuchProviderException.java	1.14 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+package java.security;
+
+import java.lang.Exception;
+import java.lang.String;
+
+public native class NoSuchProviderException extends Exception {
+
+    public NoSuchProviderException() {}
+    public NoSuchProviderException(?policyof(this) java.lang.String  msg) {}
+}

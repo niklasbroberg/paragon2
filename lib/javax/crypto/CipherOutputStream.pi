@@ -1,0 +1,12 @@
+package javax.crypto;
+
+import java.io.ByteArrayOutputStream;
+
+public native class CipherOutputStream<policy p> extends java.io.FilterOutputStream<p> {
+
+  public CipherOutputStream(?p ByteArrayOutputStream<p> bOut, ?p Cipher key) {}
+  
+  
+  
+
+}

@@ -1,0 +1,24 @@
+package java.lang;
+
+import java.io.*;
+import se.chalmers.paragon.runtime.system.RuntimeActor;
+
+public native class System {
+
+    public static ?{Object x:} PrintStream<{Object x:}> out;
+    // probably need lock on integrity or something?	
+    public static ?{Object x:} InputStream<{Object x:}> in; // in other setting, might be labeled untrusted
+    
+    /*
+    public static !p <policy p> void arraycopy(?p byte[]<p> from, ?p int from_i,
+                                     ?p byte[]<p> to, ?p int from_t, ?p int nbytes);
+                                     */
+                                     
+    public static !policyof(to) void arraycopy(?policyof(to) byte[]<policyof(to)> from, ?policyof(to) int from_i,
+                                     byte[]<policyof(to)> to, ?policyof(to) int from_t, ?policyof(to) int nbytes);
+                                     
+    public static ?policyof(key) String getProperty(String key) ;
+    
+    public static void exit(int c);
+
+}

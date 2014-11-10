@@ -1,0 +1,4 @@
+public interface InterfaceFieldRedeclarationDifferentTypes {
+  public static final int x = 0;
+  public static final double x = 1.0;
+}

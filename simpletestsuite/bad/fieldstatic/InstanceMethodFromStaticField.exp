@@ -1,0 +1,3 @@
+In the context of class InstanceMethodFromStaticField:
+In fallback context. When checking initializer of field x:
+Non-static method inst cannot be referenced from a static context

@@ -1,0 +1,5 @@
+public class D {
+
+    private C<{Object x:}> c = new C<{Object x:}>();
+
+}

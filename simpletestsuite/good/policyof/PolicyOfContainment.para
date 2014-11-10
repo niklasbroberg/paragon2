@@ -1,0 +1,19 @@
+class PolicyOfContainment {
+
+  ?{:} int t = 0;
+  ?{Object x:} int b = 1;
+
+  ?policyof(x) int foo(int x) {
+    return x;
+  }
+
+  void bar() {
+    t = foo(4);
+  }
+
+
+  ?(policyof(x) * policyof(y)) int baz(int x, int y) {
+    return x+y;
+  }
+
+}

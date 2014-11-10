@@ -1,0 +1,4 @@
+public interface InterfaceMethodRedefinition {
+  public void f();
+  public void f();
+}

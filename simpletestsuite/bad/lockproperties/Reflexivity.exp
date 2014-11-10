@@ -1,0 +1,4 @@
+In the context of class Reflexivity:
+In the context of method foo:
+In the context of lock state []:
+Cannot assign result of expression b with policy { java.lang.Object x : A(alice#0, x)} to location a with policy { alice#0 :}

@@ -1,0 +1,19 @@
+public class ConstantPolicy {
+
+  public !policyof(i) void m(int i) {
+  }
+
+  // Type checks
+  public void foo() {
+    int x = 4;
+    m(x);
+  }
+
+  // Type checksn't
+  public void bar() {
+    m(4);
+  }
+
+}
+
+

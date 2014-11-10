@@ -1,0 +1,18 @@
+package se.chalmers.parajpmail;
+
+import se.chalmers.parajpmail.runtime.Debug;
+
+public class ParaJPMailException extends java.lang.Exception {
+
+
+  public ParaJPMailException() {
+    super();
+  }
+
+  // should have been inherited? ISSUE
+  public ParaJPMailException(String msg) {
+    super(msg);
+    Debug.println(msg);    
+  }
+
+}

@@ -1,0 +1,17 @@
+public class C {
+
+    public static final lock SomeUnaryLock(Object);
+    
+    public static final lock SomeNonArayLock;
+    
+    public static final Object alice = new Object();
+    
+    public void foo() {
+        
+        if (SomeNonArayLock) { }
+        
+        if (SomeUnaryLock(alice)) { }
+    
+    }
+
+}

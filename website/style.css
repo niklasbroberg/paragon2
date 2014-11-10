@@ -1,0 +1,157 @@
+* {
+	margin: 0px;
+	padding: 0px;
+}
+
+html {
+	overflow-y: scroll;
+}
+
+body {
+	margin-top: 15px;
+	background: #557799;
+	font-family: verdana;
+	font-size: 14px;
+}
+
+div#centerpane {
+	width: 950px;
+	margin: 0px auto;
+	background: #FAFAFF;
+	border-radius: 15px;
+	padding: 20px;
+	box-shadow: 10px 10px 5px #33475C;
+	margin-bottom: 20px;
+}
+
+hr {
+	border: 0;
+	color: #aaaaaa;
+	background-color: #aaaaaa;
+	height: 1px;
+	width: 930px;
+	text-align: left;
+	margin: 10px;
+}
+
+div#leftpane {
+	width: 223px;
+	float: left;
+}
+
+div#infopane {
+	background: #CCD6E0;
+	padding: 10px;
+	border: solid 2px #2A3C4C;
+	border-radius: 10px;
+}
+
+div#rightpane {
+	margin-left: 263px;
+	min-height: 350px; /* Height of leftpane */
+	margin-right: 20px;
+}
+
+div#header {
+	width: 100%;
+	text-align: center;
+	font-size: 25px;
+	font-weight: bold;
+	margin-bottom: 20px;
+}
+
+div#footer {
+	text-align: center;
+}
+
+p {
+	margin-top: 10px;
+	
+	text-align: justify;
+}
+
+p.first {
+	margin-top: 0px;
+}
+
+span.bold {
+	font-weight: bold;
+}
+
+a {
+	color: #33475C;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+div.link a {
+	color: #303030;
+	font-weight: normal;
+}
+
+div.link {
+	margin: 20px;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+ul {
+	list-style-type: none;
+	list-style-position: inside;
+	margin-top: 15px;
+	margin-bottom: 15px;
+}	
+
+td {
+	vertical-align: top;
+}
+
+li {
+	margin: 5px;
+}
+
+img.floatright {
+	border-radius: 15px;
+	float: right;
+	margin-left: 10px;
+}
+
+img.floatleft {
+	border-radius: 15px;
+	float: left;
+	margin-right: 10px;
+}
+
+table {
+	border-collapse:collapse;
+}
+
+span.expl {
+	color: #557799;
+	font-size: 12px;
+	margin-left: 10px;
+}
+
+span.answer {
+	color: #557799;
+	font-size: 11px;
+	margin-left: 10px;
+}
+
+p.code {
+
+    background: #ddd;
+    font-family: Consolas,Menlo,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New,monospace,serif;
+    padding: 10px 10px 10px 25px;
+    margin: 15px;
+    text-align: left;
+
+}
+
+span.code {
+
+    font-family: Consolas,Menlo,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New,monospace,serif;
+
+}

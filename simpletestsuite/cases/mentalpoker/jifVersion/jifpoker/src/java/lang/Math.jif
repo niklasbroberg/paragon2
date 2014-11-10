@@ -1,0 +1,18 @@
+/*
+ * @(#)Math.java	1.57 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+package java.lang;
+import java.util.Random;
+
+
+public final strictfp class Math {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    public native static long {a} round(double a);
+    public native static double random() ;
+    public native static double{a} ceil(double a);
+}
+

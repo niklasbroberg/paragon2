@@ -1,0 +1,9 @@
+public class StaticMethodStaticMethodFromInstanceMethod
+{
+  private void inst()
+  ;
+  private static StaticMethodStaticMethodFromInstanceMethod stat1()
+  ;
+  public static int stat2()
+  ;
+}

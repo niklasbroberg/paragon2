@@ -1,0 +1,17 @@
+public class Good1 {
+
+    public static final Object Alice = new Object();
+    
+    public static final lock Declassified(Object);
+    
+    public static final policy pub = { Object x : };
+    
+    public static final policy alice =  { Alice : };
+    
+    ?pub public static int bar(?pub int x) {
+    
+        int y = x;
+        return y;
+    }
+
+}

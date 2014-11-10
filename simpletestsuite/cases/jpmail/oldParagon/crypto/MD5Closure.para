@@ -1,0 +1,39 @@
+package crypto;
+
+import java.security.MessageDigest;
+
+import jif.DLM;
+
+import jif.lang.Closure;
+
+public class MD5Closure<actor a, policy p> implements Closure<a,p> { 
+    final ?{'x:DLM.RunsFor(a)} String plaintext; // should this be a String? 
+                                  // TODO check comment hicks
+    final ?policyof(this) MessageDigest md5;
+
+    public MD5Closure(?{'x:} MessageDigest md5, ?{'x:DLM.RunsFor(a)} String plaintext) {
+    		this.plaintext = plaintext;
+    		this.md5 = md5;
+    		//super();
+    }
+
+    // This returns a Ciphertext
+    ~DLM.RunsFor(a)
+    !p
+    public ?policyof(this) Object invoke() {
+    		?policyof(this) String plaintxt = plaintext;
+    		if (md5 != null) {
+				if (plaintxt != null)
+				  md5.update(plaintxt.getBytes());
+				return md5.digest();
+    		}
+    		return null;
+    		// Note, changed from:
+    		
+    		//return md5 != null 
+    		//  ? md5.digest( plaintxt != null 
+    		//                 ? plaintxt.getBytes() 
+    		//                 : null ) 
+    		//  : null;
+    }
+}

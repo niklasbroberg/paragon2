@@ -1,0 +1,26 @@
+package se.chalmers.parajpmail;
+
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+import se.chalmers.paragon.swing.PFrame;
+import javax.swing.JLabel;
+
+public class About<policy p> implements ActionListener<p> {
+
+  private static ?p PFrame<p> aboutFrame;
+
+  public About() { }
+
+  public !p void actionPerformed(?p ActionEvent e) {
+    if (aboutFrame == null) { // Only one frame at a time.
+      aboutFrame = new PFrame<p>("About ParaJPMail");
+      aboutFrame.add(new JLabel<p>("It's written in Paragon!"));
+      aboutFrame.pack();
+      aboutFrame.setResizable(false);
+      aboutFrame.setDefaultCloseOperation(PFrame.DISPOSE_ON_CLOSE);
+    }
+    aboutFrame.setVisible(true);
+  }
+
+}

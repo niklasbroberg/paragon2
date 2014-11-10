@@ -1,0 +1,29 @@
+package se.chalmers.parajpmail;
+
+/* Needed to wrap around GUIs. Whole window and all components need to have the
+ * same (joined) policy.
+ */ 
+public class GUI<policy publicData, policy secretData> {
+
+    private lock PublicData;
+    private lock SecretData;
+
+    /* Way to separate policies in a window. Need to explicitly open the
+     * lock for setting the corresponding policy.
+     */
+    public final policy windowPol =
+            publicData * {'x : PublicData} +
+            secretData * {'x : SecretData};
+
+    public GUI() {
+        // Initialize GUI
+    }
+
+    public ?publicData String getToAddress() {
+        open PublicData {
+            return // get to address field
+        }
+    }
+
+
+}

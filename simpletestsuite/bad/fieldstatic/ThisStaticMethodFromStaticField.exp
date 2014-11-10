@@ -1,0 +1,3 @@
+In the context of class ThisStaticMethodFromStaticField:
+In fallback context. When checking initializer of field x:
+Non-static field this cannot be referenced from a static context

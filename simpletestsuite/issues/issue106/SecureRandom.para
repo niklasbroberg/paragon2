@@ -1,0 +1,4 @@
+import java.util.Random;
+public class SecureRandom<policy p> extends java.util.Random {
+  // should have given an error because we missed to add <p> to Random
+}

@@ -1,0 +1,51 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import java.security.*;
+
+public class DNCLink[label L]
+implements JifObject[L]{
+
+
+	private byte{L}[]{L} chainingValue; //chaining value
+
+	private DataField[L]{L} data;
+
+	private int{L} k;
+
+	public byte{L}[]{L} getChainingValue() {
+		return this.chainingValue;
+	}
+
+	public DataField[L]{L} getData() {
+		return data;
+	}
+    
+    public int{L} getk() {
+        return this.k;
+    }
+	
+	public DNCLink {L}(int {L}k, 
+		DataField[L] {L}data, byte{L}[] {L}chainingValue) {
+            
+        this.k = k;
+        this.data = data;
+        this.chainingValue = chainingValue;
+	}
+    
+    public String{L} toString() {
+        return "";
+	}
+	
+	public boolean{o;L} equals(IDComparable[{}] o) {
+		return false;	
+	}
+	
+	public int{L} hashCode() {
+		return 0;
+	}
+	
+}

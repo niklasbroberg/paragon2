@@ -1,0 +1,8 @@
+public class StaticMethodInstanceMethodFromStaticField
+{
+  private static int x = stat().inst();
+  private static StaticMethodInstanceMethodFromStaticField stat()
+  ;
+  public int inst()
+  ;
+}

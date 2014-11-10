@@ -1,0 +1,5 @@
+public class StaticClassMethodFromStaticMethod {
+  private static void stat() {
+    int x = Integer.parseInt("1");
+  }
+}

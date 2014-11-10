@@ -1,0 +1,11 @@
+import java.io.*;
+
+public native class BufferedReader<policy p> {
+
+    public BufferedReader(?p InputStreamReader<p> isr) { }
+    
+    public ?p String readLine() throws !p IOException;
+    
+    public ?q <policy q> java.io.BufferedReader<q> upgrade();
+
+}

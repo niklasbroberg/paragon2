@@ -1,0 +1,49 @@
+--- KeyPrincipal.jif.bck	2012-12-17 16:46:40.403377541 +0100
++++ KeyPrincipal.jif	2012-12-17 16:55:22.643394253 +0100
+@@ -91,5 +91,46 @@
+     				return false;
+     			}
+ */    		}        
++    }
++    private boolean{this;dummy;exclude} inExclude(Principal{this} s, Principal{this;dummy}[]{this;dummy} exclude, int dummy)
++    {
++    		try {
++	        for (int{this;dummy;exclude} j = 0; exclude != null && j < exclude.length; j++) {
++	        		Principal{this;dummy;exclude} q = exclude[j];
++	        		if (s == q) return true; // also test equals()-equality? 
++	        }
++	    } catch(ArrayIndexOutOfBoundsException impossible) {}
++        return false;
++    } 
++    
++     public Principal{this;p}[]{this;p} findChainUpto{p;this}(Principal p, Principal{this;p}[]{this;p} exclude) where authority (this) {
++        int{this;p} d = 0;
++        // go through our set of superiors, and see if we can find a chain
++        // from them to p.
++        Principal{this;p}[] chain;
++        
++        // exclude anything we've seen before
++        Principal{this;p}[] newExclude = addToChainBottom(exclude,this,d);
++        
++        Principal{this:}[]{this} sprs = declassify(superiors, {this});
++        
++        for (int i = 0; sprs != null && i < sprs.length; i++) {
++            try {
++                Principal{this} s = declassify(sprs[i], {this});
++
++                boolean{this;p} cycle = inExclude(s,exclude,d);
++                if (!cycle) {
++                		chain = PrincipalUtil.findDelegatesChain(p, s, newExclude);
++                		if (chain != null) {
++		                // success!
++		                // create a longer chain with this at the bottom 
++		                return addToChainBottom(chain, this, d);
++                		}
++                }
++            }
++            catch (ArrayIndexOutOfBoundsException impossible) {}
++        }
++
++        return null;
+     }
+ }

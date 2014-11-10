@@ -1,0 +1,68 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import java.math.BigInteger;
+ 
+public class BigIntPair[label L] 
+implements JifObject[L]{
+    public boolean{L;o} equals(IDComparable[L] o) {
+        return false;
+    }
+
+        
+        
+	private final DABigInteger[L]{L} x;
+    private final DABigInteger[L]{L} y;
+	public BigIntPair(DABigInteger[L] {L} a, DABigInteger[L] {L}b) {
+		x = a;
+		y = b;		
+	}
+	
+	public DABigInteger[L]{L} getX() {
+		return this.x;		
+	}
+	
+	public DABigInteger[L]{L} getY() {
+		return this.y;
+	}
+	
+	public int{L} byteLength{L}() {
+                
+        DABigInteger[L]{L} x = this.x;
+        DABigInteger[L]{L} y = this.y;
+        
+        if (x == null || y == null) return -1;
+        
+        //int x_bitLength = x.bitLength();
+        //int y_bitLength = y.bitLength(); 
+        
+        int x_byteLength = x.byteLength();
+        int y_byteLength = y.byteLength();
+        
+        int retval = x_byteLength + y_byteLength;
+        
+		return retval;
+	}
+    
+    public String{L} toString() {
+        DABigInteger[L] x= this.x;
+        DABigInteger[L] y = this.y;
+        if (x == null || y == null) return "";
+        return "(" + x.toString() + ", " + y.toString() + ")";
+    }
+
+
+    public int{L} hashCode() {
+        DABigInteger[L] x= this.x;
+        DABigInteger[L] y = this.y;
+        if (x == null || y == null) return 1;
+        
+        return x.hashCode()+31*y.hashCode();
+        
+    }    
+  
+}
+

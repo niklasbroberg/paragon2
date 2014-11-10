@@ -1,0 +1,19 @@
+/**
+ * Class testing the flow-construct.
+ **/
+public class TestFlow {
+
+    /**
+     * Simple flow calling the AtoBBlock, assigning data from level A to level
+     * B, this is allowed since it is in the appropriate flow-construct.
+     **/
+    public !LexicalFlow.pol(TestData.levelB) void
+            flow_A_to_B() {
+
+        // TestData.dataB is now 16
+        LexicalFlow.<TestData.levelA, TestData.levelB, 
+                LexicalFlow.pol(TestData.levelB)>flow(new AtoBBlock());
+        // TestData.levelBData is now 100
+    }
+
+}

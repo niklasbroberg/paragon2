@@ -1,0 +1,7 @@
+public class StaticFieldInstanceMethodFromStaticMethod {
+  private static Object obj = new Object();
+
+  private static void stat() {
+    String str = obj.toString();
+  }
+}

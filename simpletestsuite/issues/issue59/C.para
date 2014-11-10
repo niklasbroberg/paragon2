@@ -1,0 +1,8 @@
+public class C {
+
+    // Allowed but shouldnt:
+    public final Object myActor = new Object();
+    public static final policy myPolicy = { myActor : };
+    
+}
+

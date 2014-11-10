@@ -1,0 +1,11 @@
+import java.io.InputStream;
+
+public class InstanceOf {
+  public void foo(Object o) {
+    if (o instanceof String)
+      ;
+    if (o instanceof InputStream<{Object x:}>)
+      ;
+  }
+
+}

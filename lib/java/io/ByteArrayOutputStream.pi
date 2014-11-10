@@ -1,0 +1,11 @@
+package java.io;
+
+public native class ByteArrayOutputStream<policy p> extends OutputStream<p> {
+	
+	public ByteArrayOutputStream() { }
+	
+	public !p void reset();
+	
+	public ?p byte[]<p> toByteArray();
+	
+}

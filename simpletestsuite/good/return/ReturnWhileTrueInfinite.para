@@ -1,0 +1,6 @@
+public class ReturnWhileTrueInfinite {
+  public int f() {
+    while (true) {
+    }
+  }
+}

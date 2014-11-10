@@ -1,0 +1,4 @@
+public class FieldRedeclarationDifferentTypes {
+  private int x;
+  private double x;
+}

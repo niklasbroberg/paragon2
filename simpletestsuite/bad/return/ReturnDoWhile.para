@@ -1,0 +1,7 @@
+public class ReturnDoWhile {
+  public int f() {
+    do {
+    } while (false);
+  }
+}
+

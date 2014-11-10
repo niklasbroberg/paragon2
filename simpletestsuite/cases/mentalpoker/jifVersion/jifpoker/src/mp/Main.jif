@@ -1,0 +1,48 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ */
+package mp;
+
+import java.io.PrintStream;
+import jif.runtime.Runtime;
+import jif.util.ArrayList;
+
+class Main authority(Alice, Bob){
+    public static final void main {}(principal {} p, String{}[]{} args)
+    throws (SecurityException, IllegalArgumentException)
+    where authority(Alice, Bob) {
+        Main.m = new Main(p);
+        
+        //new MPTable[Alice, Bob]().play("Alice", "Bob");
+        if (args!= null && args.length > 0)
+            try {
+                new Communicator[Alice]().play(args[0]);
+            } catch (ArrayIndexOutOfBoundsException ignored) {
+            }
+         
+        else
+            test("invalid usage\n");
+      
+    }
+    
+    public final principal {} p;
+    public static Main m;
+    private Main (principal {} p ) {
+        this.p    = p;
+    }
+    
+    public static void test{} (String{} s) throws (SecurityException)
+	where authority (Alice,Bob) {
+		Main m = Main.m;
+		if (m==null) return;
+		final principal {} pp = m.p;
+
+		Runtime[pp] runtime = Runtime[pp].getRuntime(pp);
+		
+		if (runtime == null) return;
+		PrintStream [{}] output = runtime.stdout(new label{});
+		if (output == null) return;
+		if (s == null) return;
+		output.print (s);		
+	}
+}

@@ -1,0 +1,15 @@
+package javax.mail;
+
+public native class Session {
+
+  public static ?p <policy p>
+  Session getInstance(?p java.util.Properties<p,p> props, ?p Authenticator authenticator);
+  
+  public static ?p <policy p> Session getDefaultInstance(?p java.util.Properties<p,p> props,
+                                         ?p Authenticator authenticator);
+                                         
+    public ?(policyof(this)*policyof(protocol)) Store getStore(String protocol)
+        throws ?(policyof(this)*policyof(protocol))
+               !(policyof(this)*policyof(protocol)) NoSuchProviderException;
+
+}

@@ -1,0 +1,9 @@
+public class ParamActor<actor Object a> {
+
+   public lock L(Object);
+
+   public void foo() {
+       open L(a);
+   }
+
+}

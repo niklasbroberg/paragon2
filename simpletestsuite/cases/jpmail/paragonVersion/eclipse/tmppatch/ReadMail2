@@ -1,0 +1,11 @@
+--- ReadMail.bck	2013-02-07 14:15:08.678305887 +0100
++++ src/se/chalmers/parajpmail/ReadMail.java	2013-02-07 14:15:11.494305878 +0100
+@@ -94,7 +94,7 @@
+     closeB.addActionListener(new se.chalmers.parajpmail.CloseMail());
+     p.add(closeB);
+     javax.swing.JButton about = new javax.swing.JButton("About");
+-    about.addActionListener(new se.chalmers.parajpmail.About());
++    about.addActionListener(new se.chalmers.parajpmail.About(toMe));
+     p.add(about);
+     javax.swing.JFrame f = new javax.swing.JFrame("ParaJPMail");
+     f.setLayout(new java.awt.GridBagLayout());

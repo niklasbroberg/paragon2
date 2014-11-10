@@ -1,0 +1,203 @@
+/*
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+/*
+ * @(#)BigInteger.java	1.55 03/01/29
+ */
+
+package java.math;
+import java.util.Random;
+
+ 
+
+public class BigInteger /*extends Number implements Comparable*/{
+	private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+   
+//    public int signum;
+
+  //  public int[] mag;
+
+
+    //Constructors
+
+    public BigInteger(byte{this}[]{this} val)
+		throws (NumberFormatException {this}){}
+
+    public BigInteger(int{this} signum, byte{this}[]{this} magnitude) 
+		throws (NumberFormatException {this}){}
+
+    public BigInteger(String{this} val, int {this} radix) 
+		throws (NumberFormatException {this}){}
+
+
+    //BigInteger(char{this}[]{this} val) {}
+
+    public BigInteger(String{this} val) 
+		throws (NumberFormatException {this}){}
+
+    public BigInteger(int{this} numBits, Random {this} rnd) 
+		throws (IllegalArgumentException{this;numBits}){}
+
+    public BigInteger(int{this} bitLength, int{this} certainty, Random {this} rnd)
+		throws (ArithmeticException{this; bitLength}) {}
+
+    public native static BigInteger{bitLength; rnd} probablePrime(int bitLength, Random  rnd)
+		throws (ArithmeticException{bitLength});
+		
+    public native boolean{this; certainty} primeToCertainty(int certainty);
+
+    
+    // int jacobiSymbol(int{this} p, BigInteger{this} n) {}
+
+
+    // BigInteger(MutableBigInteger{this} val, int{this} sign) {}
+
+    public native static BigInteger{val} valueOf(long val);
+
+
+
+    // Constants
+
+
+    public static /*final*/ BigInteger ZERO; // = new BigInteger(new int[0], 0);
+
+    public static /*final*/ BigInteger ONE; // = valueOf(1);
+
+    public native BigInteger{this; val} add(BigInteger val);
+
+    public native BigInteger{this;val} subtract(BigInteger val);
+
+    public native BigInteger{this; val} multiply(BigInteger val);
+
+    public native BigInteger{this; val} divide(BigInteger val)
+		throws (ArithmeticException{this;val});
+
+    public native BigInteger{this; val}[]{this;val} divideAndRemainder(BigInteger val)
+		throws (ArithmeticException{this;val});
+
+    public native BigInteger{this;val} remainder(BigInteger val)
+		throws (ArithmeticException{this;val});
+
+    public native BigInteger{this;exponent} pow(int exponent)
+		throws (ArithmeticException{this;exponent});
+
+    public native BigInteger{this;val} gcd(BigInteger val);
+
+    //static void primitiveRightShift(int[] a, int len, int n) {}
+
+
+    //static void primitiveLeftShift(int[] a, int len, int n) {}
+
+    public native BigInteger{this} abs();
+
+    public native BigInteger{this} negate();
+
+    public native int{this} signum();
+
+    public native BigInteger{this;m} mod(BigInteger m)
+		throws (ArithmeticException{this;m});
+
+    public native BigInteger{this;exponent;m} modPow(BigInteger exponent, BigInteger m)
+		throws (ArithmeticException{this;m});
+
+//    static int[] bnExpModThreshTable = {7, 25, 81, 241, 673, 1793,
+//                                                Integer.MAX_VALUE}; // Sentinel
+
+//    static int mulAdd(int[] out, int[] in, int offset, int len, int k) {}
+
+//    static int addOne(int[] a, int offset, int mlen, int carry) {}
+
+    public native BigInteger{this;m} modInverse(BigInteger m)
+		throws (ArithmeticException{this;m});
+    public native BigInteger{this;n} shiftLeft(int n);
+
+    public native BigInteger{this;n} shiftRight(int n);
+
+//    int[] javaIncrement(int[] val) {}
+
+    public native BigInteger{this;val} and(BigInteger val);
+
+    public native BigInteger{this;val} or(BigInteger val);
+
+    public native BigInteger{this;val} xor(BigInteger val) ;
+
+    public native BigInteger{this} not();
+
+    public native BigInteger{this;val} andNot(BigInteger val);
+
+
+    public native boolean{this;n} testBit(int n)
+		throws (ArithmeticException{this;n});
+
+    public native BigInteger{this;n} setBit(int n)
+		throws (ArithmeticException{this;n});
+
+    public native BigInteger{this;n} clearBit(int n)
+		throws (ArithmeticException{this;n});
+
+    public native BigInteger{this;n} flipBit(int n)
+		throws (ArithmeticException{this;n});
+
+    public native int{this} getLowestSetBit() ;
+
+
+    public native int{this} bitLength();
+
+//    static int bitLen(int w) {}
+/*
+    final static byte trailingZeroTable[] = {
+      -25, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	7, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0,
+	4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0};
+*/
+    public native int{this} bitCount();
+
+    static native int{val} bitCnt(int val);
+
+    static native int{val} trailingZeroCnt(int val) ;
+
+    public native boolean{this;certainty} isProbablePrime(int certainty);
+
+
+    public native int{this;val} compareTo(BigInteger val);
+
+    public native int{this;o} compareTo(Object o)
+		throws(ClassCastException{this;o});
+
+    public native boolean{this;x} equals(Object x) ;
+
+    public native BigInteger{this;val} min(BigInteger val) ;
+
+    public native BigInteger{this;val} max(BigInteger val);
+
+
+    public native int{this} hashCode();
+
+    public native String{this;radix} toString(int radix);
+
+    public native String{this} toString() ;
+
+    public native byte{this}[]{this} toByteArray() ;
+    public native int{this} intValue();
+
+    public native long{this} longValue();
+    public native float{this} floatValue();
+
+    public native double{this} doubleValue() ;
+
+}

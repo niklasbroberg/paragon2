@@ -1,0 +1,46 @@
+// Paragonized
+
+/* This is Jif signature for a Java native class.
+ *
+ * This file provides a Jif signature for Jif code 
+ * to be compiled against. However, this signature is 
+ * disregarded at runtime, and instead the standard 
+ * Java native class files are used.
+ *
+ * Methods are marked as native to avoid the need to
+ * provide an implementation for them.
+ */
+package java.io;
+
+public native class ByteArrayInputStream<policy p> extends InputStream<p> {
+    // TODO check, why no policy on array elements?
+
+	!(p*policyof(buf)) // TODO check should this not be meet?
+    public ByteArrayInputStream(?p byte[] buf) {
+//	    	this.buf = buf;
+//	    	this.pos = 0;
+//	    	this.count = buf.length;
+    }
+
+	!(p*policyof(buf)) // TODO check should this not be meet?
+    public ByteArrayInputStream(?p byte[] buf, 
+                                ?p int offset, 
+                                ?p int length) {
+//	    	this.buf = buf;
+//	    	this.pos = offset;
+//	    	this.count = Math.min(offset + length, buf.length);
+//	    	this.mark = offset;
+    }
+
+    public native ?p int read();
+    public native !(p*policyof(b)) ?(p*policyof(b)) // TODO here too
+    int read(?p byte[] b, ?p int off, ?p int len);
+    public native long skip(?p long n);
+    public native ?p int available();
+//    public boolean{L} markSupported();
+//    public void mark(int readAheadLimit);
+//    public synchronized void reset();
+    // TODO - issue, cannot use close as name.
+    // public native !p void close() 
+    //  throws (!p IOException);
+}

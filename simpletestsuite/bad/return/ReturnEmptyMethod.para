@@ -1,0 +1,3 @@
+public class ReturnEmptyMethod {
+  public int f() {}
+}

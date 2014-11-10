@@ -1,0 +1,8 @@
+public class Inherit {
+
+   public int foo() {
+     String s = "aa";
+     return s.hashCode(); // all methods should inherit this from object
+   }
+
+}

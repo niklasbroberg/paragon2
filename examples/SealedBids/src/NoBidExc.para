@@ -1,0 +1,6 @@
+/**
+ * Simple exception for modelling that a bid was not received on the
+ * communication channel with a bidder.
+ **/
+public class NoBidExc extends Exception {
+}

@@ -1,0 +1,9 @@
+package javax.mail.internet;
+
+public native class InternetAddress extends javax.mail.Address {
+
+  public InternetAddress(?policyof(this) String address) 
+  throws !policyof(address) ?policyof(address) javax.mail.internet.AddressException
+  {}
+
+}

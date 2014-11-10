@@ -1,0 +1,7 @@
+public class InstanceFieldFromStaticMethod {
+  private int x;
+
+  private static void stat() {
+    int y = x;
+  }
+}

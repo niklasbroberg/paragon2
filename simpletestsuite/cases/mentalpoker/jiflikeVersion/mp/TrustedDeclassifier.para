@@ -1,0 +1,279 @@
+package mp;
+
+import java.util.ArrayList;
+
+public class TrustedDeclassifier {
+
+  private static final actor trustor;
+  
+  public static final policy trusted = { trustor : } ;
+  
+  public static final ?trusted lock Declassify;
+  
+  private static final policy declasable = { 'x : Declassify };
+  
+  ////
+  // boolean
+  ////
+
+  ?target public static <policy m,policy target> boolean
+  declassify(?(m+target*declasable) boolean b) {
+      open Declassify {
+          return b;
+      } 
+  }
+  
+  ////
+  // Byte array
+  ////
+
+  ?target !target public static <policy m,policy target> byte[]<target>
+  declassify(?(m+target*declasable) byte[]<m+target*declasable> array) {
+      open Declassify {
+          byte[]<target> result = new byte[array.length]<target>;
+          for (int i = 0; i < result.length; i++) {
+              result[i] = array[i];
+          }
+          return result;
+      } 
+  }
+  
+  ////
+  // Int array
+  ////
+
+  ?target !target public static <policy m,policy target> int[]<target>
+  declassify(?(m+target*declasable) int[]<m+target*declasable> array) {
+      open Declassify {
+          int[]<target> result = new int[array.length]<target>;
+          for (int i = 0; i < result.length; i++) {
+              result[i] = array[i];
+          }
+          return result;
+      } 
+  }
+  
+  ////
+  // DABigInteger
+  ////
+  
+  ?target !target public static <policy m, policy target> DABigInteger<target>
+  declassify(?(m+target*declasable) DABigInteger<m+target*declasable> bigInt) {
+      open Declassify {
+          try {
+              return new DABigInteger<target>(bigInt.getValue());
+          } catch (IllegalArgumentException e) {
+              return null;
+          }
+      } 
+  }
+  
+  ////
+  // Digest
+  ////
+  
+  ?target !target public static <policy m,policy target> Digest<target>
+  declassify(?(m+target*declasable) Digest<m+target*declasable> digest) {
+      open Declassify {
+          ?target byte[]<target> bA = TrustedDeclassifier.<m,target>declassify(digest.toByteArray());
+          return new Digest<target>(bA);
+      } 
+  }
+  
+  ////
+  // PHIntVector
+  ////
+  
+  ?target !(m+target) public static <policy m,policy target> PHIntVector<target>
+  declassify(?(m+target*declasable) PHIntVector<m+target*declasable> iv) {
+      open Declassify {      
+          ?target int size = iv.size();
+          ?target PHIntVector<target> result = new PHIntVector<target>();
+          result.ensureCapacity(size);
+          try {
+              for (int i = 0; i < iv.size(); i++)
+                  result.add(iv.getPHI(i));
+          } catch (IndexOutOfBoundsException $) { }
+          return result;
+      } 
+  }
+  
+  ////
+  // CardVector
+  ////
+  
+  // TODO should be m+target ?
+  ?target !(m+target) public static <policy m,policy target> CardVector<target>
+  declassify(?(m+target*declasable) CardVector<m+target*declasable> cv) {
+      open Declassify {      
+          ?target BigIntVector<target> bv = 
+              TrustedDeclassifier.<m,target>declassify(cv.getValueVector());
+          
+          try {
+              return new CardVector<target>(bv);
+          } catch (IllegalArgumentException $) { 
+              return null;
+          }
+      } 
+  }
+  
+  ////
+  // DAVector
+  ////
+  
+  // TODO should be m+target ?
+  ?target !(m+target) public static <policy m,policy target> DAVector<target>
+  declassify(?(m+target*declasable) DAVector<m+target*declasable> dav) {
+      open Declassify {      
+           ?target DAVector<target> res = new DAVector<target>();
+           int t = dav.size();
+           res.ensureCapacity(t);
+           for (int i = 0; i < t; i++) {
+              try {
+                 DataFieldAttribute<m+target*declasable> df = 
+                    (DataFieldAttribute<m+target*declasable>) dav.get(i);
+                 res.add(TrustedDeclassifier.<m,target>declassify(df));
+              } catch (IndexOutOfBoundsException ignored) {
+              } catch (ClassCastException ignored) {
+              }
+           }
+
+           return res;
+      } 
+  }
+  
+  ////
+  // DataFieldAttribute
+  ////
+  
+  // TODO should be m+target ?
+  ?target !(m+target) public static <policy m,policy target> DataFieldAttribute<target>
+  declassify(?(m+target*declasable) DataFieldAttribute<m+target*declasable> attrib) {
+      open Declassify {      
+           try {
+           
+           // ISSUE instanceof not supported
+//                if (attrib instanceof EncryptedCardVector<m+target*declasable>) {
+//                    return TrustedDeclassifier.<m,target>declassify((EncryptedCardVector<m+target*declasable>) attrib);
+//                } else if (attrib instanceof CardVector<m+target*declasable> ) {
+//                    return TrustedDeclassifier.<m,target>declassify((CardVector<m+target*declasable>) attrib);
+//                } else if (attrib instanceof BigIntVector<m+target*declasable>) {
+//                    return TrustedDeclassifier.<m,target>declassify((BigIntVector<m+target*declasable>) attrib);
+//                } else if (attrib instanceof PHIntVector<m+target*declasable>) {
+//                    return TrustedDeclassifier.<m,target>declassify((PHIntVector<m+target*declasable>) attrib);
+//                } else if (attrib instanceof PHInteger<m+target*declasable>) {
+//                    return TrustedDeclassifier.<m,target>declassify((PHInteger<m+target*declasable>) attrib);
+//                } else if (attrib instanceof DABigInteger<m+target*declasable>) {
+//                    return TrustedDeclassifier.<m,target>declassify((DABigInteger<m+target*declasable>) attrib);
+//                } else if (attrib instanceof Digest<m+target*declasable>) {
+//                    return TrustedDeclassifier.<m,target>declassify((Digest<m+target*declasable>) attrib);
+//                }
+
+            // Alternative used:
+            
+                // ISSUE explicit variable required 
+                int t = attrib.type;
+                
+                // Switch is also not supported
+                
+                if (t == DataFieldAttribute.EncryptedCardVector) {
+                    return TrustedDeclassifier.<m,target>declassify(
+                       (EncryptedCardVector<m+target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.CardVector) {
+                    return TrustedDeclassifier.<m,target>declassify(
+                       (CardVector<m+target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.BigIntVector) {
+                    return TrustedDeclassifier.<m,target>declassify(
+                       (BigIntVector<m+target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.PHIntVector) {
+                    return TrustedDeclassifier.<m,target>declassify(
+                       (PHIntVector<m+target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.PHInteger) {
+                    return TrustedDeclassifier.<m,target>declassify(
+                       (PHInteger<m+target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.DABigInteger) {
+                    return TrustedDeclassifier.<m,target>declassify(
+                       (DABigInteger<m+target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.Digest) {
+                    return TrustedDeclassifier.<m,target>declassify(
+                       (Digest<m+target*declasable>) attrib);
+                } 
+            
+
+           } catch(ClassCastException e) {
+           }
+           return null;
+      } 
+  }
+  
+  
+  ////
+  // EncryptedCardVector
+  ////
+  
+  ?target !(m+target) public static <policy m,policy target> EncryptedCardVector<target>
+  declassify(?(m+target*declasable) EncryptedCardVector<m+target*declasable> ecv) {
+      open Declassify {      
+        PHIntVector<m+target*declasable> v = ecv.getValueVector();
+        PHIntVector<target> u = TrustedDeclassifier.<m,target>declassify(v);
+        try {
+           return new EncryptedCardVector<target>(u);
+        } catch (IllegalArgumentException ignored) {
+           return null;
+        }
+      } 
+  }
+  
+  ////
+  // BigIntVector
+  ////
+  
+  ?target !(m+target) public static <policy m,policy target> BigIntVector<target>
+  declassify(?(m+target*declasable) BigIntVector<m+target*declasable> bi) {
+      open Declassify {      
+          int size = bi.size();
+          BigIntVector<target> res = new BigIntVector<target>();
+          res.ensureCapacity(size);
+          for (int i = 0; i < size; i++)
+              try {
+                res.add(TrustedDeclassifier.<m,target>declassify(bi.getBI(i)));
+              } catch (IndexOutOfBoundsException ignored) {
+            }
+          return res;
+      } 
+  }
+  
+  ////
+  // PermutationMatrix
+  ////
+  
+  ?target !(m+target) public static <policy m,policy target> PermutationMatrix<target>
+  declassify(?(m+target*declasable) PermutationMatrix<m+target*declasable> _m) {
+      open Declassify {      
+        ArrayList<m+target*declasable> mm = _m.getMatrix();
+        int t = mm.size();
+        
+        
+        ArrayList<target> y = new ArrayList<target>();
+        y.ensureCapacity(t);
+        
+        for (int i = 0; i < t; i++){
+            try {
+                  y.add(TrustedDeclassifier.<m,target>declassify(
+                  (BigIntVector<m+target*declasable>)mm.get(i)
+                  ));                    
+            } catch (IndexOutOfBoundsException ignored) {
+            } catch (ClassCastException ignored) {
+            }
+        }
+        
+        try {
+            return new PermutationMatrix<target>(y);
+        } catch (IllegalArgumentException ignored){
+            return null;
+        }
+      } 
+  }
+
+
+}

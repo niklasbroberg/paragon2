@@ -1,0 +1,97 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import jif.util.ArrayList;
+
+public class DNCChain[label L]{
+	private final ArrayList[L]{L} chain;
+	
+	// number of the last link
+	// in general this is not equal to the size of chain
+	// because of the possibility of the chain expansion
+	private int k = 0;
+    private SerializeWriteHelper[L]{L} writer;
+    public DNCChain(SerializeWriteHelper[L]{L} writer):{L}
+    throws IllegalArgumentException {
+        if (writer == null)             
+            throw new IllegalArgumentException();
+        
+		chain = new ArrayList[L]();
+        this.writer = writer;
+	}
+
+    /** Appends link and writes information to the output
+      * so that the other party can see it
+      */
+	public void addLink{L}(DNCLink[L]{L} link) {
+        try {
+            this.chain.add(link);
+            this.writer.writeDNCLink(link);
+            
+        } catch (NullPointerException e) {
+        } catch (SecurityException e) {
+        }
+	}
+    
+    /** Appends link to the existing chain
+      * Appended link supposed to be the one read from the input
+      *
+      */
+    public void appendLink{L}(DNCLink[L]{L} link) {
+        try {
+            this.chain.add(link);
+        } catch (NullPointerException e) {
+        }
+	}
+	
+	public DNCLink[L]{L} getLink(int{L} i):{L} 
+    throws IndexOutOfBoundsException{    
+        try {
+            return (DNCLink[L]) chain.get(i);
+        } catch (NullPointerException e) {
+        } catch (ClassCastException e) {
+        }
+        return null;
+	}
+	
+	/**
+	 * Just in case someone wants to walk along the chain himself
+	 * @return
+	 */
+     public ArrayList[L]{L} getChainVector() {
+		return this.chain;
+	}
+	
+    public int{L} size{L}() {
+        ArrayList[L]{L} chain = this.chain;
+        return chain == null? 0: chain.size();
+	}
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

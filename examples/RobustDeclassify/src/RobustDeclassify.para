@@ -1,0 +1,53 @@
+/**
+ * Class providing interface for robust declassification. The decision to
+ * declassify information can only be taken in a trusted context.
+ **/
+public class RobustDeclassify {
+    
+    // Actor that only acts on trusted data
+    private static final actor trustor;
+   
+    // Trusted data may flow to the trustor actor (may be acted upon by the
+    // trustor actor)
+    public static final policy trusted   = { trustor : };
+
+    // Untrusted data is acted upon by no one
+    public static final policy untrusted = { : };
+    
+    // The declassification lock carries the policy trusted, meaning that
+    // opening or closing this lock is observable by the trustor actor
+    private ?trusted lock Declassify;
+ 
+    // Actor that only observes
+    private static final actor observer;
+    
+    // Public information is always observable
+    public static final policy low  = { observer : };
+
+    // Secret information is only observable in the declassification context
+    public static final policy high = { observer : Declassify };
+    
+    /** 
+     * Declassification method exported; only calls to this method can now be
+     * used to declassify information.
+     *
+     * The policy of the received argument is the meet between High and some
+     * arbitrary policy (which can be trusted, untrusted, or anything else).
+     * The result of the method is the same argument with the policy low meeted
+     * with the same arbitrary policy. That means that the result is at least
+     * low, since low + high = low.
+     *
+     * Since the Declassify lock gets opened and closed within the same method
+     * there is no side-effect (assuming the absence of concurrency) -- thus the
+     * policy on the lock is never compared to the write effect. However, we do
+     * annotate the method with the trusted write effect since this ensures that
+     * the declassification method can only be called in a trusted context.
+     **/
+    !trusted ?(low + p) public static <A, policy p>
+            A declassify(?(high + p) A x) {
+        open Declassify {
+            return x; 
+        }
+    }
+    
+}

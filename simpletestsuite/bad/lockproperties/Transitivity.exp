@@ -1,0 +1,4 @@
+In the context of class Transitivity:
+In the context of method foo:
+In the context of lock state [A(charlie#2,bob#1)]:
+Cannot assign result of expression b with policy { java.lang.Object x : A(charlie#2, x)} to location a with policy { alice#0 :}

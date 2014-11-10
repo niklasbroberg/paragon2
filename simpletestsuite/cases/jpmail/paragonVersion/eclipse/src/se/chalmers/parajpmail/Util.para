@@ -1,0 +1,136 @@
+package se.chalmers.parajpmail;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+import java.nio.file.NoSuchFileException;
+
+import java.security.GeneralSecurityException;
+import java.security.PublicKey;
+
+import se.chalmers.parajpmail.cryptmessage.AESEncryption;
+import se.chalmers.parajpmail.cryptmessage.ASymPol;
+import se.chalmers.parajpmail.cryptmessage.CryptUtil;
+import se.chalmers.parajpmail.cryptmessage.DESEncryption;
+import se.chalmers.parajpmail.cryptmessage.MailBody;
+import se.chalmers.parajpmail.cryptmessage.RSAEncryption;
+
+import se.chalmers.parajpmail.jpmailpol.GlobalPol;
+import se.chalmers.parajpmail.jpmailpol.JPMailPolicy;
+
+import se.chalmers.parajpmail.runtime.Debug;
+import se.chalmers.parajpmail.runtime.JPMailRuntime;
+import se.chalmers.parajpmail.runtime.JPMailUserID;
+import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+import se.chalmers.parajpmail.runtime.UnixFile;
+
+public class Util {
+
+    // To be used in policies as a place holder, but never to be opened.
+    // Only to be replaced with actual lock once known.
+    public lock LockHolder;
+
+
+
+    /**
+     * Read and relabel a line from the input stream. Providing the policy as a
+     * parameter forces the programmer to think of what policy the input should
+     * be labeled with.
+     *
+     * TODO: It would be slightly better to have a GUI, so different input
+     * fields can be labeled differently. Now we are using the same input and
+     * correct information flow depends heavily on mapping the correct /parts/
+     * of this input to the correct policy.
+     */
+    public static ?p <policy p> String 
+            readLine(?{'x:} BufferedReader<{'x:}> in)
+                    throws !p ParaJPMailException {
+
+        try {
+            return in.readLine();
+        } catch (IOException e) {
+            throw new ParaJPMailException("IOException: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Reads the policy file at the specified locations and lets JPMailPolicy
+     * parse it. Should only be using things at level GlobalPol.publ, except the 
+     * file read from the system. Hence it needs to check if the current UNIX 
+     * user is the owner of the file and if so share the content of that file 
+     * with the network.
+     */
+    public static !GlobalPol.publScreen void 
+            parsePolicy(?GlobalPol.publScreen String polfp)
+                    throws !GlobalPol.publScreen ParaJPMailException {
+
+        try {
+            UnixFile uf = new UnixFile(polfp);
+
+            if (UnixFile.FileOwner(uf.fd, SimpleUnixRuntime.currentUser)) {
+                // Policy content is visible to the network as well
+                open UnixFile.ShareContent(uf.fd, SimpleUnixRuntime.currentUser,
+                        GlobalPol.network);
+                open UnixFile.ShareContent(uf.fd, SimpleUnixRuntime.currentUser,
+                        GlobalPol.screen);
+                JPMailPolicy.apply(uf.getContent());
+            } else {
+                throw new ParaJPMailException("You are not allowed to read " +
+                        "this policy file.");
+            }
+        } catch (IOException e) {
+            throw new ParaJPMailException("Could not read provided policy " +
+                    "file.");
+        } catch (ParsingException e) {
+            throw new ParaJPMailException("Received parsing exception in " +
+                    "policy: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Parse the file with user settings.
+     */
+    public static !GlobalPol.publ ?GlobalPol.publ UserSettings
+        parseSettings(?GlobalPol.publ String userset)
+                throws !GlobalPol.publ ParaJPMailException {
+
+        try {
+            UnixFile uf = new UnixFile(userset);
+
+            if (UnixFile.FileOwner(uf.fd, SimpleUnixRuntime.currentUser)) {
+                open UnixFile.ShareContent(uf.fd, SimpleUnixRuntime.currentUser,
+                        GlobalPol.network) { // TODO Move opening lock into UserSettings
+                    return UserSettings.parse(uf.getContent());
+                }
+            } else {
+                throw new ParaJPMailException("You are not allowed to read " +
+                        "this settings file.");
+            }
+        } catch (IOException e) {
+            throw new ParaJPMailException("Could not read provided settings " +
+                    "file.");
+        } catch (ParsingException e) {
+            throw new ParaJPMailException("Received parsing exception in " +
+                    "settings: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Returns true iff the specified file has the specified permissions.
+     */
+    public static ?GlobalPol.publScreen boolean 
+        checkPermissions(?GlobalPol.publScreen String file, 
+            ?GlobalPol.publScreen String check) {
+
+        String permissions;
+        try { 
+             permissions = JPMailRuntime.getFilePermissions(file);
+        } catch (?GlobalPol.publScreen NoSuchFileException e) {
+            return false;
+        }
+        return check != null && check.equals(permissions);
+    }
+
+}

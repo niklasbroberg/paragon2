@@ -1,0 +1,425 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ */
+package mp;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.ArrayList;
+
+
+public class SerializeReadHelper<policy p>{
+    
+    private final ?p BufferedReader<p> reader;
+    
+    
+    public SerializeReadHelper(?p BufferedReader<p> reader)
+    throws !p IllegalArgumentException {     
+        this.reader = reader;
+        if (reader == null)
+           throw new IllegalArgumentException("reader is null");
+    }
+    
+//    // line which has been read from stdin...
+    private ?p String line = null;
+//    
+//    // integer position of the amount of read symbols in the line...
+    private ?p int pos = 0;
+
+//    // very inefficient implementation !!!
+//    // but should work...
+//    // we have side effect here
+//    // since the method affects this.line member variable...
+//    
+    private ?p !p String readString()
+    throws !p ?p MPException, !p IOException{
+        String line = this.line;
+        if (line != null) line = line.trim();        
+
+        BufferedReader<p> reader = this.reader;
+        if (reader == null) 
+            throw new MPException("readString: reader is null");
+        
+        // attempt to read once from the stream
+        if (line == null || line.length() == 0) {
+            line = reader.readLine();
+            pos = 0;
+            if (line == null)
+                return null;
+            else 
+                line = line.trim();
+        }
+        
+        // line is not null now...
+        // parse and return whatever we have before the first space...
+        try {
+            int j = pos;
+            while (j < line.length()
+                && !Character.isWhitespace(line.charAt(j))) {
+                j++;
+            }
+            String v  = line.substring(pos, j);
+            this.line = line.substring(j).trim();
+                   
+            return v;
+        } catch (NullPointerException e) {
+            throw new MPException("readString: NPE");
+        } 
+    }
+    
+    private ?p !p int readInt() 
+    throws !p ?p MPException, !p NumberFormatException, !p IOException
+    {
+        String v = readString();
+        return Integer.parseInt(v);                           
+    }
+    
+    private !p ?p byte readByte()
+    throws !p ?p MPException, !p NumberFormatException, !p IOException 
+    {
+        int ival = readInt();
+        return (byte) ival;
+    }
+    
+    public ?p !p DABigInteger<p> readBigInt()
+    throws !p ?p MPException, !p IOException {
+        String type = readString();
+        if (type == null)
+            throw new MPException("readBigInt: null type input");
+        if (0 != type.compareTo("###BIGINT"))
+             throw new MPException("readBigInt: invalid format"); 
+        ?p String value = readString();
+        if (value == null)
+            throw new MPException("readBigInt: null value input");        
+        if (value.compareTo("NULL") == 0)
+             return null;
+        try {
+            DABigInteger<p> x = new DABigInteger<p>(value);
+            return x;
+        } catch (NumberFormatException e) {
+            throw new MPException("readBigInt: NFE");
+        }        
+    }
+
+    public ?p !p BigIntPair<p> readBigIntPair()
+    throws !p ?p MPException, !p IOException{
+        String type = readString();
+        if (type == null)
+            throw new MPException("readBigIntPair: null type input");
+        if (0 != type.compareTo("###BIGINTPAIR"))
+            throw new MPException("readBigIntPair: invalid format");
+        ?p String value = readString();
+        if (value == null)
+            throw new MPException("readBigIntPair: null value input"); 
+        if (value.compareTo("NULL") == 0)
+            return null;
+        
+        DABigInteger<p> x = readBigInt();
+        DABigInteger<p> y = readBigInt();
+    
+        return new BigIntPair<p>(x,y);
+    }
+        
+    public !p ?p PHInteger<p> readPHInt()
+    throws !p ?p MPException, !p IOException{
+        String type = readString();
+        if (type == null)
+            throw new MPException("readPHInt: null type input");
+        if (0 != type.compareTo("###PHINT"))
+           throw new MPException("readPHInt: invalid format");
+        
+        ?p ArrayList<p> y = new ArrayList<p>();
+        
+        try {
+            int t = readInt();
+            y.ensureCapacity(t);
+            for (int i = 0; i < t; i++)
+                y.add (readBigIntPair());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        return new PHInteger<p>(y);
+    }
+
+    public !p ?p PHIntVector<p> readPHIntVector()
+    throws !p ?p MPException, !p IOException{
+        String type = readString();
+        if (type == null)
+            throw new MPException("readPHIntVector: null type input");
+        if (0 != type.compareTo("###PHINTVECTOR"))
+            throw new MPException("readPHIntVector: invalid format");
+        ?p PHIntVector<p> y = new PHIntVector<p>();
+        try {
+            int t = readInt();
+            y.ensureCapacity(t);
+            for (int i = 0; i < t; i++)
+                y.add(readPHInt());
+        } catch (NumberFormatException e) {
+            return null;
+        }            
+        return y;
+    }
+
+    public ?p !p BigIntVector<p> readBigIntVector()
+    throws !p ?p MPException, !p IOException
+    {
+        String type = readString();
+         if (type == null)
+            throw new MPException("readBigIntVector: null type input");
+      
+        if (0 != type.compareTo("###BIGINTVECTOR") )
+            throw new MPException("readBigIntVector: invalid format");
+        BigIntVector<p> y = new BigIntVector<p>();
+        try {
+            int t = readInt();
+            y.ensureCapacity(t);
+            for (int i = 0; i < t; i++)
+                y.add(readBigInt());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        return y;
+    }
+
+    public ?p !p CardVector<p> readCardVector() 
+    throws !p ?p MPException, !p IOException
+    {
+        String type = readString();
+        if (type == null)
+            throw new MPException("readCardVector: null type input");
+      
+        if (0 != type.compareTo("###CARDVECTOR"))
+            throw new MPException("readCardVector: invalid format");
+        String value = readString();
+         if (value == null)
+            throw new MPException("readPHIntVector: null value input");
+      
+        if (value.compareTo("NULL") == 0)
+            return null;
+        BigIntVector<p> biv = readBigIntVector();
+        try {
+            return new CardVector<p>(biv);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+
+    public !p ?p EncryptedCardVector<p> readEncCardVector()
+    throws !p ?p MPException, !p IOException
+    {
+        String type = readString();
+        if (type == null)
+            throw new MPException("readEncCardVector: null type input");
+        if (0 != type.compareTo("###ENCCARDVECTOR"))
+            throw new MPException("readEncCardVector: invalid format");
+        String value = readString();
+        if (value == null)
+            throw new MPException("readEncCardVector; null value input");
+        if (value.compareTo("NULL") == 0)
+            return null;
+        PHIntVector<p> phv = readPHIntVector();
+        try {
+            return new EncryptedCardVector<p>(phv);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    public !p ?p byte[]<p> readByteArray()
+    throws !p ?p MPException, !p IOException
+    {
+        ?p String type = readString();
+        if (type == null)
+            throw new MPException("readByteArray: null type input");
+        if (0 != type.compareTo("###BYTEARRAY"))
+            throw new MPException("readByteArray: invalid format");
+
+        ?p int t ;
+        
+        try {
+            t = readInt();
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        
+        ?p String value = readString();
+        if (value == null)
+            throw new MPException("readByteArray: null value input");
+        if (0 != value.compareTo("###BYTES"))
+            throw new MPException("readByteArray: invalid format " + value);
+        ?p byte[]<p> y = new byte[t]<p>;
+        try {
+           
+            for (int i = 0; i < t; i++)
+                y[i] = readByte( );
+           
+        } catch (ArrayIndexOutOfBoundsException ignored) {
+        } catch (NumberFormatException e) {
+            throw new MPException("readByteArray: invalid format");
+        }
+        return y;
+    }
+
+    public ?p !p Digest<p> readDigest()
+    throws !p ?p MPException, !p IOException{
+        String type = readString();
+        if (type == null)
+            throw new MPException("readDigest: null type input");
+        if (0 != type.compareTo("###DIGEST"))
+            throw new MPException("readDigest: invalid format");
+        String value = readString();
+        if (value == null)
+            throw new MPException("readDigest: null value input");
+        if (value.compareTo("NULL") == 0)
+            return null;
+        byte[]<p> ba = readByteArray();
+        return new Digest<p>(ba);       
+    }
+
+    public !p ?p DataFieldAttribute<p> readAttribute()
+    throws !p ?p MPException, !p IOException {
+        // read the value from the string 
+        // and put it back... so that it can be parsed 
+        // further
+        String type = readString();
+        if (type == null)
+            throw new MPException("readAttribute: null type input");
+        // put back so that it can be used further
+        this.line = type +" " + line;
+        if (type.compareTo ( "###ENCCARDVECTOR") == 0)             
+            return readEncCardVector();
+        else if (type.compareTo( "###CARDVECTOR") == 0) 
+            return readCardVector();
+        else if (type.compareTo("###BIGINTVECTOR") == 0) 
+            return readBigIntVector();
+        else if (type.compareTo ("###PHINTVECTOR") == 0)
+            return readPHIntVector();
+        else if (type.compareTo( "###BIGINT") == 0 )
+            return readBigInt();       
+        else if (type.compareTo ("###DIGEST") ==0 )
+            return readDigest();
+        else if (type.compareTo ( "###DAVECTOR") == 0)
+            return readDAVector();
+        
+        throw new MPException("readAttribute: unknown type" + type);
+    }
+             
+            
+
+    public ?p !p DAVector<p> readDAVector()
+    throws !p ?p MPException, !p IOException
+    {
+        String type = readString();
+        if (type == null)
+            throw new MPException("readDAVector: null type input");
+        if (0 != type.compareTo("###DAVECTOR"))
+            throw new MPException("readDAVector: invalid format");
+        DAVector <p> y = new DAVector<p>();
+        try {
+            int t = readInt();
+            y.ensureCapacity(t);
+            for (int i =0 ; i < t; i++)
+                y.add(readAttribute());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+        return y;
+    }
+
+    
+    public ?p !p DNCLink<p> readDNCLink()
+    throws !p ?p MPException, !p IOException 
+    {
+        String type = readString();
+        if (type == null)
+            throw new MPException("readDNCLink: null input");
+        if (type.compareTo("###DNCLINK") != 0) 
+            throw new MPException("readDNCLink: unknown format " + type);
+        
+        // if (value == null)
+            // throw new MPException("readDNCLink: null value input");
+        // if (value.compareTo("NULL") == 0)
+            // return null;
+        int k;
+        try {            
+            k = readInt();
+        } catch (NumberFormatException e) {
+            return null;
+            //throw new MPException("readDNCLink: invalid integer format");
+        }
+        
+        DataField<p> data = readDataField();
+      
+        String value = readString();
+        if (value == null)
+            throw new MPException("readDNCLink: null value input");
+        if (value.compareTo( "###CHAINVALUE") != 0)
+            throw new MPException("readDNCLink: invalid format");
+        
+        byte[]<p> chval = readByteArray();
+        return new DNCLink<p>(k, data, chval);        
+        
+    }
+    
+    
+    public ?p !p DataField<p> readDataField() 
+    throws !p ?p MPException, !p IOException {
+        String type = readString();
+        if (type == null)
+            throw new MPException("readDataField: null type input");
+        if (0 != type.compareTo("###DATAFIELD") )
+            throw new MPException("readDataField: invalid type format " + type);
+        String value = readString();
+        if (value == null)
+            throw new MPException("readDataField: null value input");
+        if (value.compareTo("NULL") == 0)
+            return null;
+        String playerName = value;
+        
+        int tmstamp;
+        try {
+            tmstamp = readInt();
+        } catch (NumberFormatException e) {
+            throw new MPException("readDataField: invalid int format");
+        }            
+        String info  = readString();
+        if (info == null)
+            throw new MPException("readDataField: null info input");
+        
+        DataFieldAttribute<p> attrib = readAttribute();
+        return new DataField<p>(
+            playerName,
+            tmstamp,
+            info,
+            attrib);
+        
+    }
+    
+    
+    public ?p !p PermutationMatrix<p> readMatrix()
+    throws !p ?p MPException, !p IOException {
+        String type = readString();
+        if (type == null)
+            throw new MPException("readMatrix: null type input");
+        if (0 != type.compareTo("###MATRIX"))
+            throw new MPException("readMatrix: invalid type format " + type);
+       
+        ArrayList<p> y = new ArrayList<p>();
+        int t ;
+        
+        try {
+            t = readInt();
+        } catch (NumberFormatException e ) {
+            return null;
+        }
+        y.ensureCapacity(t);
+        for (int i = 0; i < t; i++)
+            y.add(readBigIntVector());
+        try {
+            return new PermutationMatrix<p>(y);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+        
+    }
+}

@@ -1,0 +1,4 @@
+public class InstanceArrayAccessFromStaticField {
+  private int[] a = new int[1];
+  private static int x = a[0];
+}

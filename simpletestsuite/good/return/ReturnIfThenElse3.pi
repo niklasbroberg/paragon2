@@ -1,0 +1,5 @@
+public class ReturnIfThenElse3
+{
+  public int f()
+  ;
+}

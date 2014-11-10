@@ -1,0 +1,10 @@
+public class PossibilityInferred
+{
+  private static final java.lang.Object Alice = new java.lang.Object();
+  public static final policy alice = {Alice:};
+  public static final policy bot = {java.lang.Object x:};
+  private ?PossibilityInferred.alice int aa;
+  private ?PossibilityInferred.bot int bb;
+  !PossibilityInferred.alice public void method0()
+  ;
+}

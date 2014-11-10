@@ -1,0 +1,7 @@
+public class StaticFieldStaticFieldAssignmentFromStaticMethod
+{
+  private static StaticFieldStaticFieldAssignmentFromStaticMethod x = new StaticFieldStaticFieldAssignmentFromStaticMethod();
+  public static int y;
+  private static !{java.lang.Object o:} void stat()
+  ;
+}

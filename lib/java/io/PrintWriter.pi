@@ -1,0 +1,21 @@
+public native class PrintWriter {
+
+    // should everything have write effect !p  ?
+    
+    void print(?policyof(this) String s);
+    
+    void print(?policyof(this) byte b);
+    
+    void print(?policyof(this) int s);
+    
+    void println(?policyof(this) String s);
+    
+    void println(?policyof(this) int s);
+    
+    void println(?policyof(this) boolean b);
+    
+    void println();   
+    
+    void flush();
+
+}

@@ -1,0 +1,13 @@
+package java.lang;
+
+import java.io.*;
+
+public class System {
+
+    public ?{'x:} PrintStream<{'x:}> out;
+    public ?{'x:} InputStream<{'x:}> in; // in other setting, might be labeled untrusted
+    
+    public !p <policy p> void arraycopy(?p byte[]<p> from, ?p int from_i,
+                                     ?p byte[]<p> to, ?p int from_t, ?p int nbytes);
+
+}

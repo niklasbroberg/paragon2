@@ -1,0 +1,4 @@
+public class InstanceFieldInstanceMethodFromInstanceField {
+  private Object obj = new Object();
+  private String str = obj.toString();
+}

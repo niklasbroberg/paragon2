@@ -1,0 +1,21 @@
+public class PrintStream<policy p> {
+
+    // should everything have write effect !p  ?
+    
+    void print(?p String s);
+    
+    void print(?p byte b);
+    
+     void print(?p int s);
+    
+    void println(?p String s);
+    
+    void println(?p int s);
+    
+    void println(?p boolean b);
+    
+    void println();   
+    
+    void flush();
+
+}

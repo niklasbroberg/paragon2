@@ -1,0 +1,19 @@
+public class Similar {
+
+  ?{:} boolean high = true;
+  ?{Object x:} boolean low = true;
+
+  public void m() throws !{Object x:} Exception {
+    throw new Exception();
+  }
+  
+  !{Object x:} public void n() {
+    try {
+      if (high)
+        m();
+      low = false;
+    } catch (Exception e) {
+    }
+  }
+
+}

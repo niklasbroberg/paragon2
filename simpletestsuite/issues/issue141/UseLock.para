@@ -1,0 +1,52 @@
+public class UseLock {
+
+    public static final Object alice = new Object();
+    public static final Object bob = new Object();
+
+  public static final policy polA =
+    { Object x : DefineLock.MyLock(x, alice) };
+
+  // should be equivalent to polA
+  public static final policy polB =
+    { Object x : DefineLock.MyLock(alice, x) };
+
+  public void foo() {
+    open DefineLock.MyLock(alice, bob);
+    ?polB int b = 4;
+    ?{bob:} int x1 = b;
+    ?polA int a = 4;
+    // Should also work:
+    ?{bob:} int x2 = a;
+    // Should also work:
+    ?polB int ab = a;
+  }
+
+  // Problem does not exist in class defining lock propety:
+
+
+  public lock L(Object,Object)
+    { (Object x, Object y)
+	    L(x,y) : L(y, x) };
+
+  public static final policy myPolA =
+    { Object x : L(x, alice) } ;
+
+  public static final policy myPolB =
+    { Object x : L(alice, x) } ;
+
+  public void bar() {
+    open L(alice, bob);
+    ?myPolB int b = 4;
+    ?{bob:} int x1 = b;
+    ?myPolA int a = 4;
+    // Should also work:
+    ?{bob:} int x2 = a;
+    // Should also work:
+    ?myPolB int ab = a;
+
+  }
+  
+
+
+
+}

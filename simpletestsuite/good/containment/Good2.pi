@@ -1,0 +1,11 @@
+public class Good2
+{
+  public static final java.lang.Object Alice = new java.lang.Object();
+  public static final lock Declassified;
+  public static final policy secret = {java.lang.Object y: Good2.Declassified};
+  public static final policy pub = {java.lang.Object x:};
+  public static final ?Good2.pub int pubData;
+  public static final ?Good2.secret int aliceData;
+  !Good2.secret public static void bar()
+  ;
+}

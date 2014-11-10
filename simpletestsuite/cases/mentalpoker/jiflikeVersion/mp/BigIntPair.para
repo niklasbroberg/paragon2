@@ -1,0 +1,65 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ * Adaptation in paragon.
+ */
+
+package mp;
+
+import java.math.BigInteger;
+import mp.*;
+ 
+public class BigIntPair<policy q>
+{
+     
+    private final ?q DABigInteger<q> x;
+    private final ?q DABigInteger<q> y;
+    
+    public BigIntPair(?q DABigInteger<q> a, ?q DABigInteger<q> b) {
+        x = a;
+        y = b;		
+    }
+    
+	public ?q DABigInteger<q> getX() {
+		return this.x;		
+	}
+	
+	public ?q DABigInteger<q> getY() {
+		return this.y;
+	}
+	
+	public ?q int byteLength() {
+                
+        
+      if (x == null || y == null)
+         return -1;        
+        
+      int retval = x.byteLength() + y.byteLength();
+        
+      return retval;
+	}
+    
+    public ?q String toString() {
+    
+        if (x == null || (y == null))
+            return "";
+        return "(" + x.toString() + ", " + y.toString() + ")";
+    }
+   
+/*
+    public ?q int hashCode() {
+        // Done because otherwise jif's nullpointer analysis doesnt work
+        // DABigInteger x = this.x;
+        // DABigInteger y = this.y;
+        if (x == null || (y == null))
+            return 1;
+        
+        return x.hashCode()+31*y.hashCode();
+        
+    } 
+  */  
+    
+    
+}
+
+

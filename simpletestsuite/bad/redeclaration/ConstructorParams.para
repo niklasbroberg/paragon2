@@ -1,0 +1,4 @@
+public class ConstructorParams {
+  public ConstructorParams(Object o, int o) {
+  }
+}

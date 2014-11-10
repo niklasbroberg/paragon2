@@ -1,0 +1,48 @@
+public class Guess<actor Object act> {
+
+ 	private static lock Givehint;
+	public static final policy low={ Object x:};
+ 	public static final policy owner={Object x:Givehint; act:};
+
+    public static final ?low int FAILED = -2;
+	public static final ?low int LOWER = -1;
+	public static final ?low int CORRECT = 0;
+	public static final ?low int HIGHER = 1;
+    
+    private ?owner int number;
+    
+	private ?low int tries;
+
+ 	public Guess(?owner int n){
+ 		this.number = n;
+ 		this.tries = 0;
+	}
+	
+	public ?owner int getNumber() {
+		return number;
+	}
+	
+	!low public ?low int guess(?low int i) {
+	
+		this.tries += 1;
+		
+		if (this.tries > 10)
+			 return FAILED;
+			
+			
+		int diff;
+		open Givehint {
+			diff = this.number - i;
+		}
+			
+		if (diff > 0)
+	    	return HIGHER;
+	    	
+	  	if (diff < 0)
+	    	return LOWER;
+
+	    return CORRECT;
+	
+	}
+	
+}

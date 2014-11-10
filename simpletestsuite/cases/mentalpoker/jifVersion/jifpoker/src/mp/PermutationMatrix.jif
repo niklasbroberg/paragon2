@@ -1,0 +1,291 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import jif.util.ArrayList;
+import java.security.*;
+
+public class PermutationMatrix[label L] {
+	private ArrayList[L]{L} matrix;
+	private int bitLength = 0;
+	
+	public PermutationMatrix(ArrayList[L]{L} v):{L}
+    throws IllegalArgumentException{
+        if (v == null)
+            throw new IllegalArgumentException();
+		this.matrix = v;
+	}
+	
+	public PermutationMatrix{L}(byte{L}[]{L} p, DABigInteger[L]{L} z) 
+    throws (IllegalArgumentException{L}, NoSuchAlgorithmException{L},MPException{L}){
+        if (z == null)
+            throw new IllegalArgumentException("z is null");
+        if (p == null)
+            throw new IllegalArgumentException("p is null");
+        matrix = new BigIntVector[L]();
+        if (p == null || z == null) return;
+		int t = p.length; // obtain the size of the matrix we want
+
+		
+		try {
+			for (int i = 0; i < t; i++) {
+
+				BigIntVector[L] rowi = new BigIntVector[L]();
+				for (int j = 0; j < t; j++) {
+					DABigInteger[L] P_ij;
+					if (j != p[i] - 1) {
+						DABigInteger[L] k;
+						do {
+							k = new DABigInteger[L](z.bitLength(), SecureRandom
+									.getInstance("SHA1PRNG"));
+						} while (k.compareTo(DABigInteger[L].ZERO()) == 0);
+						// we should have Pij mod z = 0
+						// so Pij = z*k + 0
+						// if we have Pij = z*k, then we're done
+						// so, we're taking some random value k, 
+						// and multiply it by z, this will give us
+						// what we're looking for
+						P_ij = k.multiply(z);
+
+					} else {
+                        boolean loop = true;
+						do {
+							P_ij = new DABigInteger[L](z.bitLength(), SecureRandom
+									.getInstance("SHA1PRNG"));
+						} while (P_ij.mod(z).compareTo(DABigInteger[L].ZERO()) == 0);
+					}
+
+					rowi.add(P_ij);
+					bitLength += P_ij.byteLength();
+					
+				}
+
+				matrix.add(rowi);
+			}
+		} catch (ArithmeticException e) {
+            throw new MPException();
+		} catch (NullPointerException e) {
+            throw new MPException();
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new MPException();
+        } catch (IllegalArgumentException e) {
+            throw new MPException();
+        }
+	}
+    
+    
+    public boolean{L} validate{L}(byte{L}[]{L} p, DABigInteger[L]{L} z) :{L}
+    throws IllegalArgumentException, MPException {
+        if (z == null)
+            throw new IllegalArgumentException("z is null");
+        if (p == null)
+            throw new IllegalArgumentException("p is null");
+        
+        ArrayList[L] matrix = this.matrix;
+        
+        if (matrix == null)
+            throw new MPException("validate: matrix is null");
+        
+        
+        int t = matrix.size();
+        try {
+            for (int i = 0; i<t; i++) {
+                BigIntVector[L] rowi = (BigIntVector[L]) matrix.get(i);
+                
+                for (int j = 0; j<t; j++) {
+                    DABigInteger[L] P_ij = (DABigInteger[L]) rowi.get(j);
+                    
+                    if (j != p[i]-1) {
+                        if (P_ij.mod(z).compareTo(DABigInteger[L].ZERO()) != 0)  {
+                           throw new MPException("validate: " + Integer.toString(j) + "," + Integer.toString(i) + "  " + Integer.toString(p[i] -1) + " :" +
+                           "P_ij mod z for j/=p[i]-1 is ZERO " + 
+                           "P_ij = " + P_ij.toString() +", z=" + z.toString() + this.toString());                                    
+                        }
+                    } else { // j== p[i] - 1 , that is P_ij mod z /= 0
+                        if (P_ij.mod(z).compareTo(DABigInteger[L].ZERO()) == 0)
+                           return false;
+                    }
+                }
+            }
+            
+        } catch (IndexOutOfBoundsException ex) {
+            throw new MPException("validate: IOB");
+        } catch (ClassCastException ex) {
+            throw new MPException("validate: CCE");
+        } catch (ArithmeticException ex) {
+            throw new MPException("validate: AE");
+        } catch (NullPointerException ex) {
+            throw new MPException("validate: NPE");
+        }
+        
+        return true;
+    }
+
+	public String{L} toString() {
+        ArrayList[L] matrix = this.matrix;
+        if (matrix == null) return "(null)";
+        
+		String rs = "(";
+		int t = matrix.size();
+		for (int i = 0; i < t; i++) {
+			rs += "[";
+			BigIntVector[L] rowi = null;
+            try {
+                rowi = (BigIntVector[L]) matrix.get(i);
+            } catch (IndexOutOfBoundsException ignored) { return "";
+            } catch (ClassCastException ignored) { return "";
+            }
+            
+            
+            
+			for (int j = 0; j < t; j++) {
+                try {
+                    DABigInteger[L] P_ij = (DABigInteger[L]) rowi.get(j);
+                    rs += P_ij.toString();
+                    if (j != t - 1)
+                        rs += ",";
+                } catch (NullPointerException ignored) { return "";
+                } catch (ClassCastException ignored) { return "";
+                } catch (IndexOutOfBoundsException ignored) { return "";
+                }
+			}
+			rs += "]";
+			if (i != t - 1)
+				rs += ",";
+		}
+		rs += ")";
+		return rs;
+	}
+
+    public PermutationMatrix[L]{L} cloneMatrix{L}():{L} {
+        ArrayList[L] m = this.matrix;
+        if (m == null) return null;
+        
+        int t = m.size();        
+        
+        ArrayList[L] y = new ArrayList[L]();
+        y.ensureCapacity(t);
+        
+        for (int i = 0; i < t; i++){
+            try {
+                BigIntVector[L]rowi = (BigIntVector[L])m.get(i);
+                y.add(rowi);
+            } catch (IndexOutOfBoundsException ignored) {
+            } catch (ClassCastException ignored) {
+            }
+        }
+        
+        try {
+            return new PermutationMatrix[L](y);
+        } catch (IllegalArgumentException ignored){
+            return null;
+        }
+    }
+    
+	// TODO possible optimization .... calculate this only once...
+	//
+	public byte{L}[]{L} toByteArray{L}():{L}{
+        ArrayList[L] matrix = this.matrix;
+        if (matrix == null) return null;
+		byte{L}[]{L} rv = new byte[this.bitLength];
+		int{L} u = 0;
+		int t = matrix.size();
+		for (int i = 0; i< t; i++) {
+			BigIntVector[L] rowi = null;
+            try {
+                rowi = (BigIntVector[L]) matrix.get(i);
+            } catch (IndexOutOfBoundsException ignored) { return null;
+            } catch (ClassCastException ignored) { return null;
+            }
+			for (int j = 0; j < t; j++) {
+                try {
+                    byte{L}[]{L} p_ij = ((DABigInteger[L]) rowi.get(i)).toByteArray();
+                    // System.arraycopy(p_ij, 0, rv, u, p_ij.length);
+                    // u += p_ij.length;
+                    for (int k = 0; k < p_ij.length; k++, u++ )
+                        rv[u] = p_ij[u];
+                } catch (NullPointerException ignored) { return null;
+                } catch (ClassCastException ignored) { return null;
+                } catch (IndexOutOfBoundsException ignored) { return null;
+                //} catch (ArrayStoreException ignored) {return null; 
+                }
+			}
+		}
+		return rv;
+	}
+	
+    public Digest[L]{L} getDigest{L}():{L}
+    throws MPException{
+        ArrayList[L] matrix = this.matrix;
+        if (matrix == null) throw new MPException();
+		
+		int t = matrix.size();
+		try {
+			MessageDigest md = MessageDigest.getInstance("SHA1");
+			for (int i = 0; i < t; i++) {
+                try {
+                    BigIntVector[L] rowi = (BigIntVector[L]) matrix.get(i);
+                    for (int j = 0; j <t; j++)
+                        md.update(((DABigInteger[L]) rowi.get(j)).toByteArray());
+                } catch (IndexOutOfBoundsException ignored) { 
+                    throw new MPException("IOB");
+                }
+			}
+            
+            
+            
+			return new Digest[L] (md.digest());
+		} catch (NoSuchAlgorithmException e) {
+            throw new MPException("NSA");
+		} catch (NullPointerException e) {
+            throw new MPException("NPE");
+        } catch (ClassCastException e) {
+            throw new MPException("CCE");
+        } 
+	}
+
+    /**
+     * Modification of the matrix according to the protocol requirements
+     */
+    public void setNonZero{L}(int{L} i, DABigInteger[L]{L} z):{L}
+    throws (MPException, IllegalArgumentException, IndexOutOfBoundsException) {
+        ArrayList[L] matrix = this.matrix;
+        
+        if (matrix == null)
+            throw new MPException("matrix is null");
+        if (z == null)
+            throw new IllegalArgumentException("z is null");
+        
+
+        
+	// Choose z-1 as as a value which is not nonzero mod z
+	DABigInteger[L] zMinusOne = z.subtract(DABigInteger[L].ONE());
+	int t = matrix.size();
+	
+	if (t <= i )
+	    throw new IllegalArgumentException(
+					       "setNonZero" +
+					       Integer.toString(t) + " " +
+					       Integer.toString(i)
+					       );
+	
+	BigIntVector[L] rowi = new BigIntVector[L]();
+	for (int j = 0; j < t; j ++) {
+	    rowi.add(zMinusOne);
+	}
+        
+        matrix.set(i, rowi);
+        
+    }
+	
+	
+    /**
+     * @return Returns the matrix.
+     */
+    public ArrayList[L]{L} getMatrix() {
+	return matrix;
+    }
+}
+	

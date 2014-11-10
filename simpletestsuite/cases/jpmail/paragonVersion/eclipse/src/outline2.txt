@@ -1,0 +1,121 @@
+
+public class JPMailPolicy {
+
+  public static final readonly lock AllowSomeDecryptionLock;
+
+  // Opens a bunch of locks, but not in signature since which locks
+  // depends on policy file data.
+  public void apply(?{'x:} policy) {
+  
+    // parsing policy...
+    // for each jpmailUser1 -> jpmailUser2
+    
+    open ActsFor( JPMailRuntime.getActor("jpmailUser1"),
+                  JPMailRuntime.getActor("jpmailUser2") );
+                  
+    // for each jpmailUser allows SomeDecryptionLock
+    open AllowSomeDecryptionLock;
+  }
+
+}
+
+/* Native */
+
+public class JPMailRuntime {
+  // keep hashmap string->actor and actor->pubkey / privkey
+}
+
+public class UnixRuntime {
+ 
+   // Should read file, let's ignore groups for now and only focus on settings
+   // for owner and everyone
+   ?p String <policy p> readFile(filename, expectedPermissions) {
+     // Construct policy on filename:
+     // x x 4 -> {'x:} -- readable by everyone
+     // <4 x <4 -> {:} -- readable by no one
+     // 4 x <4 -> {fileOwner:} -- readable by fileOwner
+     ?pf content = read file contents
+     if (pf == {'x:})
+       return content;
+     if (fileOwner != runtimeOwner)
+       return cannot read this file
+     if (pf = {fileOwner:})
+       // should allow for different return policy, i.e one that allows declassification
+       // under locks?
+       
+       // Why make this a default behavior in paragon anyway? Why not just a
+       // readfile that as long as it can read the content of a file, uses any
+       // policy the requester asks for?
+       
+       // Checking correct file permissions (ie not written to / readable by other users etc.)
+       // is jpmail-specific security.
+   }
+
+}
+
+public class SendMail {
+
+  // read and relabel a line from the input stream
+  private ?p String <policy p> readLine(?{'x:} InputStream<{'x:}> in) {
+  
+  }
+
+  
+  // System.out, System.err : {RuntimeUser:}
+  // System.in : {'x:}
+  public void doit() {
+  
+    ?{'x:} String policyFile = readLine(System.in);
+    actor osUser = Runtime.OSActor;
+    ?{'x:} String jpmailPolicy;
+    try {
+      jpmailPolicy = Runtime.<{'x:}>readFile(policyFile,"644");
+    } catch (FilePolicyException fpe) {
+      // Note, the first error is default in paragon, the or-part is specific for JPMail's 644 specification
+      System.err.println("You have no permission to read that file or someone else may have written to it");
+      // Shorter: permission is not at least 444, or not exactly 644
+      System.exit(-1);
+    }
+    
+    // Open locks according to policy
+    JPMailPolicy.apply(jpmailPolicy);
+    
+    ?{'x:} String claimedJPmailUser = readLine(System.in);
+    actor jpmailUser = JPMailRuntime.getActor(claimedJPmailUser)
+    
+    // TODO: check that jpmailUser delegates to osUser
+    
+    ?{'x:} String settingsFile = readLine(System.in);
+    ?{jpmailUser:} UserSettings userSettings;
+    try {
+      userSettings = Runtime.<{jpmailUser:}>readFile(settingsfile,"600");
+    } catch (FilePoilicyException fpe) {
+      // Note, JPMail security, not Jif security. Check if correct!
+      System.err.println("That user does not delegate to the current OS user, or the permission on the file is incorrect");
+      System.exit(-1);
+    }
+   
+    ?{jpmailUser:; 'x: IsPublicKey} Keystore keystore;
+    try {
+      keyStore = Runtime.readFile(UserSettings.keyStore);
+    } catch (FilePolicyException fpe) {
+      // Cannot read file, permissions incorrect
+      // exit
+    } // catch  that some key is not signed by CA
+    
+    actor _jpmailUser = JPMailRuntime.getActor(keystore.thePrivateKey.owner);
+    // check: should be equal to claimed jpmailUser,// ( or via actsfor relation) -> No, would not work, everyone has to have own priv key!
+    
+    // read public header info as {network:}
+    
+    // read body as {network : AESEncrypted, AllowsAES ;
+                     network : DESEncrypted, AllowsDES ;
+                     network : DES3Encrypted, AllowsDES3 }
+                     
+    // etc. (also need to include AES/DES key encrypted, so that key gets policy {network : RSAEncrypted, AllowRSA} or something.
+    
+    // Send that stuff.
+  
+  }
+
+}

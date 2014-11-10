@@ -1,0 +1,10 @@
+public class ReturnSwitch {
+  public int f() {
+    int i = 0;
+    switch (i) {
+      case 1:
+        return 1;
+    }
+  }
+}
+

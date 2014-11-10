@@ -1,0 +1,20 @@
+public class PossibilityInferred {
+
+    private static final Object Alice = new Object();
+  
+  public static final policy alice = {Alice:};
+  public static final policy bot = {Object x:};
+
+  private ?alice int aa;
+  private ?bot int bb;
+
+  !alice
+  public void method0(){
+    int a = 5;		// Policy for a is not specified, we infer it.
+    ?alice int b = 4;
+    
+    a = b + 2;
+    aa = bb + 2;
+  }
+  
+}

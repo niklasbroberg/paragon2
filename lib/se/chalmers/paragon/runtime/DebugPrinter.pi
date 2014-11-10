@@ -1,0 +1,6 @@
+package se.chalmers.paragon.runtime;
+
+public native class DebugPrinter {
+	public void print(?{:} String s);
+	public void println(?{:} String s);	
+}

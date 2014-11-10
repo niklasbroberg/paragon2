@@ -1,0 +1,41 @@
+package se.chalmers.parajpmail.runtime;
+
+import java.io.IOException;
+
+/**
+* Uses policyof(this) joined with the standard unix permissions derived
+* on the file's content.
+**/
+public class UnixFile {
+
+  // Represents this file:
+  public final actor fd;
+  
+  public final policy contentPol =
+   { 'x : se.chalmers.parajpmail.runtime.UnixFile.FileOwner(fd, 'x)
+   ; 'y : se.chalmers.parajpmail.runtime.UnixFile.FileOwner(fd, 'x), se.chalmers.parajpmail.runtime.UnixFile.ShareContent(fd, 'x, 'y)
+   };
+  
+  public static final 
+  ?{'x:}
+  lock FileOwner(fileDescriptor, fileOwner);
+  // Automatically add delegation:
+  // = { FileOwner('fd, 'a) : FileOwner('fd, 'owner), DelegatesTo('owner, 'a) }
+  
+  public static final 
+  ?{SimpleUnixRuntime.currentUser:} 
+  lock ShareContent(fileDescriptor, fileOwner, otherActor);
+  // Automatically add delegation:
+  // = { ShareContent('fd, 'owner, 'a) : FileOwner
+
+  // reads the content of the file in a string (not as static method, to get instance-fd 
+  // opens lock for unix owner
+  public UnixFile(?policyof(this) String file)
+  throws !policyof(file) IOException
+  { }
+
+  public
+  ?(contentPol * policyof(this))
+  String getContent();
+
+}

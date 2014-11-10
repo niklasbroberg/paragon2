@@ -1,0 +1,9 @@
+public class DoWhile {
+
+  public void foo() {
+    do { 
+      ;
+    } while (true);
+  }
+
+}

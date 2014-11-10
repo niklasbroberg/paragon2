@@ -1,0 +1,9 @@
+public class FinalField {
+
+  private final ?{Object x:} String finalString;
+
+  public FinalField(?{Object x:} String s) {
+    this.finalString = s;
+  }
+
+}

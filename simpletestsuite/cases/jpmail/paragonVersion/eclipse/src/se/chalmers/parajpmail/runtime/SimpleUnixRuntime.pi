@@ -1,0 +1,27 @@
+package se.chalmers.parajpmail.runtime;
+
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.PrintStream;
+
+import java.nio.charset.Charset;
+
+public class SimpleUnixRuntime {
+
+  public static final actor currentUser;
+  
+  // looks up, or creates if not exists, the actor for this unix user.
+  public static final actor getActorOf(UnixUserID id);
+  
+  // Is just System.out
+  public static final ?{currentUser:} PrintStream<{currentUser:}> out;
+  
+  // Is just System.in
+  public static final ?{'x:} InputStream<{'x:}> in; 
+  
+  public static !{currentUser:} void exit(int c);
+  
+  // To avoid some exception handling
+  public static final ?{'x:} Charset UTF8;
+
+}

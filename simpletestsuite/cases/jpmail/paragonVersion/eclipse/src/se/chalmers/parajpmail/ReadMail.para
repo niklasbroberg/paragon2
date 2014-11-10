@@ -1,0 +1,293 @@
+/*
+ * ReadMail.para
+ *
+ * Version 0.1
+ *
+ * February 2013
+ *
+ * Copyright:           Chalmers University, CSE department, Paragon Team
+ * Lioense:             BSD 3-Clause
+ * Implementation v0.1: Bart van Delft
+ */
+
+package se.chalmers.parajpmail;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+
+import java.nio.file.NoSuchFileException;
+
+import java.security.GeneralSecurityException;
+import java.security.PublicKey;
+import java.security.PrivateKey;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+
+import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JList;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.border.LineBorder;
+import javax.swing.event.ListSelectionEvent;
+
+import se.chalmers.parajpmail.cryptmessage.AESEncryption;
+import se.chalmers.parajpmail.cryptmessage.ASymPol;
+import se.chalmers.parajpmail.cryptmessage.CryptUtil;
+import se.chalmers.parajpmail.cryptmessage.DESEncryption;
+import se.chalmers.parajpmail.cryptmessage.MailBody;
+import se.chalmers.parajpmail.cryptmessage.RSAEncryption;
+
+import se.chalmers.parajpmail.jpmailpol.GlobalPol;
+import se.chalmers.parajpmail.jpmailpol.JPMailPolicy;
+
+import se.chalmers.parajpmail.runtime.Debug;
+import se.chalmers.parajpmail.runtime.JPMailRuntime;
+import se.chalmers.parajpmail.runtime.JPMailUserID;
+import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+import se.chalmers.parajpmail.runtime.UnixFile;
+
+import se.chalmers.paragon.swing.PPanel;
+import se.chalmers.paragon.swing.PFrame;
+
+// ISSUE should be implements!
+public class ReadMail extends javax.swing.event.ListSelectionListener {
+
+   // TODO: nicer if under condition that jpmailUser delegates to user
+   public static final policy toMe = {SimpleUnixRuntime.currentUser:}; 
+
+
+    private static ?toMe !toMe String decrypt(
+            ?GlobalPol.publScreen CryptedMail<GlobalPol.publScreen> mail,
+            ?GlobalPol.publScreen UserSettings userSettings) 
+                throws !toMe ParaJPMailException {
+
+        if (mail.getASymMode() == CryptedMail.RSA) {
+            try {
+                PrivateKey key = userSettings.getPrivateKey(mail.getToUser());
+                byte[]<toMe> skey = RSAEncryption.<toMe>decrypt(key,
+                    CryptUtil.<toMe>fromHex(mail.getSymmKey()));
+                byte[]<toMe> siv = RSAEncryption.<toMe>decrypt(key,
+                    CryptUtil.<toMe>fromHex(mail.getSymmIV()));
+                if (mail.getSymMode() == CryptedMail.AES) {
+                    return AESEncryption.<toMe>decrypt(
+                        mail.getSymmEncBody(), skey, siv);
+                }
+                else if (mail.getSymMode() == CryptedMail.DES) {
+                    return  DESEncryption.<toMe>decrypt(
+                        mail.getSymmEncBody(), skey, siv);
+                }
+                else {
+                    throw new ParaJPMailException("Unsupported symm " +
+                        "encryption: " + mail.getSymMode());
+                }
+            } catch (?toMe java.security.GeneralSecurityException e) {
+                throw new ParaJPMailException(e.getMessage());
+            }
+        } else {
+            throw new ParaJPMailException("Unsupported asymm encryption" + mail.getASymMode());
+        }
+    }
+    
+    private ?toMe JTextArea<toMe> message;
+    private ?toMe DefaultListModel<toMe> listModel = new DefaultListModel<toMe>();
+    private ?toMe JList<toMe> list;
+    private ?toMe String[]<toMe> decrMessages;
+    
+    public !toMe void valueChanged(ListSelectionEvent e) {
+      int mid = list.getSelectedIndex();
+      message.setText(decrMessages[mid]);
+    }
+
+    private !toMe void initGUI() {
+
+		    // Create the list and put it in a scroll pane.
+		    list = new JList<toMe>(listModel);
+		    list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		    //list.setSelectedIndex(0);
+		    list.addListSelectionListener(this);
+		    //list.setVisibleRowCount(5);
+		    JScrollPane<toMe> listScrollPane = new JScrollPane<toMe>(list);
+		    listScrollPane.setPreferredSize(new Dimension(800, 200));
+		    
+		    this.message = new JTextArea<toMe>();
+		    this.message.setBorder(new LineBorder(new Color(100, 100, 100)));
+		    this.message.setMargin(new Insets(10, 10, 10, 10));
+		    this.message.setLineWrap(true);
+		    this.message.setEditable(false);
+		    
+		    JScrollPane<toMe> sp = new JScrollPane<toMe>(this.message);
+		    sp.setPreferredSize(new Dimension(800, 300));
+		    sp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		    
+		    PPanel<toMe> p = new PPanel<toMe>();
+		    JButton<toMe> compose = new JButton<toMe>("Compose");
+		    //compose.addActionListener(new ComposeMail());
+		    p.add(compose);
+		    
+		    JButton<toMe> closeB = new JButton<toMe>("Close");
+		    closeB.addActionListener(new CloseMail());
+		    p.add(closeB);
+		    
+		    //JButton<toMe> about = new JButton<toMe>("About");
+		    //about.addActionListener(new About<toMe>());
+		    //p.add(about);
+		    
+		    PFrame<toMe> f = new PFrame<toMe>("ParaJPMail");
+		    f.setLayout(new GridBagLayout<toMe>());
+		    GridBagConstraints<toMe> gbc = new GridBagConstraints<toMe>();
+		    gbc.gridx = 0;
+		    gbc.gridy = 0;
+		    f.add(listScrollPane, gbc);
+		    
+		    gbc.gridy += 1;
+		    f.add(sp, gbc);
+		    gbc.gridy += 1;
+		    f.add(p, gbc);
+		    
+		    
+        f.pack();
+        f.setResizable(false);
+        f.setVisible(true);
+        f.setDefaultCloseOperation(PFrame.EXIT_ON_CLOSE);
+        
+    }
+
+    public !GlobalPol.publScreen void readAllMail()
+            throws !GlobalPol.publScreen ParaJPMailException {
+
+        try { // NullPointers catch all
+
+            BufferedReader<{'x:}> in = 
+                    new BufferedReader<{'x:}>(new 
+                            InputStreamReader<{'x:}>(SimpleUnixRuntime.in));
+
+            // 1) Reading and parsing the policy:
+
+            SimpleUnixRuntime.out.print("Policy filepath: ");
+            String policyFilePath = Util.<GlobalPol.publScreen>readLine(in);        
+            Util.parsePolicy(policyFilePath);
+
+            // 2) Read jpmail uid and verify this unix user may send for it:
+
+            SimpleUnixRuntime.out.print("JPMail username: ");
+            String jpmailUserName = Util.<GlobalPol.publScreen>readLine(in);     
+            final actor jpmailUser = JPMailRuntime.getActorOf(
+                    new JPMailUserID(jpmailUserName));        
+
+            // Negation in lock queries is not supported. 
+            if (JPMailPolicy.DelegatesTo(jpmailUser, 
+                    SimpleUnixRuntime.currentUser)) {
+            } else {
+                throw new ParaJPMailException("JPMail user " + jpmailUserName + 
+                        " is not known to delegate to this UNIX user.");
+            }
+
+            // 3) Read and parse user's settings (servers, passwords, etc)
+            // Since this is a sensitive file, require that it has permission 
+            // set to 600
+
+            SimpleUnixRuntime.out.print("Settings file:   ");
+            String userSettingsFile = Util.<GlobalPol.publScreen>readLine(in);
+
+            // TODO replace with unix file permissions check via locks?
+            if (!Util.checkPermissions(userSettingsFile, "rw-------")) { 
+                throw new ParaJPMailException("The permissions of this file " +
+                        "should be set to 600 - and the file should exist.");
+            }
+
+            UserSettings userSettings = Util.parseSettings(userSettingsFile);
+
+
+            CryptedMail<GlobalPol.publScreen>[]<GlobalPol.publScreen> rmail =
+                    IMAP.<GlobalPol.publScreen>readmail(
+                            userSettings.getIMAPServer(),
+                            userSettings.getIMAPUsername(),
+                            userSettings.getIMAPPassword());
+
+
+            String s = ""; // conditional terms arent passed yet? ISSUE ?
+            if (rmail.length != 0)
+                s = "s";
+            decrMessages = new String[rmail.length];
+
+            SimpleUnixRuntime.out.println("Inbox contains " + rmail.length +
+                " message" + s + ".");
+
+            for (int i = 0; i < rmail.length; i++) {
+                SimpleUnixRuntime.out.println("Message " + i + ":");
+                if (rmail[i] == null) {
+                    this.listModel.addElement("Not a ParaJPMail mail");
+                    continue;
+                }
+                SimpleUnixRuntime.out.println(
+                        "From user: " + rmail[i].getFromUser() +
+                            " - " + rmail[i].getFromAddress());
+                SimpleUnixRuntime.out.println(
+                        "To user: " + rmail[i].getToUser());
+                this.listModel.addElement(rmail[i].getFromUser()
+                        + " (" + rmail[i].getFromAddress() + ") - "
+                        + rmail[i].getSubject());
+                final actor to = JPMailRuntime.getActorOf(
+                        new JPMailUserID(rmail[i].getToUser().trim()));
+                if (JPMailPolicy.DelegatesTo(to, jpmailUser)) {
+                    try {
+                        decrMessages[i] = decrypt(rmail[i], userSettings);
+                    } catch (ParaJPMailException e) {
+                        decrMessages[i] = "Error decrypting: " + e.getMessage() +
+                                "\nDo you have access to the private key for the " +
+                                "intended receiver " + rmail[i].getToUser() + "?";
+                    }
+                } else {
+                    decrMessages[i] = "Current user " + jpmailUserName + " does " +
+                            "not have the delegation to read this message " +
+                            "intended for " + rmail[i].getToUser() + ".";
+                }
+            }
+            initGUI();
+
+        } catch (?{SimpleUnixRuntime.currentUser:} NullPointerException e) {
+            throw new ParaJPMailException("Nullpointer: " + e.getMessage());
+        } catch (?{SimpleUnixRuntime.currentUser:} javax.mail.MessagingException e) {
+            throw new ParaJPMailException("MessagingException: " + e.getMessage());
+        }
+    }
+    
+    public ReadMail() { }
+
+    public static !GlobalPol.publScreen void main(String[] args) {
+
+        try {
+          java.security.Security.addProvider(
+                new org.bouncycastle.jce.provider.BouncyCastleProvider());
+        } catch (NullPointerException e) {
+            SimpleUnixRuntime.out.println("Bouncy Castle Provider could not " +
+                "be registered.");
+            SimpleUnixRuntime.out.println(e.getMessage());
+            SimpleUnixRuntime.exit(1);
+        } catch (SecurityException e) {
+            SimpleUnixRuntime.out.println("Bouncy Castle Provider could not " +
+                "be registered.");
+            SimpleUnixRuntime.out.println(e.getMessage());
+            SimpleUnixRuntime.exit(1);
+        }
+
+        try {
+            (new ReadMail()).readAllMail();
+        } catch(ParaJPMailException e) {
+            SimpleUnixRuntime.out.println("ParaJPMailException:");
+            SimpleUnixRuntime.out.println(e.getMessage());
+            SimpleUnixRuntime.out.println("Exiting");
+            SimpleUnixRuntime.exit(1);
+        }
+    }
+
+}

@@ -1,0 +1,24 @@
+public class Leaky {
+  
+  public static final Object observer = new Object();
+  public static final policy low = { observer : };
+  public static final policy high = { : };
+  
+  ?low boolean lowData;
+  ?high boolean highData;
+  
+  public void leakStuff(?high boolean b) throws Exception {
+    if (b)
+      throw new Exception();
+  }
+  
+  !low public void abuseLeak() {
+    try {
+      leakStuff(highData);
+      lowData = false;
+    } catch (Exception e) {
+      lowData = true;
+    }
+  }
+
+}

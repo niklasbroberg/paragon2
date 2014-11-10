@@ -1,0 +1,59 @@
+/*
+ * @(#)SecureRandom.java	1.42 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+ 
+package java.security;
+
+import java.util.Random;
+import java.security.*;
+
+public native class SecureRandom<policy p> extends java.util.Random<p> {
+
+    /**
+     * The provider.
+     *
+     * @serial
+     * @since 1.2
+     */
+    
+     public SecureRandom() {}
+   
+    
+    public static 
+    java.security.SecureRandom<policyof(algorithm)>
+    getInstance(String algorithm) 
+    throws !policyof(algorithm) NoSuchAlgorithmException ;
+
+
+//    public native static SecureRandom{algorithm;provider} getInstance(String algorithm, String provider)
+//	throws NoSuchAlgorithmException, NoSuchProviderException
+//    {
+//	if (provider == null || provider.length() == 0)
+//	    throw new IllegalArgumentException("missing provider");
+//	Object[] objs = Security.getImpl(algorithm, "SecureRandom", provider);
+//	return new SecureRandom((SecureRandomSpi)objs[0], (Provider)objs[1]);
+ //   }
+
+//    public static SecureRandom getInstance(String algorithm,
+//					   Provider provider)
+//	throws NoSuchAlgorithmException
+//  {
+//	if (provider == null)
+//	    throw new IllegalArgumentException("missing provider");
+//	Object[] objs = Security.getImpl(algorithm, "SecureRandom", provider);
+//	return new SecureRandom((SecureRandomSpi)objs[0], (Provider)objs[1]);
+//  }
+ 
+ //   public final Provider getProvider() {
+//	return provider;
+//    }
+
+
+    // Retain unused values serialized from JDK1.1
+    /**
+     * @serial
+     */
+}

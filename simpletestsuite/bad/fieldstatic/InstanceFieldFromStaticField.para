@@ -1,0 +1,4 @@
+public class InstanceFieldFromStaticField {
+  private int x;
+  private static int y = x;
+}

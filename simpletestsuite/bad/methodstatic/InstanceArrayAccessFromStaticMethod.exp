@@ -1,0 +1,3 @@
+In the context of class InstanceArrayAccessFromStaticMethod:
+In the context of method stat:
+Non-static field a cannot be referenced from a static context

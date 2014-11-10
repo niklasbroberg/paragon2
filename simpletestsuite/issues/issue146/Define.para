@@ -1,0 +1,8 @@
+public class Define {
+
+  public static final Object alice = new Object();
+  public static final policy toAlice = { alice : } ;
+  // When using toAlice instead the problem arises already within this file
+    public static final ?toAlice Object aData = alice; //new Object();
+
+}

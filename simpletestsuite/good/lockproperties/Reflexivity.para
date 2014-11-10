@@ -1,0 +1,16 @@
+public class Reflexivity {
+   
+    lock A(Object,Object) { (Object x) A(x,x) : };
+   
+    public static final Object alice = new Object();
+   
+   void foo() {
+   
+     ?{alice : } int a;
+     ?{Object x : A(alice,x)} int b;
+     
+     a = b;
+   
+   }
+   
+}

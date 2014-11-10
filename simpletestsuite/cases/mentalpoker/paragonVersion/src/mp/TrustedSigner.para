@@ -1,0 +1,654 @@
+package mp;
+
+import java.util.ArrayList;
+import java.security.*;
+
+public class TrustedSigner {
+
+  private static final actor signTrustor;
+  
+  public static final policy trusted = { signTrustor : } ;
+  
+  public ?trusted lock SignDeclassify;
+  
+  private static final policy declasable = { 'x : SignDeclassify };
+  
+  ~GameState.GameRunning
+  public !target ?target static <policy target> 
+  DNCLink<target> sign(?(target*declasable) PrivateKey key,
+                       ?(target*declasable) int k, 
+                       ?(target*declasable) DataField<target*declasable> data, 
+                       ?(target*declasable) byte[]<target*declasable> prevChainingValue) 
+  {
+      ?target boolean isNull = false;
+      open SignDeclassify {
+         isNull = data == null || prevChainingValue == null;
+      }
+      if (isNull)
+          return null;
+      byte[]<target*declasable> dataArray = data.toByteArray();
+      Signature dsa = null;
+      try {
+          ?(target*declasable) String sha1 = "SHA1withDSA";
+          dsa = Signature.getInstance(sha1);
+      } catch (NoSuchAlgorithmException e) {
+      }
+      
+      byte[]<target*declasable> chainingValueP = null;
+  
+          
+      try {
+          dsa.initSign(key);
+      } catch (InvalidKeyException e) {
+      } 
+      
+      try {
+          (dsa).<target*declasable>update(dataArray);
+          (dsa).<target*declasable>update(prevChainingValue);
+          chainingValueP = dsa.sign();
+      } catch (SignatureException e) {
+      } 
+    
+      open SignDeclassify {
+        return new DNCLink<target>(k, 
+            TrustedSigner.<target>declassify(data), 
+            TrustedSigner.<target>declassify(chainingValueP)); 
+      }
+
+  }
+  
+  
+  ////
+  // DataField
+  ////
+  
+  ?target !target private static <policy target> DataField<target>
+  declassify(?(target*declasable) DataField<target*declasable> df) {
+      open SignDeclassify {
+          return new DataField<target>(
+              df.getPlayerName(),
+              df.getTimestamp() ,
+              df.getInfo(),
+              TrustedSigner.<target>declassify(df.getAttrib())
+          );
+      } 
+  }
+  
+  ////
+  // DataFieldAttribute
+  ////
+  
+  // TODO should be target ?
+  ?target !target private static <policy target> DataFieldAttribute<target>
+  declassify(?(target*declasable) DataFieldAttribute<target*declasable> attrib) {
+      open SignDeclassify {      
+           try {
+                int t = attrib.getType();
+                
+                
+                if (t == DataFieldAttribute.EncryptedCardVector) {
+                    return TrustedSigner.<target>declassifyECV(
+                       (EncryptedCardVector<target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.CardVector) {
+                    return TrustedSigner.<target>declassifyCV(
+                       (CardVector<target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.BigIntVector) {
+                    return TrustedSigner.<target>declassifyBIV(
+                       (BigIntVector<target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.PHIntVector) {
+                    return TrustedSigner.<target>declassifyPHIV(
+                       (PHIntVector<target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.PHInteger) {
+                    return TrustedSigner.<target>declassifyPHI(
+                       (PHInteger<target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.DABigInteger) {
+                    return TrustedSigner.<target>declassifyDAB(
+                       (DABigInteger<target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.Digest) {
+                    return TrustedSigner.<target>declassifyDI(
+                       (Digest<target*declasable>) attrib);
+                } else if (t == DataFieldAttribute.DAVector) {
+                    return TrustedSigner.<target>declassifyDAV(
+                       (DAVector<target*declasable>) attrib);
+                } 
+            
+
+           } catch(ClassCastException e) {
+           }
+           return null;
+      } 
+  }
+  
+  ////
+  // DABigInteger
+  ////
+  
+  ?target !target private static <policy target> DABigInteger<target>
+  declassifyDAB(?(target*declasable) DABigInteger<target*declasable> bigInt) {
+      open SignDeclassify {
+          try {
+              return new DABigInteger<target>(bigInt.getValue());
+          } catch (IllegalArgumentException e) {
+              return null;
+          }
+      } 
+  }
+
+  ?target !target public static <policy target> DABigInteger<target>
+  declassifyZ(?(target*declasable) DABigInteger<target*declasable> z) {
+      return TrustedSigner.<target>declassifyDAB(z);
+  }
+ 
+
+  ////
+  // EncryptedCardVector
+  ////
+  
+  ?target !target private static <policy target> EncryptedCardVector<target>
+  declassifyECV(?(target*declasable) EncryptedCardVector<target*declasable> ecv) {
+      open SignDeclassify {      
+        PHIntVector<target*declasable> v = ecv.getValueVector();
+        PHIntVector<target> u = TrustedSigner.<target>declassifyPHIV(v);
+        try {
+           return new EncryptedCardVector<target>(u);
+        } catch (IllegalArgumentException ignored) {
+           return null;
+        }
+      } 
+  }
+  
+  
+  
+  ////
+  // boolean
+  ////
+
+  ?target private static <policy target> boolean
+  declassify(?(target*declasable) boolean b) {
+      open SignDeclassify {
+          return b;
+      } 
+  }
+  
+  ////
+  // Byte array
+  ////
+
+  ?target !target private static <policy target> byte[]<target>
+  declassify(?(target*declasable) byte[]<target*declasable> array) {
+      open SignDeclassify {
+          byte[]<target> result = new byte[array.length]<target>;
+          for (int i = 0; i < result.length; i++) {
+              result[i] = array[i];
+          }
+          return result;
+      } 
+  }
+  
+  ////
+  // Int array
+  ////
+
+  ?target !target private static <policy target> int[]<target>
+  declassify(?(target*declasable) int[]<target*declasable> array) {
+      open SignDeclassify {
+          int[]<target> result = new int[array.length]<target>;
+          for (int i = 0; i < result.length; i++) {
+              result[i] = array[i];
+          }
+          return result;
+      } 
+  }
+  
+  ////
+  // Digest
+  ////
+  
+  ?target !target private static <policy target> Digest<target>
+  declassifyDI(?(target*declasable) Digest<target*declasable> digest) {
+      open SignDeclassify {
+          ?target byte[]<target> bA = TrustedSigner.<target>declassify(digest.toByteArray());
+          return new Digest<target>(bA);
+      } 
+  }
+  
+  ////
+  // PHIntVector
+  ////
+  
+  ?target !target private static <policy target> PHIntVector<target>
+  declassifyPHIV(?(target*declasable) PHIntVector<target*declasable> iv) {
+      open SignDeclassify {      
+          ?target int size = iv.size();
+          ?target PHIntVector<target> result = new PHIntVector<target>();
+          result.ensureCapacity(size);
+          try {
+              for (int i = 0; i < iv.size(); i++)
+                  result.add(iv.getPHI(i));
+          } catch (IndexOutOfBoundsException $) { }
+          return result;
+      } 
+  }
+  
+  ////
+  // PHInteger
+  ////
+  
+  ?target !target private static <policy target> PHInteger<target>
+  declassifyPHI(?(target*declasable) PHInteger<target*declasable> pi) {
+      open SignDeclassify {      
+          ArrayList<target> res = new ArrayList<target>();
+          ArrayList<target*declasable> ar = pi.getValueVector();
+          res.ensureCapacity(ar.size());
+          for (int i = 0; i < ar.size(); i++) {
+              res.add(ar.get(i));
+          }
+          return new PHInteger<target>(res);
+      } 
+  }
+  
+  ////
+  // CardVector
+  ////
+  
+  // TODO should be target ?
+  ?target !target private static <policy target> CardVector<target>
+  declassifyCV(?(target*declasable) CardVector<target*declasable> cv) {
+      open SignDeclassify {      
+          ?target BigIntVector<target> bv = 
+              TrustedSigner.<target>declassifyBIV(cv.getValueVector());
+          
+          try {
+              return new CardVector<target>(bv);
+          } catch (IllegalArgumentException $) { 
+              return null;
+          }
+      } 
+  }
+  
+  ////
+  // DAVector
+  ////
+  
+  // TODO should be target ?
+  ?target !target private static <policy target> DAVector<target>
+  declassifyDAV(?(target*declasable) DAVector<target*declasable> dav) {
+      open SignDeclassify {      
+           ?target DAVector<target> res = new DAVector<target>();
+           int t = dav.size();
+           res.ensureCapacity(t);
+           for (int i = 0; i < t; i++) {
+              try {
+                 DataFieldAttribute<target*declasable> df = 
+                    (DataFieldAttribute<target*declasable>) dav.get(i);
+                 res.add(TrustedSigner.<target>declassify(df));
+              } catch (IndexOutOfBoundsException ignored) {
+              } catch (ClassCastException ignored) {
+              }
+           }
+
+           return res;
+      } 
+  }
+  
+  
+  ////
+  // BigIntVector
+  ////
+  
+  ?target !target private static <policy target> BigIntVector<target>
+  declassifyBIV(?(target*declasable) BigIntVector<target*declasable> bi) {
+      open SignDeclassify {      
+          int size = bi.size();
+          BigIntVector<target> res = new BigIntVector<target>();
+          res.ensureCapacity(size);
+          for (int i = 0; i < size; i++)
+              try {
+                res.add(TrustedSigner.<target>declassify(bi.getBI(i)));
+              } catch (IndexOutOfBoundsException ignored) {
+            }
+          return res;
+      } 
+  }
+  
+  ////
+  // PermutationMatrix
+  ////
+  
+  ?target !target private static <policy target> PermutationMatrix<target>
+  declassify(?(target*declasable) PermutationMatrix<target*declasable> _m) {
+      open SignDeclassify {      
+        ArrayList<target*declasable> mm = _m.getMatrix();
+        int t = mm.size();
+        
+        
+        ArrayList<target> y = new ArrayList<target>();
+        y.ensureCapacity(t);
+        
+        for (int i = 0; i < t; i++){
+            try {
+                  y.add(TrustedSigner.<target>declassify(
+                  (BigIntVector<target*declasable>)mm.get(i)
+                  ));                    
+            } catch (IndexOutOfBoundsException ignored) {
+            } catch (ClassCastException ignored) {
+            }
+        }
+        
+        try {
+            return new PermutationMatrix<target>(y);
+        } catch (IllegalArgumentException ignored){
+            return null;
+        }
+      } 
+  }
+  
+  ////////////////////// Upgrading
+  
+    ////
+    // DNCLink
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> DNCLink<m+from*declasable>
+    upgrade(?(from+m) DNCLink<m+from> d) {
+    
+       return new DNCLink<m+from*declasable>(
+          d.getk(),
+          TrustedSigner.<m,from>upgrade(d.getData()),
+          TrustedSigner.<m,from>upgrade(d.getChainingValue())
+       );
+        
+    }
+      
+        
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> byte[]<m+from*declasable>
+    upgrade(?(from+m) byte[]<m+from> array) {
+        
+            byte[]<m+from*declasable> result = 
+              new byte[array.length]<m+from*declasable>;
+            for (int i = 0; i < result.length; i++) {
+                result[i] = array[i];
+            }
+            return result; 
+        
+    }
+    
+    
+    ////
+    // DataField
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> DataField<m+from*declasable>
+    upgrade(?(from+m) DataField<m+from> df) {
+    
+       return new DataField<m+from*declasable>(
+              df.getPlayerName(),
+              df.getTimestamp() ,
+              df.getInfo(),
+              TrustedSigner.<m,from>upgrade(df.getAttrib())
+          );
+    }
+    
+    ////
+    // DataFieldAttribute
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> DataFieldAttribute<m+from*declasable>
+    upgrade(?(from+m) DataFieldAttribute<m+from> attrib) {
+    
+       try {
+            int t = attrib.getType();
+            
+            
+            if (t == DataFieldAttribute.EncryptedCardVector) {
+                return TrustedSigner.<m,from>upgradeECV(
+                   (EncryptedCardVector<m+from>) attrib);
+            } else if (t == DataFieldAttribute.CardVector) {
+                return TrustedSigner.<m,from>upgradeCV(
+                   (CardVector<m+from>) attrib);
+            } else if (t == DataFieldAttribute.BigIntVector) {
+                return TrustedSigner.<m,from>upgradeBIV(
+                   (BigIntVector<m+from>) attrib);
+            } else if (t == DataFieldAttribute.PHIntVector) {
+                return TrustedSigner.<m,from>upgradePHIV(
+                   (PHIntVector<m+from>) attrib);
+            } else if (t == DataFieldAttribute.PHInteger) {
+                return TrustedSigner.<m,from>upgradePHI(
+                   (PHInteger<m+from>) attrib);
+            } else if (t == DataFieldAttribute.DABigInteger) {
+                return TrustedSigner.<m,from>upgradeDAB(
+                   (DABigInteger<m+from>) attrib);
+            } else if (t == DataFieldAttribute.Digest) {
+                return TrustedSigner.<m,from>upgradeDI(
+                   (Digest<m+from>) attrib);
+            } else if (t == DataFieldAttribute.DAVector) {
+                return TrustedSigner.<m,from>upgradeDAV(
+                   (DAVector<m+from>) attrib);
+            } 
+        
+
+       } catch(ClassCastException e) {
+       }
+       return null;
+    }
+  
+    ////
+    // CardVector
+    ////
+
+    public static !(from+m) ?(m+from*declasable) 
+    <policy m, policy from> CardVector<m+from*declasable>
+    upgradeCV(?(from+m) CardVector<m+from> cv) {
+        try {
+            BigIntVector<m+from> v = cv.getValueVector();
+            BigIntVector<m+from*declasable> u = TrustedSigner.<m,from>upgradeBIV(v);
+            return new CardVector<m+from*declasable>(u);
+         } catch (IllegalArgumentException e) {
+            return null;
+        }    
+    }
+    
+    ////
+    // BigIntVector
+    ////
+    
+    public static ?(m+from*declasable) 
+    <policy m, policy from> BigIntVector<m+from*declasable>
+    upgradeBIV(?(from+m) BigIntVector<m+from> iv) {
+   
+        BigIntVector<m+from*declasable> result = new BigIntVector<m+from*declasable>();
+        result.ensureCapacity(iv.size());
+        for (int i = 0; i < iv.size(); i++)  {
+            try { 
+                result.add(TrustedSigner.<m,from>upgradeDAB(iv.getBI(i)));
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        } 
+        
+        return result;
+    
+    }
+    
+    ////
+    // DABigInteger
+    ////
+    
+    public static ?(m+from*declasable) 
+    <policy m, policy from> DABigInteger<m+from*declasable>
+    upgradeDAB(?(from+m) DABigInteger<m+from> bi) {
+    
+        try {
+            return new DABigInteger<m+from*declasable>(bi.getValue());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    
+    }
+    
+    
+    ////
+    // EncryptedCardVector
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> EncryptedCardVector<m+from*declasable>
+    upgradeECV(?(from+m) EncryptedCardVector<m+from> ecv) {
+    
+        try {
+            PHIntVector<m+from> v = ecv.getValueVector();
+            PHIntVector<m+from*declasable> u = 
+               TrustedSigner.<m,from>upgradePHIV(v);
+            return new EncryptedCardVector<m+from*declasable>(u);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    
+    }
+    
+    ////
+    // PHIntVector
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> PHIntVector<m+from*declasable>
+    upgradePHIV(?(from+m) PHIntVector<m+from> phi) {
+        
+        PHIntVector<m+from*declasable> res = 
+            new PHIntVector<m+from*declasable>();
+        res.ensureCapacity(phi.size());
+        for (int i = 0; i < phi.size(); i++)
+            try {
+                 res.add(TrustedSigner.<m,from>upgradePHI(phi.getPHI(i)));
+            } catch (IndexOutOfBoundsException e) {
+            }
+        return res;
+    }
+    
+    ////
+    // PHInteger
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> PHInteger<m+from*declasable>
+    upgradePHI(?(from+m) PHInteger<m+from> phi) {
+        
+        ArrayList<m+from*declasable> res = 
+            new ArrayList<m+from*declasable>();
+        res.ensureCapacity(phi.size());
+        for (int i = 0; i < phi.size(); i++)
+            try {
+                 res.add(TrustedSigner.<m,from>upgrade(phi.getBigIntPair(i)));
+            } catch (IndexOutOfBoundsException e) {
+            }
+        return new PHInteger<m+from*declasable>(res);
+    }
+    
+    ////
+    // BigIntPair
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> BigIntPair<m+from*declasable>
+    upgrade(?(from+m) BigIntPair<m+from> bip) {
+    
+        return new BigIntPair<m+from*declasable>(
+             TrustedSigner.<m,from>upgradeDAB(bip.getX()),
+             TrustedSigner.<m,from>upgradeDAB(bip.getY())
+          );
+        
+    }
+    
+    
+    ////
+    // PermutationMatrix
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> PermutationMatrix<m+from*declasable>
+    upgrade(?(from+m) PermutationMatrix<m+from> pm) {
+    
+        return new PermutationMatrix<m+from*declasable>(
+             TrustedSigner.<m,from>upgrade(pm.getMatrix())
+          );
+        
+    }
+    
+    ////
+    // Digest
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> Digest<m+from*declasable>
+    upgradeDI(?(from+m) Digest<m+from> digest) {
+        byte[]<m+from*declasable> bA = TrustedSigner.<m,from>upgrade(digest.toByteArray());
+        return new Digest<m+from*declasable>(bA);
+        
+    }
+    
+    ////
+    // DAVector
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> DAVector<m+from*declasable>
+    upgradeDAV(?(from+m) DAVector<m+from> dav) {
+       DAVector<m+from*declasable> res = new DAVector<m+from*declasable>();
+       int t = dav.size();
+       res.ensureCapacity(t);
+       for (int i = 0; i < t; i++) {
+          try {
+             DataFieldAttribute<m+from> df = 
+                (DataFieldAttribute<m+from>) dav.get(i);
+             res.add(TrustedSigner.<m,from>upgrade(df));
+          } catch (IndexOutOfBoundsException ignored) {
+          } catch (ClassCastException ignored) {
+          }
+       }
+
+       return res;
+        
+    }
+    
+    
+    ////
+    // ArrayList
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> ArrayList<m+from*declasable>
+    upgrade(?(from+m) ArrayList<m+from> pm) {
+    
+        ArrayList<m+from*declasable> res = 
+            new ArrayList<m+from*declasable>();
+        res.ensureCapacity(pm.size());
+        for (int i = 0; i < pm.size(); i++) {
+          try {
+             res.add(pm.get(i));
+          } catch (IndexOutOfBoundsException e) {
+          }
+        }
+        return res;
+        
+    }
+    
+    public static ?(m+from*declasable) 
+    <policy m, policy from> PHCrypto<m+from*declasable>
+    upgrade(?(from+m) PHCrypto<m+from> phc) {
+    
+        try {
+              return new PHCrypto<m+from*declasable>(
+              phc.getLength(),
+              TrustedSigner.<m,from>upgradeBIV(phc.getSecretKey())
+              );
+          } catch (IllegalArgumentException e) {
+              return null;
+          }
+        
+    }
+  
+
+}

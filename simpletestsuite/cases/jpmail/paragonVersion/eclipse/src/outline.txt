@@ -1,0 +1,97 @@
+Purpose of policies files according to JPMail paper: make clear what declassification points are allowed.
+In paragon: just opening lock depending on content of policy file?
+policy on some declassifier becomes:
+
+public class DeclassifierLocks {
+  private static final readonly lock AllowsEncryptDeclassifier; // readonly as in, others can use it in ~-locks
+  public void openLocksAccordingTo(?currentUser somefile) { // add policy on somefile?
+  
+  }
+}
+
+public class EncryptDeclassifier {
+  private static final lock EncryptIt
+  public policy sensDataPol = { 'x : EncryptIt, AllowsEncryptDeclassifier, isRecipient('x)}
+  
+  ~AllowsEncryptDeclassifier
+  ?{ network : }
+  public byte[] encrypt(?sensDataPol byte[] data) {
+    open EncryptIt {
+      return doEncr(data);
+    }
+  }
+}
+
+
+principal store:
+link principal name to actor + (private) + public key (signed by CA)
+
+-) get policy as described above
+-) let user be the runtime actor
+-) request private keystore file, if not from user, abort
+-) similar for pop3, smtp, keystore password file
+-) continue with normal operation (??)
+
+Envisioned final result
+
+-- src\..
+-- ParaJPMail.jar 666
+-- keystore 644
+-- passwords 400
+Where passwords contains this user's passwords:
+keystore:keystorefile
+keystorepwd:mypass
+pop3:pop3.myserver.com
+pop3user:me
+pop3pass:mypass
+similar for smtp 
+
+
+-- confusing JPMail:
+
+The example in INSTALL.txt uses as label nsrc. This does however -not work- and =can never have worked=!
+The label is used to get the public key of the receiver, which nsrc does not have. There is also no way of getting the public
+key of the intended receiver -- what is the point??
+In JPMailMessage.toMimeMailMessage we can see this, by enabling debugging we see that the call to getPublicKey() is null.
+-- so the whole delegation thing is useles now.  (hence also the filenotfound exceptions = public keys of groups)
+
+-- TODO: check, where does CA come from?
+
+ALSO:  the trust statements officialy can contain particular principals, but that is not done in JPMail... (wordt niet een geparsed)
+
+
+-- sending email
+
+?{network:} String idFile = in (); // force higher level on data than normal (in())
+// need to get first own id (within crypto network) as actor
+// then we can use that for labeling private key {moi: ; network: ....?..} vs public keys {network:}
+?{network:..?..} IDData idData;
+try {
+  idData = readIDFile(idFile);
+} catch (FileReadException f) {
+  err "You are not allowed to read this idFile"
+  exit
+} catch (KeyReadException k) {
+  err "Some of the keys was not trusted by the CA"
+  exit
+}
+
+String toCertID = in ();
+PublicKey toKey = idData[toCertID];
+
+Body body = new Body();
+?{network:Encrypted(a)} String content = in(); // higher from {'x:} ...
+body.content = content;
+?{network:}String eBody = <body.thisBody>encrypt(body.content, toKey);
+out(eBody);
+
+Body {
+  final actor thisBody;
+  ?{network : Encrypted(thisBody)} content;
+}
+// in class, with trusted declassifier and as above with trust from principal
+<actor a>encrypt(?{network : Encrypted(a)}, ?{network:} key) {
+  open Encrypted(a) {
+    return ... ;
+  }
+}

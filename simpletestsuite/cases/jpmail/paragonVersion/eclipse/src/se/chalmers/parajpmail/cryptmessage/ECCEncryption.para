@@ -1,0 +1,14 @@
+package se.chalmers.parajpmail.cryptmessage;
+
+import se.chalmers.parajpmail.jpmailpol.JPMailPolicy;
+import se.chalmers.parajpmail.jpmailpol.GlobalPol;
+
+import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+
+public class ECCEncryption {
+
+  private lock ECCEncrypted;
+
+  public static final policy encPol = { 'x : ECCEncrypted };
+
+}

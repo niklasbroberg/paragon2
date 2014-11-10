@@ -1,0 +1,17 @@
+package se.chalmers.parajpmail;
+
+public class MyAuthenticator extends javax.mail.Authenticator {
+   
+  private final ?policyof(this) String username;
+  private final ?policyof(this) String password;
+
+  public MyAuthenticator(?policyof(this) String username, ?policyof(this) String password) {
+    this.username = username;
+    this.password = password;
+  }
+
+  protected ?policyof(this) javax.mail.PasswordAuthentication getPasswordAuthentication() {
+    return new javax.mail.PasswordAuthentication(this.username, this.password);
+  }
+
+}

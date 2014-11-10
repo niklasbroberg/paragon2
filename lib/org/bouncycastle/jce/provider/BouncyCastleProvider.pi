@@ -1,0 +1,6 @@
+package org.bouncycastle.jce.provider;
+
+public native class BouncyCastleProvider extends java.security.Provider
+{
+  public BouncyCastleProvider() {}
+}

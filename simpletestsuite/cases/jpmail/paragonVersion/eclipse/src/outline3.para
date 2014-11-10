@@ -1,0 +1,183 @@
+/** Native classes **/
+
+public class SimpleUnixRuntime {
+
+  public static final actor currentUser;
+  
+  // looks up, or creates if not exists, the actor for this unix user.
+  public static final actor getActorOf(UnixUserID id);
+  
+  // throws IOException if e.g. not allowed to read file / file does not exist
+  public static ?policyof(file) String readFile(String file);
+  
+  // Is just System.out
+  public static final ?{currentUser:} PrintStream<{currentUser:}> out;
+  
+  // Is just System.in
+  public static final ?{'x:} InputStream<{'x:}> in; 
+
+}
+
+public class JPMailRuntime {
+
+  // looks up, or creates if not exists, the actor for this jpmail user.
+  public static final actor getActorOf(JPMailUserID id);
+  
+  // look up user, look up public key in keystore
+  // throw exception if not signed by CA.
+  public static <actor jpmailUser> void loadPublicKey(Keystore keystore); 
+  
+  // returns 400, 644 etc.
+  public static ?policyof(file) String getFilePermissions(String file);
+
+}
+
+// For reference, this default should not be used in jpmail:
+public class System {
+
+  public static final ?{'x:} PrintStream<{'x:}> out;
+  
+  public static final ?{'x:} InputStream<{'x:}> in;
+
+}
+
+/** Paragon classes **/
+
+public class JPMailFileReader {
+  // DISCUSS difference between owner-approach and flowto-appraoch becomes very clear here
+  // Jif can derive labels from OS-permissions, we cannot know yet where info may flow to.
+
+  // Relabel file data to desired policy (i.e. asserting policy here)
+  // Extra jpmail feature: specify the expected permissions
+  public static ?filePol <policy filePol> 
+  String readFile(?filePol String file, ?filePol String expectedPermissions) {
+    if (!JPMailRuntime.getFilePermissions(file).equals(expectedPermissions))
+      throw new JPPermissionException ...
+    return SimpleUnixRuntime.readFile(file);
+  }
+
+}
+
+
+public class JPMailPolicy {
+
+  // readonly as in: outside classes can query, add ~, but not open/close -- assumed closed by default
+  // therefore, should not need to add -closelock to signature closing readonly locks, since not relevant 
+  // -- hmm unless called in an outer method within an opened lock...
+  public static final readonly lock AllowsAESEncryption(actor);
+
+  // Opens a bunch of locks, but not in signature since which locks
+  // depends on policy file data.
+  public void apply(?SendMail.publ String policy) {
+  
+    // parsing policy...
+    // for each jpmailUser1 -> jpmailUser2
+    
+    open ActsFor( JPMailRuntime.getActor("jpmailUser1"),  
+                  JPMailRuntime.getActor("jpmailUser2") ); // or: SimpleUnixRuntime.getActorOf(UnixID)
+                  
+    // for each jpmailUser allows AESEncryption (or DES, DES3)
+    open AllowsAESEncryption(jpmailUser);
+  }
+
+}
+
+
+
+public class SendMail {
+
+  public static final actor network;
+  public static final policy publ = {network:};
+
+  // read and relabel a line from the input stream
+  private ?p String <policy p> readLine(?{'x:} InputStream<{'x:}> in) {
+  
+  }
+  
+  public void doit() {
+  
+
+    // Read in the policy file containing
+    // - which jpmailUser delegates to which jpmailUser / UnixUser
+    // - which jpmailUser trusts which declassifier (i.e. encryption)
+  
+    ?publ String policyFile = <publ>readLine(SimpleUnixRuntime.in);
+  
+    ?publ String jpmailPolicy;
+    try {
+      jpmailPolicy = JPMailFileReader.<publ>readFile(policyFile,"644");
+    } catch (FilePolicyException fpe) {
+      System.err.println("You have no permission to read that file"); // from SimpleUnixruntime
+    } catch (JPPermissionException jpe) {
+      System.err.println("The file does not have the desired permission 644."); // from JPMailFileReader
+      System.exit(-1);
+    }
+    
+    // Open locks according to the policy just read:
+    JPMailPolicy.apply(jpmailPolicy);
+    
+    
+    // The identity JPmail identity claimed:    
+    ?publ String claimedJPmailUser = <publ>readLine(System.in);
+    final actor jpmailUser = JPMailRuntime.getActor(claimedJPmailUser);
+    
+    // check that jpmailUser delegates to osUser
+    // can this go into a policy somehow?
+    if (!ActsFor(jpmailUser, SimpleUnixRuntime.currentUser)) { // should work around that in paragon with aux. boolean or something.
+     System.err.println("According to the policy file this Unix cannot send as that JPmail user.");
+     System.exit(-1)
+    }
+    
+    final policy userSecrets = { jpmailUser:
+                               ; network:  -- come up with good policy --
+                               };
+    
+    // Get location of file containing
+    // - location of key store
+    // - password of key store
+    // - server, username, password of pop3
+    // - server, username, password of smtp
+    
+    ?publ String settingsFile = <publ>readLine(System.in);
+    ?userSecrets UserSettings userSettings;
+    try {
+      userSettings = parseUserSettings(Runtime.<userSecrets>readFile(settingsfile,"600"));
+    } catch (FilePolicyException fpe) {
+      System.err.println("You have no permission to read that file"); // from SimpleUnixruntime
+    } catch (JPPermissionException jpe) {
+      System.err.println("The file does not have the desired permission 600."); // from JPMailFileReader
+      System.exit(-1);
+    } // Note, JPMail security, not Jif security. TODO: Check if correct!
+   
+    ?userSecrets Keystore keystore;
+    try {
+      keyStore = parseKeystore(Runtime.readFile(UserSettings.keyStore));
+    } catch (FilePolicyException fpe) {
+      // Cannot read file, permissions incorrect
+      // exit
+    } // catch  that some key is not signed by CA
+    
+    JPMailRuntime.loadPublicKey(jpmailUser, keystore); // might throw exception: not found, not correctly signed
+    JPMailRuntime.loadPrivateKey(jpmailUser, keystore); // might throw exception: not found, not corresponding private key
+    
+    // if we arrive here we assume unix user is allowed to send mail as jpmailUser.
+    // Trust based on possession of private key and file permissions.
+    
+    
+    // read public header info as {network:}
+    
+    // read in recepient
+    
+    // read body as {network : AESEncrypted, AllowsAES(recipient) ;
+                     network : DESEncrypted, AllowsDES(recipient) ;
+                     network : DES3Encrypted, AllowsDES3(recipient) }
+                     
+    // encrypt etc. (also need to include AES/DES key encrypted, so that key gets policy {network : RSAEncrypted, AllowRSA(recipient)} or something.
+    
+    // Send that stuff.
+  
+  }
+
+}
+
+

@@ -1,0 +1,29 @@
+public class FlowViaProperties {
+
+  public static final policy bottom = { Object x:};
+
+  public static ?bottom lock A;
+  public static ?bottom lock B {B : A};
+
+  public static final policy secret = {Object x: B};
+
+  ?bottom int pub;
+  ?secret int sec;
+
+  -A !bottom
+  public void something() {
+    open A;
+    if (B) {
+      // B is open
+      // B can be derived to be open via A
+      // We now close A
+      close A;
+      // As a result B might be closed as well, hence this assignment should
+      // not be allowed, but it is:
+      pub = sec;
+    }
+  }
+
+}
+
+

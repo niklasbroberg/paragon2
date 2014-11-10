@@ -1,0 +1,232 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import java.security.*;
+// import mp.*;
+
+/**
+ * Represents a single card in the vector form
+ * We assume that this is vector of DABigInteger<p>s
+ * 
+ */
+public class CardVector<policy p>
+implements DataFieldAttribute<p> 
+{
+
+  public ?p int getType() {
+    return DataFieldAttribute.CardVector;
+  }
+
+
+	private ?p BigIntVector<p> value; 
+    
+    
+	public CardVector(?p BigIntVector<p> v)
+    throws !p IllegalArgumentException {
+        if (v == null) 
+            throw new IllegalArgumentException();
+        
+		this.value = v;
+	}
+
+
+	/**
+	 * Generates a vector representation of a card x
+	 * module z, consisting of t cards
+	 *  
+	 * @param x
+	 * @param t
+	 * @param z
+	 */
+    public !p CardVector(?p int  x, ?p int t, ?p DABigInteger<p> z, 
+                         ?p DABigInteger<p> m) 
+    throws !p IllegalArgumentException, 
+    !p NoSuchAlgorithmException, 
+    !p MPException
+    {
+        
+        if (z == null)
+            throw new IllegalArgumentException();
+    
+       if (m == null) 
+            throw new IllegalArgumentException();
+        
+        value = new BigIntVector<p>();
+        
+        try {
+          // ISSUE 100
+          ?p String sha1 = "SHA1PRNG";
+          for (int j = 0; j < t; j++) {
+            ?p DABigInteger<p> P_ij = null;
+            if (j != x - 1) {
+              DABigInteger<p> k = new DABigInteger<p>(4, SecureRandom.getInstance(sha1)); 
+              while (  (k.compareTo(DABigInteger.<p>ZERO()) == 0) ||
+                       (k.multiply(z).compareTo(m) >= 0) )	{
+                  k = new DABigInteger<p>(4, SecureRandom.getInstance(sha1));
+              }
+              // we should have Pij mod z = 0
+              // so Pij = z*k + 0
+              // if we have Pij = z*k, then we're done
+              // so, we're taking some random value k, 
+              // and multiply it by z, this will give us
+              // what we're looking for
+              
+              // Note that this value should be less than ph.m,
+              // since it is used later in decryption
+              
+               P_ij = k.multiply(z);
+            } else {
+              P_ij =  new DABigInteger<p>(z.bitLength(), SecureRandom.getInstance(sha1));
+              while ((P_ij.mod(z).compareTo(DABigInteger.<p>ZERO()) == 0) 
+                  || (P_ij.compareTo(m) >= 0 )) {
+                 P_ij = new DABigInteger<p>(z.bitLength(), SecureRandom.getInstance(sha1));
+              }
+            }
+            value.add(P_ij);
+          }
+        } catch (NullPointerException e) {	throw new MPException("NPE");	
+        } catch (ArithmeticException e) { throw new MPException("AE");
+        //} catch (IndexOutOfBoundsException e) { throw new MPException("IOOBE");
+        }
+	}
+	
+	
+	public ?p BigIntVector<p> getValueVector() {
+		return this.value;
+	}
+	
+	public ?(p*policyof(index)) DABigInteger<p> getBI (int index)
+	throws !(p+policyof(index)) IndexOutOfBoundsException 
+	{
+        BigIntVector<p> value = this.value;
+        return value == null ? null: value.getBI(index); 
+	}
+	
+	
+	/* (non-Javadoc)
+	 * @see poker.DataFieldAttribute#toByteArray()
+	 */
+     public !p ?p byte[]<p> toByteArray() {
+        BigIntVector<p> value = this.value;
+        return value == null ? null: value.toByteArray(); 
+        
+	}
+
+	/* (non-Javadoc)
+	 * @see poker.DataFieldAttribute#byteLength()
+	 */
+    public ?p int byteLength() {
+        BigIntVector<p> value = this.value;
+        return value == null ? 0: value.byteLength(); 
+	}
+	
+	
+    public CardVector<p> multMatrix(?p mp.PermutationMatrix<p> pi)
+    throws !p IllegalArgumentException, 
+    !p MPException 
+    {
+        if (pi == null)
+            throw new IllegalArgumentException();
+        
+        BigIntVector<p> value = this.value;
+        if (value == null) 
+            throw new MPException("value is null");
+        
+        int t = value.size();
+        BigIntVector<p> w = new BigIntVector<p>();
+        try {
+            for (int i = 0; i < t; i++) {
+                BigIntVector<p> rowi = (BigIntVector<p>)pi.getMatrix().get(i);
+                DABigInteger<p> coli = (DABigInteger<p>)value.get(i);
+                
+                if (i == 0)
+                    for (int j = 0; j < t; j++) {
+                        DABigInteger<p> p_ij = (DABigInteger<p>)rowi.get(j);
+                        w.add(p_ij.multiply(coli));
+                    }
+                else 
+                    for (int j = 0; j < t; j++) {
+                        DABigInteger<p> p_ij = (DABigInteger<p>)rowi.get(j);
+                        DABigInteger<p> w_j = (DABigInteger<p>) w.get(j);
+                        w.set(j, w_j.add(p_ij.multiply(coli)));
+                    }			
+            }
+            return new CardVector<p>(w);
+        } catch (NullPointerException e) { 
+            throw new MPException("multMatrix: NPE");        
+        } catch (ClassCastException e)  {
+            throw new MPException("multMatrix: CCE");
+        } catch (IndexOutOfBoundsException e) {
+            throw new MPException("multMatrix: IOB"); 
+        }
+	}
+	
+	
+	public !p ?p int getCardValue(?p DABigInteger<p> z)
+  throws !p IllegalArgumentException,
+  !p MPException
+  {
+        try {
+            int found = -1;
+            int t = value.size();
+            for (int i = 0; i < t; i++) {
+                DABigInteger<p> v_i = (DABigInteger<p>) value.get(i);
+                if (v_i.mod(z).compareTo(DABigInteger.<p>ZERO()) != 0)
+                    {
+                     if (found < 0)
+                        found = i+1;
+                     else 
+                        throw new IllegalArgumentException
+                            ("ambigous card or incorrect modulus");
+                    }
+            }
+           
+            return found;
+        } catch (NullPointerException e) {
+        } catch (IndexOutOfBoundsException e) {
+        } catch (ClassCastException e) {
+        } catch (ArithmeticException e) {
+        }
+        // something wrong happened
+        throw new MPException();
+	}
+	
+	public ?p String toString() {
+       BigIntVector<p> value = this.value;
+       return value == null ? "" : value.toString();
+        
+        
+	}
+    
+    /*
+    
+    public boolean{L;o} equals (IDComparable<p> o) {
+        if (o == null)
+            return false;
+        if (!(o instanceof CardVector<p>))
+            return false;
+        
+        try {
+            CardVector <p> that = (CardVector<p>) o;
+            BigIntVector<p> thisvalue = this.value;
+            BigIntVector<p> thatvalue = that.value;
+            if (thisvalue == null || thatvalue == null)
+                return false;
+            return thisvalue.equals(thatvalue);
+        } catch (ClassCastException e) {
+        }
+        return false;
+    }
+    
+    
+    public int{L} hashCode() {
+        BigIntVector<p> value = this.value;        
+        return value == null ? 0: value.hashCode();
+    }
+    */
+}
+
+

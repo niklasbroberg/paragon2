@@ -1,0 +1,10 @@
+package javax.mail;
+
+// HACK, should be inner type of Message
+public native class RecipientType {
+  
+  public static final ?{Object x:} RecipientType TO;
+  public static final ?{Object x:} RecipientType CC;
+  public static final ?{Object x:} RecipientType BCC;
+
+}

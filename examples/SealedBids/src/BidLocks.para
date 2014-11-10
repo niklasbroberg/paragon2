@@ -1,0 +1,27 @@
+/**
+ * Mainly due to Paragon not yet supporting cyclic dependencies, this class
+ * collects all the stateful locks used in the auction policies.
+ **/
+public class BidLocks {
+
+    /**
+     * Lock representing that the auction is over
+     **/
+    public lock AuctionClosed;
+
+    /**
+     * Lock representing that we are in the process of determining the winner
+     **/
+    public lock DetermineWinner;
+
+    /**
+     * Lock that is open for a bidder who has bid
+     **/
+    public ?{'x:} lock HasBid(bidder);
+
+    /**
+     * Lock to be opened for the winning bidder at the end of the auction
+     **/
+    public lock Winner(bidder);
+
+}

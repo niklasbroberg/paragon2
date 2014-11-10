@@ -1,0 +1,92 @@
+/*
+ * IMAP.para
+ *
+ * Version 0.1
+ *
+ * February 2013
+ *
+ * Copyright:           Chalmers University, CSE department, Paragon Team
+ * Lioense:             BSD 3-Clause
+ * Implementation v0.1: Bart van Delft
+ */
+
+package se.chalmers.parajpmail;
+
+import java.util.Properties;
+
+import javax.mail.AuthenticationFailedException;
+import javax.mail.Folder;
+import javax.mail.FolderNotFoundException;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.NoSuchProviderException;
+import javax.mail.Session;
+import javax.mail.Store;
+
+/**
+ * Helper class for reading mails via IMAP
+ */
+public class IMAP {
+
+    private lock DeclassPassword;
+
+    /**
+     * Exposed policy to be used with imap server password, can only be
+     * declassified by IMAP (acting as trusted declassifier).
+     */
+    public static final policy passwordPol = { 'x : DeclassPassword };
+
+    // ISSUE should be CryptedMail<p>[]<p> ?
+    public static !p ?p <policy p> CryptedMail<p>[]<p> readmail(?p String server, 
+            ?p String username, ?(p*passwordPol) String password)
+                    throws !p ?p NullPointerException, 
+                           !p ?p MessagingException,
+                           !p ?p ParaJPMailException {
+
+        Properties<p, p> props = new Properties<p, p>();
+        props.put("mail.store.protocol", "imaps");
+        
+        String _password;
+        open DeclassPassword {
+          _password = password;
+        }
+        try {
+            Session session = Session.<p>getDefaultInstance(props, null);
+            Store store = session.getStore("imaps");
+            store.connect(server, username, _password);
+
+            Folder inbox = store.getFolder("INBOX");
+            if (inbox == null) {
+                throw new MessagingException("No INBOX");
+            }
+            inbox._open(Folder.HOLDS_MESSAGES);
+
+            Message<p>[] messages = inbox.getMessages();
+            ?p CryptedMail<p>[] res = new CryptedMail<p>[messages.length];
+
+            for (int i = 0; i < messages.length; i++) {
+                // filtering: only PPMail messages
+                ?p String[] h = messages[i].getHeader("X-PPMail-Crypto");
+                if (h != null && h.length == 1 && "true".equals(h[0])) {
+                    res[i] = CryptedMail.<p>parse(messages[i].getContent().toString());
+                    res[i].setFromAddress(messages[i].getFrom()[0].toString());
+                    res[i].setSubject(messages[i].getSubject());
+                }
+            }
+            inbox._close(false); // not deleting anything.
+            store._close(); // TODO ISSUE open/close methods
+            return res;
+        } catch (NoSuchProviderException e) {
+            throw new MessagingException(e.getMessage());
+        } catch (AuthenticationFailedException e) {
+            throw new MessagingException(e.getMessage());
+        } catch (IllegalStateException e) {
+            throw new MessagingException(e.getMessage());
+        } catch (FolderNotFoundException e) {
+            throw new MessagingException(e.getMessage());
+        } catch (java.io.IOException e) {
+            throw new MessagingException(e.getMessage());
+        }
+    }
+
+}

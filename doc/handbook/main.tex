@@ -1,0 +1,217 @@
+\documentclass{book}
+
+%%%%%%%%%%%%%%%%%
+%%%%% Packages 
+%  Please be so kind to document what an included package does
+
+% Fancy chapter captions - 
+\usepackage[Lenny]{fncychap}
+
+% For a nice font in the code samples
+\usepackage{courier}
+
+% Links within the document:
+\usepackage{hyperref}
+\hypersetup{
+    pdftitle={Flawless},    % title
+    pdfauthor={The Paragon Team},     % author
+    pdfcreator={Bart van Delft},   % creator of the document
+    pdfproducer={LaTeX}, % producer of the document
+    pdfkeywords={paragon} {paralocks} {documentation} {handbook} {tutorial}, % list of keywords
+    colorlinks=true,       % false: boxed links; true: colored links
+    linkcolor=red,          % color of internal links
+    citecolor=blue,        % color of links to bibliography
+    urlcolor=cyan           % color of external links
+}
+
+% displaying code
+\usepackage{listings}
+% in colored frames
+\usepackage{color}
+\definecolor{grey}{rgb}{0.9,0.9,0.9}
+% for quotes display
+\usepackage{upquote}
+% some fancy stuff
+\lstset{ %
+  frame = single ,
+  basicstyle=\footnotesize\ttfamily,     
+  backgroundcolor=\color{grey},  % hence including package color
+  showspaces=false,              
+  showstringspaces=false,        
+  showtabs=false,                
+  frame=single,        
+  tabsize=2,          % let's have very long discussions about that. no, wait.
+  captionpos=b,           % if any
+  breaklines=true,        
+  breakatwhitespace=false
+}
+%
+% command for paragon code:
+\lstnewenvironment{paragoncode}
+{\lstset{numbers = left , 
+          numberstyle = \tiny , 
+          numbersep = 5pt , 
+          stringstyle = \ttfamily,
+          language=Java,       % almost correct, see emph below
+          emph = {actor, lock, policy} ,
+          emphstyle = {\bf\color{blue}} ,
+          literate={'}{{\textquotesingle}}1 
+            % so that we can directly copy paragon source code - otherwise policy quotes
+            % for actor variables are considered character-quotes... 
+         } }
+{}
+
+
+\newcommand{\newSyntax}[1]{{\tt \bf \color{blue} #1}}
+\newcommand{\smallcode}[1]{{\tt \small #1}}
+
+
+\title{Flawless\\A handbook to Paragon programming}
+
+\author{The Paragon Team.}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\chapter{Introduction}
+\label{chap:introduction}
+
+\begin{itemize}
+
+  \item Short introduction to the problem of information flow
+  
+  \item Maybe a section on earlier work
+  
+  \item Describe goal and outline of handbook
+  
+  \item Wish the reader a good time
+
+\end{itemize}
+
+\chapter{Paralocks}
+\label{chap:paralocks}
+
+\begin{itemize}
+
+  \item Introduce the language
+  
+  \item A bit on the semantics perhaps and what you cannot express 
+        (if appropriate)
+
+\end{itemize}
+
+\chapter{My First Paragons}
+\label{chap:firstParagons}
+
+\begin{itemize}
+
+  \item Just per method; no methods calling other methods, no need for 
+         signatures etc.
+         
+  \item Only policies on integers
+  
+  \item Some policies and locks, with lock properties.
+  
+  \item Main purpose: get a feeling of the information flows within 
+        sequential code (explicit flows and `crazy' implicit flows.
+        
+  \item A section on arrays? Or move that to chapter on objects?
+
+\end{itemize}
+
+\input{firstParagons}
+
+\chapter{Method signatures}
+\label{chap:methods}
+
+\begin{itemize}
+
+  \item Include methods that need annotations (read/write effect, lock state 
+         effects on lockstate)
+         
+  \item Interactions between methods with annotations (i.e. effects on caller)
+
+\end{itemize}
+
+\chapter{Classes and parametrization}
+\label{chap:classes}
+
+\begin{itemize}
+
+  \item Analogy with arrays for need of parametrization. Perhaps examples of a
+        Player in a simple game.
+        
+  \item Instance actors and policies vs static ones
+
+\end{itemize}
+
+\chapter{Runtime Paragon}
+\label{chap:runtime}
+
+\begin{itemize}
+
+  \item Lock queries
+  
+  \item Runtime policies (..example?)
+
+\end{itemize}
+
+\chapter{Writing interfaces}
+\label{chap:interfaces}
+
+\begin{itemize}
+
+  \item How-to, pi path etc.
+  
+  \item In general: advice to be very careful (examples of potential mistakes,
+         e.g. forgetting side effects (SecureRandom) )
+
+\end{itemize}
+
+\chapter{The online auction}
+\label{chap:auction}
+
+\begin{itemize}
+
+  \item To have a proper online example we actually need a database, in case we
+         manage to do so, include
+         
+  \item Think this is a good point since we can use all of the above chapters'
+         material here. 
+
+\end{itemize}
+
+\chapter{So you wrote a flawless program}
+\label{chap:conclusions}
+
+\begin{itemize}
+
+  \item Conclusions
+  
+  \item Advices
+  
+  \item Potential dangers left:
+  
+  \begin{itemize}
+
+    \item Incorrect policies
+    
+    \item Untrusted code
+    
+    \item Bugs in parac / javac / runtime paragon (i.e. keep them up to date) 
+
+  \end{itemize}
+
+\end{itemize}
+
+\appendix
+
+\chapter{Paralocks Policy Operations}
+\label{app:paralocksOperations}
+
+\input{appendixParalocksOperations}
+
+\end{document}

@@ -1,0 +1,144 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta charset="UTF-8">
+		<title>Paragon</title>
+		<link rel="stylesheet" type="text/css" href="style.css" />
+	</head>
+	<body>
+		<div id="centerpane">
+			<div id="header">
+				Paragon
+				<hr />
+			</div>
+			<div id="leftpane">
+				<div id="infopane">
+					<p class="first">
+						<span class="bold">Main Developer</span> <br />
+						Niklas Broberg
+					</p>
+					<p>
+                        <span class="bold">Contributors</span> <br />
+						David Sands <br />
+						Bart van Delft <br />
+                        Yannick Zakowski <br />
+                        Javed Nazir <br />
+                        Filippo Del Tedesco <br />
+					</p>
+				</div>	
+				<div id="links">
+					<div class="link">
+						<a href="index.html">
+							Home
+						</a>
+					</div>
+					<div class="link">
+						<a href="download.html">
+							 >  Download Paragon
+						</a>
+					</div>
+                    <div class="link">
+						<a href="cases.html">
+							 Case Studies
+						</a>
+					</div>
+					<div class="link">
+						<a href="tutorials.html">
+							 Tutorials
+						</a>
+					</div>
+				</div>			
+			</div>
+			<div id="rightpane">
+                <h3>Installation and usage</h3>
+				<p>
+					Paragon is written in Haskell and is available in
+                    <a href="http://hackage.haskell.org/packages/hackage.html">
+                    HackageDB</a>. Installation should therefore be as simple
+                    as running the command:
+				</p>
+                <p class="code">
+                    cabal install paragon
+                </p>
+                <p>
+                    To compile a file
+                    <span class="code">MyClass.para</span>
+                    written in Paragon execute the command in the folder 
+                    containing the file:
+                </p>
+                <p class="code">
+                    parac MyClass.para
+                </p>
+                <p>
+                    If the file is compiled correctly nothing is printed to the
+                    screen and the files
+                    <span class="code">MyClass.pi</span>
+                    <span class="code">MyClass.java</span>
+                    are created in the same folder. The 
+                    <span class="code">.pi</span> file is a Paragon Interface file
+                    and preserves the original annotations. This file is used when
+                    using MyClass in other files.
+                    The <span class="code">.java</span> file can be compiled using
+                    the standard <span class="code">javac</span> compiler, provided
+                    that the Paragon runtime library is in the path (see below).
+                </p>
+                <p>
+                    The paragon compiler can be called with the following flags
+                </p>
+                <p class="code">
+                    Usage: parac [OPTIONS...] files...<br /><br />
+                    -V <br />
+                    --version <br />
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    Show the version number <br />
+                    <br />
+                    -p &lt;path> <br />
+                    --pipath=&lt;path> <br />
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    Under Unix : and under windows ; separated list of paths to 
+                    directories containing requried Paragon interface (.pi) files (default is&nbsp;.)
+                    <br />
+                    <br />
+                    -h <br />
+                    --help <br />
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    Show this help <br />
+                    <br />
+                    -v[n] <br />
+                    --verbose[=n] <br />
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    Control verbosity (n is 0--4, normal verbosity level is 1,
+                    -v alone is equivalent to -v3)
+                </p>
+                <h3>Runtime library</h3>
+                <p>
+                    In order to support the dynamic features of Paragon
+                    (dynamic policies and lock queries)
+                    the generated <span class="code">.java</span> files
+                    need to be compiled against the Paragon runtime
+                    library. This library also needs to be present during
+                    execution of the generated <span class="code">.class</span>
+                    files.
+                </p>
+                <p>
+                    Download the Paragon runtime jar <a href="paragonRT.jar">here</a>.
+                </p>
+                <p>
+                    Assuming that the <span class="code">paragonRT.jar</span> file is in
+                    the same directory as your code, you can run the command
+                </p>
+                <p class="code">
+                    javac -cp .;paragonRT.jar MyClass.java
+                </p>
+                <p>
+                    to compile the <span class="code">.java</span> generated by the
+                    Paragon compiler.
+                </p>
+            </div>
+			<div id="footer">
+				<hr />
+				Chalmers University, G&ouml;teborg, Sweden
+			</div>
+		</div>
+	</body>
+</html>

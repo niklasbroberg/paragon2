@@ -1,0 +1,10 @@
+public class Joininarg {
+
+    public static final policy p = {:};
+    
+    public static final policy q = {:};
+    
+    public void a(int[]<p*q> arr) {
+    }
+
+}

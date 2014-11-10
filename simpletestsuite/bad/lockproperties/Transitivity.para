@@ -1,0 +1,24 @@
+public class Transitivity {
+   
+   lock A(Object,Object) {
+       (Object x, Object y, Object z)
+	   A(x,y) : A(x,z), A(z,y) 
+	   };
+   
+    public static final Object alice = new Object();
+    public static final Object bob = new Object();
+    public static final Object charlie = new Object();
+   
+   void foo() {
+   
+     ?{alice : } int a;
+     ?{Object x : A(charlie,x)} int b;
+     
+     open A(charlie,bob);
+     
+     a = b;
+   
+   }
+   
+   
+}

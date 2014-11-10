@@ -1,0 +1,45 @@
+package java.util;
+
+// Paragonized
+
+/**
+ * A collection of JifObjects.
+ *
+ * The parameter L is the label of the elements, that is,
+ * the collection contains JifObject[L] elements. It is
+ * also the label for the amount of 
+ * information obtained by knowing what objects are 
+ * contained in this collection.
+ */
+public native interface Collection<policy p> extends Object {
+    ?p int size();
+    ?p boolean isEmpty();
+    ?(p*policyof(o)) boolean contains(Object o);
+    // Not applicable, since paragon objects do not take a policy
+    // boolean{L;*lbl;lbl;o} contains(label lbl, JifObject[lbl] o);
+    ?policyof(this) Iterator<p> iterator();
+
+    ?p !p Object[]<p> toArray();
+
+    ?p !p boolean add(?p Object o)
+        throws !p ClassCastException, 
+               !p IllegalArgumentException;
+    ?p !p boolean remove(?p Object o);
+
+    ?p boolean containsAll(?p Collection<p> c)
+        throws !(policyof(c)) NullPointerException;
+    ?p !p boolean addAll(?p Collection<p> c)
+        throws !p ClassCastException,
+               !p IllegalArgumentException;
+    ?p !p boolean removeAll(?p Collection<p> c);
+    ?p !p boolean retainAll(?p Collection<p> c);
+    !p void clear();
+    
+    // all collections must provide a way of accessing elements by index.
+    // this allows clients to iterate over elements without the side-effects
+    // required by iterators.
+    ?(p*policyof(index)) Object get(int index)
+       // TODO usual comment on * vs +
+       throws !(p*policyof(index)) IndexOutOfBoundsException;
+    
+}

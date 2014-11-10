@@ -1,0 +1,67 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+import java.lang.String;
+import java.lang.Throwable;
+
+public class MPException extends java.lang.Exception{
+	/**
+	 * Constructs an <code>MPException</code> with no specified detail message
+	 */
+	public MPException() {
+		super();
+		this.detailMessage = ""; // just empty string, no detailed message
+    this.cause = null;
+	}
+	
+	
+	// defining this variable as final allows us to use it later in the 
+	// class, i.e. return it, etc..
+	private final ?policyof(this) String detailMessage;
+    
+  private final ?policyof(this) Throwable cause;
+    
+	/**
+	 * Constructs an <code>MPException</code> with the specified detail
+	 * message
+	 *
+	 * @param    s     the detail message
+	 */
+	 
+	 public MPException (?policyof(this) String s) {
+		 super();		 
+		 this.detailMessage = s;
+         this.cause = null;
+	 }
+	 
+     
+     public MPException (?policyof(this) String s,
+                          ?policyof(this) Throwable cause) {
+        super();
+        this.detailMessage = s;
+        this.cause = cause;
+     }
+     
+     public MPException (?policyof(this) Throwable cause) {
+         super();
+         this.detailMessage = "";
+         this.cause = cause;
+     }
+     
+	 public ?policyof(this) String getMessage() {
+		 return this.detailMessage;
+	 }
+	 
+	 public ?policyof(this) String toString() {
+		return this.getMessage(); 
+	 }
+     
+     public ?policyof(this) Throwable getCause() {
+         return this.cause;
+     }
+}
+
+
+

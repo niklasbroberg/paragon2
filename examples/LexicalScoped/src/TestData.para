@@ -1,0 +1,13 @@
+/**
+ * Simple test data for testing the lexically scoped flows.
+ * Consists of two different security levels and data protected on those levels.
+ **/
+public class TestData {
+
+    public static final actor levelA;
+    public static final actor levelB;
+    
+    public static ?LexicalFlow.pol(levelA) int dataA = 100;
+    public static ?LexicalFlow.pol(levelB) int dataB = 16;
+           
+}

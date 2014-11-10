@@ -1,0 +1,39 @@
+// Paragonized
+
+package java.net;
+
+import java.io.IOException;
+import java.io.UnknownHostException;
+
+public native class Socket<policy p>  {
+
+    public Socket() {
+    }
+
+
+    public Socket(?p String host, ?p int port)
+	  throws !p UnknownHostException,
+	         !p IOException {
+    }
+
+    public Socket(?p InetAddress address, ?p int port)
+      throws !p IOException 
+    {  }
+
+    public Socket(?p String host, ?p int port, ?p InetAddress localAddr,
+		  ?p int localPort)
+      throws !p IOException 
+    {}
+
+    public Socket(?p InetAddress address, ?p int port, ?p InetAddress localAddr,
+		  ?p int localPort)
+	  throws !p IOException
+    {}
+
+    // ISSUE 119
+    // public native void close();
+    public ?p native java.io.InputStream<p> getInputStream() 
+      throws !p java.io.IOException;
+    public ?p native java.io.OutputStream<p> getOutputStream()
+      throws !p java.io.IOException;
+}

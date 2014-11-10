@@ -1,0 +1,23 @@
+public class Symmetry {
+   
+   lock A(Object,Object) {
+       (Object x, Object y)
+	   A(x,y) : A(y,x) 
+	   };
+   
+    public static final Object alice = new Object();
+    public static final Object bob = new Object();
+   
+   void foo() {
+   
+     ?{alice : } int a;
+     ?{Object x : A(bob,x)} int b;
+   
+     open A(alice,bob);
+     
+     a = b;
+   
+   }
+   
+   
+}

@@ -1,0 +1,72 @@
+/*
+* Class demonstrating some current problems in the actor alias analysis.
+* Compiles until you start uncommenting code.
+*
+* @author Bart van Delft
+*/
+public class ActorTest<actor Object b> {
+
+  public static final lock L(Object);
+
+  public final Object a = new Object();
+  
+  public final boolean bool;
+
+  // Closing a lock via an alias, works
+  -L(b)
+  public void m1() {
+    Object c = b;
+    close L(c);  
+  }
+  
+  // Closing a different lock in each branch, works
+  -L(a)
+  -L(b)
+  public void m2() {
+    if (bool)
+      close L(a);
+    else
+      close L(b);
+  }
+  
+  // Combining above approaches, fails
+  -L(a)
+  -L(b)
+  public void m3() {
+    Object c;
+    if(bool)
+      c = a;
+    else
+      c = b;
+    close L(c);
+  }
+  
+  // Performing comparisons on actors is not supported at all
+  //+L(a)
+  public void m4() {
+    if (a == b)
+      open L(b);
+  }
+  
+  // Closing aliased, method-parametrized lock, works
+  -L(c)
+  public <actor Object c> void m5() {
+    Object d = c;
+    close L(d);
+  }
+
+  // Calling m5, works
+  -L(a)
+  public void m6() {
+    this.<a>m5();
+  }
+  
+  // Calling m5 with an alias, fails
+  -L(a)
+  public void m7() {
+    Object c = a;
+    this.<c>m5();
+  }
+ 
+
+}

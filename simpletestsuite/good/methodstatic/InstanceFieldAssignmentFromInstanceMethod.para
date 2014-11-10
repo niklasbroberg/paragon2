@@ -1,0 +1,7 @@
+public class InstanceFieldAssignmentFromInstanceMethod {
+  private int x;
+
+  private !{Object o:} void inst() {
+    x = 1;
+  }
+}

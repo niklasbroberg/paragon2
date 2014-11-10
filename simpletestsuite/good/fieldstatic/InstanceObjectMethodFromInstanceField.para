@@ -1,0 +1,3 @@
+public class InstanceObjectMethodFromInstanceField {
+  private String x = (new Object()).toString();
+}

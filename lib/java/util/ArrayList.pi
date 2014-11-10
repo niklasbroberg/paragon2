@@ -1,0 +1,17 @@
+public native class ArrayList<policy p> extends java.lang.Object {
+
+    public ArrayList() {}
+    
+    public void add(?p Object<p> s);
+    
+    public void ensureCapacity(?p int c);
+    
+    public ?p int size();
+    
+    public ?(p*policyof(i)) Object<p> get(int i);
+    
+    public void set(?p int pos, ?p Object<p> s);
+    
+    public void add(?p int pos, ?p Object<p> s);
+    
+}

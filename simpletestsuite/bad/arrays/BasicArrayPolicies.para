@@ -1,0 +1,15 @@
+public class BasicArrayPolicies {
+
+    public static final Object alice = new Object();
+    
+    public static final policy apol = {alice:};
+
+    public ?apol int[]<apol> myArray;
+    
+    public void foo() {
+    
+        ?{Object x:} int j = myArray[0];
+    
+    }
+
+}

@@ -1,0 +1,10 @@
+public class RunsFor
+{
+  lock ActsFor(java.lang.Object, java.lang.Object) {(java.lang.Object x,java.lang.Object y,java.lang.Object z) RunsFor.ActsFor(x,y): RunsFor.ActsFor(x,z),RunsFor.ActsFor(z,y)};
+  lock RunsFor(java.lang.Object) {(java.lang.Object x,java.lang.Object y) RunsFor.RunsFor(x): RunsFor.RunsFor(y),RunsFor.ActsFor(y,x)};
+  public static final java.lang.Object alice = new java.lang.Object();
+  public static final java.lang.Object bob = new java.lang.Object();
+  public static final java.lang.Object charlie = new java.lang.Object();
+  void foo()
+  ;
+}

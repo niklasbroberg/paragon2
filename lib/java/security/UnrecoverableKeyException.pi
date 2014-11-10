@@ -1,0 +1,4 @@
+package java.security;
+
+public native class UnrecoverableKeyException extends java.security.GeneralSecurityException {
+}

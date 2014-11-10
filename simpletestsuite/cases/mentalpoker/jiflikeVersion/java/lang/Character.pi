@@ -1,0 +1,7 @@
+package java.lang;
+
+public class Character {
+
+    public static ?policyof(c) boolean isWhitespace(Character c);
+
+}

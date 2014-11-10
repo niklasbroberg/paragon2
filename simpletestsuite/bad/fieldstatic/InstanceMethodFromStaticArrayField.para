@@ -1,0 +1,5 @@
+public class InstanceMethodFromStaticArrayField {
+  private static int[] a = inst();
+
+  private int[] inst() { return new int[1]; }
+}

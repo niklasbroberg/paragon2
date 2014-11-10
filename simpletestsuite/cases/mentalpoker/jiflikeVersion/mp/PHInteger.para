@@ -1,0 +1,244 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import java.util.ArrayList;
+
+public class PHInteger<policy p>
+implements DataFieldAttribute<p>
+{
+	private ?p ArrayList<p> value;
+	
+	public PHInteger(?p ArrayList<p> v) {
+		this.value = v;
+	}
+	
+	public ?p String toString() {
+        ArrayList<p> value = this.value;
+        if (value == null) 
+            return "";
+		int n = value.size();
+		String s = "(";
+		for (int i = 0 ; i < n ;i++) {
+			try  {
+                BigIntPair<p> pair = (BigIntPair<p>) value.get(i);
+                s += "[" + pair.getX().toString() +	", " + pair.getY() +"]";
+            } catch(IndexOutOfBoundsException ignored) {
+			} catch (NullPointerException ignored) {
+			} catch (ClassCastException ignored) {
+            }
+			if (i < n-1) 
+				s+=",";
+		}
+		s+=")";
+		return s;		
+	}
+//	
+//    
+//    public boolean{L;o} equals(IDComparable<p> o)   {
+//        try {
+//            PHInteger<p> that = (PHInteger<p>)o;
+//            return this.value.equals(that.value);
+//        } catch (NullPointerException ignored) {
+//        } catch (ClassCastException ignored) {
+//        }
+//        return false;
+//    }
+//    
+//    public int{L} hashCode() {
+//        ArrayList<p> value = this.value;
+//        return value == null ? 0: value.hashCode();
+//    }
+//    
+//	public byte{L}[]{L} toByteArray{L}() {
+//        ArrayList<p> value = this.value;
+//        if (value == null) return null;
+//		int n = value.size();
+//		int size = this.byteLength();
+//		
+//		byte[] ret = new byte[size];
+//		int r = 0;
+//		for (int j = 0; j < n; j++) {
+//            byte [] v_X = null;
+//            byte [] v_Y = null;
+//			try {
+//                BigIntPair<p> pair = (BigIntPair<p>)value.get(j);
+//                v_X = pair.getX().toByteArray();
+//                v_Y = pair.getY().toByteArray();   
+//                System.arraycopy(v_X, 0, ret, r, v_X.length);
+//                r += v_X.length;
+//                System.arraycopy(v_Y, 0, ret, r, v_Y.length);
+//                r += v_Y.length;
+//            } catch (IndexOutOfBoundsException ignored) { return null;
+//            } catch (NullPointerException ignored) { return null;
+//            } catch (ClassCastException ignored) { return null;
+//            } catch (ArrayStoreException ignored) { return null;
+//            }            		
+//		}
+//		return ret;
+//	}
+//	
+//	public int{L} byteLength() {
+//        ArrayList<p> value = this.value;
+//        if (value == null)
+//            return 0;
+//		int n = value.size();
+//		int bitlength = 0;
+//        for (int i = 0; i < n; i++) {
+//            try {
+//                BigIntPair<p> pair = (BigIntPair<p>) value.get(i);
+//                int inc = (int) Math.ceil((pair.getX().bitLength() + 1)/8.0);
+//                bitlength += inc;
+//                inc = (int) Math.ceil((pair.getY().bitLength() + 1)/8.0);
+//                bitlength += inc;
+//            } catch (NullPointerException ignored) { return 0;
+//            } catch (IndexOutOfBoundsException ignored) {  return 0;
+//            } catch (ClassCastException ignored) {  return 0;
+//            } catch (ArithmeticException ignored) {  return 0;
+//            }
+//		}
+//		return bitlength;
+//	}
+//	
+	public ?p ArrayList<p> getValueVector() {
+		return this.value;
+	}
+    
+    public ?p !p BigIntPair<p> getBigIntPair(?p int index)
+    throws !p IndexOutOfBoundsException 
+    {
+        ArrayList <p> value = this.value;
+        try {
+            return value == null? null : (BigIntPair<p>) value.get(index);
+        } catch (ClassCastException e) {}
+        return null;
+    }
+    
+    public ?p int size() {
+        ArrayList<p> value = this.value;
+        return value == null? 0 :value.size();
+    }
+        
+	 
+    public ?p PHInteger<p> add (?p PHInteger<p> phi)
+    throws !p IllegalArgumentException
+    {
+		ArrayList<p> a = this.value;
+        ArrayList<p> b = null;
+        if (a == null || phi == null) 
+			throw new IllegalArgumentException("argument is null");
+        b = phi.getValueVector();
+        
+        if ( b == null) return null;
+		
+		int min = (a.size() < b.size()) ? a.size() : b.size() ;
+		int max = (a.size() > b.size()) ? a.size() : b.size() ;
+		
+		?p ArrayList<p> c = new ArrayList<p>();
+		int i = 0;
+		for (; i < min; i++) {
+            try {
+                ?p BigIntPair<p> pai = (BigIntPair<p>) a.get(i);
+                ?p BigIntPair<p> pbi = (BigIntPair<p>) b.get(i);
+                ?p BigIntPair<p> cbi = new BigIntPair<p>(
+                        pai.getX().add(pbi.getX()),
+                        pai.getY().add(pbi.getY()));
+                c.add(cbi);
+            } catch (NullPointerException ignored) {  return null;
+            } catch (IndexOutOfBoundsException ignored) {  return null;
+            } catch (ClassCastException ignored) { return null;
+            }
+		}
+		
+		// copy the rest
+		ArrayList<p> t = (max == a.size()) ? a : b;
+        
+        for (; i < max; i++) {
+            try {
+                c.add(t.get(i));
+            } catch (NullPointerException ignored) {
+                return null;
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        }
+    
+		return new PHInteger<p>(c);
+	}
+	
+    public ?p !p PHInteger<p> mult(?p DABigInteger<p> b)
+    throws !p IllegalArgumentException 
+    {
+		?p ArrayList<p> a = this.value;
+        
+        if (a == null) return null;
+        
+        int n = a.size();
+		ArrayList<p> c = new ArrayList<p>();
+		for (int i = 0; i < n; i++) {
+            try {
+                BigIntPair<p> pai = (BigIntPair<p>) a.get(i);
+                BigIntPair<p> pci = new BigIntPair<p>(
+                        pai.getX().multiply(b),
+                        pai.getY().multiply(b));
+                c.add(pci);
+            } catch (NullPointerException ignored) {
+            } catch (IndexOutOfBoundsException ignored) {
+            } catch (ClassCastException ignored) {
+            }
+		}
+		return new PHInteger<p>(c);
+	}
+
+    public ?p PHInteger<p> mult(?p PHInteger<p> phi)
+    throws !p IllegalArgumentException{
+		ArrayList<p> a = this.value;
+        if (phi == null) return null;
+		ArrayList<p> b = phi.getValueVector();
+        if (a == null || b == null) 
+            return null;
+		
+		int n = a.size();
+		int m = b.size();
+		
+		ArrayList<p> c = new ArrayList<p>();
+		BigIntPair<p> zeroPair = new BigIntPair<p>(DABigInteger.<p>ZERO(), 
+            DABigInteger.<p>ZERO());
+		
+		for (int k = 0; k < n+m; k++)
+			c.add(zeroPair);
+			
+		for (int i = 0; i < n; i++) {
+            BigIntPair<p> ai = null;
+            try {
+                ai = (BigIntPair<p>)a.get(i);
+            } catch (IndexOutOfBoundsException ignored) {
+            } catch (ClassCastException ignored) {
+            }
+            if (ai == null) return null;
+			DABigInteger<p> aiq = ai.getY();
+			
+			for (int j = 0; j < m ; j++) {
+                try {
+                    BigIntPair<p> mp = (BigIntPair<p>)b.get(j);
+                    
+                    BigIntPair<p> pair = (BigIntPair<p>)c.get(i+j+1);
+                    
+                    DABigInteger<p> x = pair.getX().add(ai.getX().multiply(mp.getX()));
+                    DABigInteger<p> y = pair.getY().add(ai.getY().multiply(mp.getY()));
+                    
+                    pair = new BigIntPair <p>(x,y);
+                    c.set(i+j+1, pair);
+                } catch (NullPointerException ignored) {
+                    return null;
+                } catch (IndexOutOfBoundsException ignored) {
+                    return null;
+                } catch (ClassCastException ignored) {
+                    return null;
+                }
+			}
+		}
+		return new PHInteger<p>(c);	
+	}	
+}

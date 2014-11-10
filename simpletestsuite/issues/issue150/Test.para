@@ -1,0 +1,14 @@
+public class Test {
+
+  private ?{Object y:} Object y;
+
+  !{Object x:}
+  public void foo() {
+
+    if (true) {
+      y = null; 
+    } else {
+      y = new Object(); 
+    }
+  }
+}

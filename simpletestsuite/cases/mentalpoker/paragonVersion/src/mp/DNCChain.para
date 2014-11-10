@@ -1,0 +1,81 @@
+
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import java.util.ArrayList;
+import mp.*;
+
+public class DNCChain<policy p> {
+
+    // private final ?p ArrayList<p, DNCLink<p>> chain;
+    private final ?p ArrayList<p> chain;
+    
+    // number of the last link
+    // in general this is not equal to the size of chain
+    // because of the possibility of the chain expansion
+    // (paragon) not used.
+    //private ?policyof(this) final int k = 0;
+    
+    private final ?p SerializeWriteHelper<p> writer;
+  
+    public DNCChain (?p SerializeWriteHelper<p> writer)
+    throws !p IllegalArgumentException 
+    {
+        if (writer == null)             
+            throw new IllegalArgumentException();
+     
+		    this.chain = new ArrayList<p>();
+        this.writer = writer;
+	}
+
+    /** Appends link and writes information to the output
+      * so that the other party can see it
+      */
+	public !p void addLink(?p DNCLink<p> link) {
+        try {
+            this.chain.add(link);
+            this.writer.writeDNCLink(link);
+            
+        } catch (NullPointerException e) {
+        } catch (SecurityException e) {
+        }
+	}
+//    
+//    /** Appends link to the existing chain
+//      * Appended link supposed to be the one read from the input
+//      *
+//      */
+    public !p void appendLink(?p DNCLink<p> link) {
+        try {
+            this.chain.add(link);
+        } catch (NullPointerException e) {
+        }
+	}
+//	
+	public ?p DNCLink<p> getLink(?p int i)
+    throws !p IndexOutOfBoundsException{    
+        try {
+            return (DNCLink<p>) chain.get(i);
+        } catch (NullPointerException e) {
+        } catch (ClassCastException e) {
+        }
+        return null;
+	}
+//	
+//	/**
+//	 * Just in case someone wants to walk along the chain himself
+//	 * @return
+//	 */
+//     public ArrayList[L]{L} getChainVector() {
+//		return this.chain;
+//	}
+//	
+    public ?p int size() {
+        return chain.size();
+	}
+
+
+}

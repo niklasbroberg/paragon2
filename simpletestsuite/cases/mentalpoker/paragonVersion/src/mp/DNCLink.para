@@ -1,0 +1,58 @@
+// Needs to be parametrized because of byte array
+
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import java.security.*;
+import mp.*;
+
+public class DNCLink<policy p>
+{
+
+    private ?p final byte[]<p> chainingValue; 
+    //chaining value
+
+    private ?p final DataField<p> data;
+
+    private ?p final int k;
+
+    public ?p byte[]<p> getChainingValue() {
+        return this.chainingValue;
+    }
+   
+
+    public ?p DataField<p> getData() {
+      return data;
+    }
+      
+    public ?p int getk() {
+        return this.k;
+    }
+    
+    public !p DNCLink(?p int k, ?p DataField<p> data, ?p byte[]<p> chainingValue) {
+              
+          this.k = k;
+          this.data = data;
+          this.chainingValue = chainingValue;
+    }
+      
+    public ?p String toString() {
+          return "";
+    }
+    
+    // ever used?
+    /*
+    public boolean{o;L} equals(Object o) {
+        return false;	
+    }
+    */
+    /*
+    public int{L} hashCode() {
+      return 0;
+    }
+    */
+	
+}

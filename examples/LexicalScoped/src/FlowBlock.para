@@ -1,0 +1,12 @@
+/**
+ * Interface for modelling closures (ie functions as first-class values)
+ **/
+public interface FlowBlock<actor from, actor to, policy w> {
+      
+    /**
+     * The go method may assume the appropriate flow lock to be open.
+     * It can have side-effects up to the level indicated with w.
+     **/
+    public !w ~LockCirc.Flow(from, to) void go(); 
+             
+}

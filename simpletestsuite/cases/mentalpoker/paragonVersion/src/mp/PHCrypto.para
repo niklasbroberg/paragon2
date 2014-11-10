@@ -1,0 +1,370 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import java.security.*;
+import java.util.ArrayList;
+/**
+ * 
+ * Privacy Homomorphism Encryption & Decryption
+ * Based on [J.Domingo i Ferrer - A new privacy homomorphism and applications, 
+ * 1996]
+ */
+
+
+public class PHCrypto<policy pol> 
+{
+	private final ?pol DABigInteger<pol> p;
+	private final ?pol DABigInteger<pol> q;
+	private ?pol int nlength ;
+	private final ?pol DABigInteger<pol> m;
+ 
+	public final int BITLENGTH = 128;
+	public ?pol DABigInteger<pol> rp;
+	public ?pol DABigInteger<pol> rq;
+	
+	?pol String sha1 = "SHA1PRNG";
+	
+	public ?pol int getLength() {
+      return this.nlength;
+	}
+	
+	public !pol PHCrypto(?pol int n)
+    throws !pol NoSuchAlgorithmException, !pol MPException 
+    {
+    
+		Debug.println("Starting PHCrypto constructor");
+                DABigInteger<pol> a = DABigInteger.<pol>ZERO(),  b = DABigInteger.<pol>ZERO();		
+		
+		try {
+			Debug.println("Generating probable prime a of length 128, with SHA1PRNG");
+                        a = DABigInteger.<pol>probablePrime(BITLENGTH, SecureRandom.getInstance(sha1));
+                        Debug.println("a set to some value");
+			while (a.compareTo(DABigInteger.<pol>ZERO()) == 0) { 
+                          Debug.println("a was equal to zero, trying again");
+      			  a = DABigInteger.<pol>probablePrime(BITLENGTH, SecureRandom.getInstance(sha1));
+			} 
+
+			Debug.println("Generating probable prime a of length 128, with SHA1PRNG");
+			b = DABigInteger.<pol>probablePrime(BITLENGTH, SecureRandom.getInstance(sha1));
+			while ((b.compareTo(DABigInteger.<pol>ZERO()) == 0) || (b.compareTo(a) == 0)) {
+				b = DABigInteger.<pol>probablePrime(BITLENGTH, SecureRandom.getInstance(sha1));
+			} 
+                                    
+            this.nlength = n;		
+            this.p = a;
+            this.q = b;
+            this.m = p.multiply(q);
+            Debug.println("Generating R");
+            generateR();
+        } catch (NullPointerException e) {
+            throw new MPException("NPE");
+		} catch (ArithmeticException e) {
+            throw new MPException("AE");
+        } catch (IllegalArgumentException e) {
+            throw new MPException("IAE");
+        }
+        
+		
+	}
+	
+	
+	public ?pol BigIntVector<pol> getSecretKey()
+	{ 
+        BigIntVector<pol> v = new BigIntVector<pol>();
+        v.ensureCapacity(4);
+        v.add(p);
+        v.add(q);
+        v.add(rp);
+        v.add(rq);
+		return v;
+	}
+	
+	public ?pol DABigInteger<pol> getPublicParam() {
+		return this.m;
+	}
+	
+	public  PHCrypto(?pol int n, ?pol BigIntVector<pol> keyVector) 
+	throws !pol IllegalArgumentException {
+		if (keyVector == null) 
+			throw new IllegalArgumentException("PHCrypto: keyVector is null");
+		if (keyVector.size() != 4) {
+			throw new IllegalArgumentException("PHCrypto: keyVector invalid size");
+		}
+		
+		
+		DABigInteger<pol> p = null;
+		DABigInteger<pol> q = null;
+		try {
+			// to avoid NPE
+			p = (DABigInteger<pol>) keyVector.get(0); 
+			q = (DABigInteger<pol>) keyVector.get(1);
+			this.rp = (DABigInteger<pol>) keyVector.get(2);
+			this.rq = (DABigInteger<pol>) keyVector.get(3);
+			this.nlength = n;		
+		} catch (IndexOutOfBoundsException ignored) {
+		} catch (ClassCastException ex) {
+			throw new IllegalArgumentException("PHCrypto: CCE");
+		}
+		if (p == null || q == null || rp == null || rq == null)
+			throw new IllegalArgumentException("PHCrypto: null value");
+		this.m = p.multiply(q);
+		this.p = p;
+		this.q = q;
+	}
+	
+	public !pol PHCrypto(
+        ?pol int n, 
+        ?pol DABigInteger<pol> p, 
+        ?pol DABigInteger<pol> q, 
+        ?pol DABigInteger<pol> rp, 
+        ?pol DABigInteger<pol> rq)
+    throws !pol IllegalArgumentException
+    {
+        if (p == null ||
+            q == null ||
+            rp == null ||
+            rq == null)
+            throw new IllegalArgumentException("PHCrypto: null value");
+           
+		this.p = p;		
+		this.q = q;		
+		this.nlength = n;		
+		this.rp = rp; 	
+		this.rq = rq;
+		this.m = p.multiply(q);	
+	}
+	
+	public !pol void generateR() 
+    throws !pol NoSuchAlgorithmException 
+    {
+    
+		try {
+		    this.rp = new DABigInteger<pol>(p.bitLength(), SecureRandom.getInstance(sha1));
+			while ((rp.compareTo(p)>= 0 ) || (rp.compareTo(DABigInteger.<pol>ZERO()) <= 0)) {
+				this.rp = new DABigInteger<pol>(p.bitLength(), SecureRandom.getInstance(sha1));
+			} 
+			
+			this.rq = new DABigInteger<pol>(q.bitLength(), SecureRandom.getInstance(sha1));
+			while ((rq.compareTo(q) >= 0 ) || 
+					 (rq.compareTo(DABigInteger.<pol>ZERO()) <= 0)) {
+				this.rq = new DABigInteger<pol>(q.bitLength(), SecureRandom.getInstance(sha1));
+					
+			} 			
+			
+		} catch (NullPointerException ignored ) {
+		} catch (IllegalArgumentException ignored) {
+        }
+        
+	}
+	
+	
+	public !(pol*E) ?(pol*E) <policy E> PHInteger<pol*E> 
+	encrypt(?(E) DABigInteger<E> _a, ?pol int _n)
+    throws !(pol*E) IllegalArgumentException, !(pol*E) MPException
+    {
+    
+    
+        ?(pol*E) DABigInteger<pol*E> a =  
+          new DABigInteger<pol*E>(_a.getValue());
+        ?pol int n = _n;
+        
+        if (a == null)
+            throw new IllegalArgumentException();
+      
+        
+        
+        
+		try {
+        
+            ArrayList<pol*E> v = new ArrayList<pol*E>();
+            v.ensureCapacity(n);
+            
+             ?(pol*E) DABigInteger<pol*E> _m = 
+              new DABigInteger<pol*E>(m.getValue());
+            
+            if (a.compareTo(_m) >= 0) {
+                throw new IllegalArgumentException
+                    ("argument out of clear text space: " + a.toString() 
+                    + ">=" + this.m.toString());
+            }
+	?(pol*E) String sha1 = "SHA1PRNG";
+            
+			DABigInteger<pol*E> ss  = DABigInteger.<pol*E>ZERO();
+			DABigInteger<pol*E> ai  = DABigInteger.<pol*E>ZERO();
+			
+			DABigInteger<pol*E> rpi =new DABigInteger<pol*E>(rp.getValue());
+			DABigInteger<pol*E> rqi =new DABigInteger<pol*E>(rq.getValue());
+			
+			for (int i = 0; i<n; i++) {				
+				if ( i < n - 1) {
+				    ai = new DABigInteger<pol*E>(_m.bitLength()-1, SecureRandom.getInstance(sha1));
+					while ((ai.compareTo(_m) >= 0 ) || (ai.compareTo(DABigInteger.<pol*E>ZERO()) <= 0)) {
+					    ai = new DABigInteger<pol*E>(_m.bitLength()-1, SecureRandom.getInstance(sha1));
+					} 
+					ss = ss.add(ai).mod(_m);					
+				}
+				else 
+					ai = a.subtract(ss).mod(_m);
+				
+//				//System.out.println(a.toString() + 
+//						"::" + Integer.toString(i) + 
+//						"::" + ai.toString());
+//				
+      ?(pol*E) DABigInteger<pol*E> _p = 
+              new DABigInteger<pol*E>(p.getValue());
+       ?(pol*E) DABigInteger<pol*E> _q = 
+              new DABigInteger<pol*E>(q.getValue());
+      ?(pol*E) DABigInteger<pol*E> _rp = 
+              new DABigInteger<pol*E>(rp.getValue());
+       ?(pol*E) DABigInteger<pol*E> _rq = 
+              new DABigInteger<pol*E>(rq.getValue());
+				
+				BigIntPair<pol*E> pair = new BigIntPair<pol*E>(
+						ai.multiply(rpi).mod(_p),
+						ai.multiply(rqi).mod(_q));
+			
+				rpi = rpi.multiply(_rp).mod(_p);
+				rqi = rqi.multiply(_rq).mod(_q);
+				
+				v.add(pair);		
+				
+			}
+            return new PHInteger<pol*E>(v);
+		} catch (NullPointerException e) {
+		} catch (ArithmeticException e) {
+        } catch (NoSuchAlgorithmException e) {
+        } 
+        throw new MPException();
+        
+		
+   }
+
+  public !(pol*E) ?(pol*E) <policy E> PHInteger<pol*E> 
+	encrypt(?(E) DABigInteger<E> a)
+    throws !(pol*E) IllegalArgumentException, !(pol*E) MPException {   
+        if (a == null)
+            throw new IllegalArgumentException();
+        PHInteger<pol*E> retval = (this).<E>encrypt(a, nlength);
+        return retval;
+  
+	}
+	
+	public !(pol*E) ?(pol*E) <policy E> EncryptedCardVector<pol*E> 
+	encrypt(?E CardVector<E> w, ?pol int n)
+    throws !(pol*E) IllegalArgumentException, !(pol*E) MPException 
+    {
+        
+        try {
+            PHIntVector<pol*E> ew = new PHIntVector<pol*E>();
+            ew.ensureCapacity(w.getValueVector().size());
+            for (int i = 0; i < w.getValueVector().size(); i++) {
+                ?E DABigInteger<E> x = (DABigInteger<E>)w.getValueVector().get(i);
+                PHInteger<pol*E> ex = (this).<E>encrypt(x, n);
+                ew.add(i, ex);			
+            }
+            return new EncryptedCardVector<pol*E> (ew);
+        } catch (NullPointerException e) {
+        } catch (IndexOutOfBoundsException e) {
+        } catch (ClassCastException e) {
+        }
+        return null;
+        
+	}
+	
+	public !(pol*E) ?(pol*E) <policy E> EncryptedCardVector<pol*E> 
+	encrypt(?E CardVector<E> w)
+    throws !(pol*E) IllegalArgumentException, !(pol*E) MPException  {
+		return (this).<E>encrypt(w, this.nlength);
+	}
+	
+	public ?(pol*E) <policy E> DABigInteger<pol*E> decrypt(?E PHInteger<E> encr)
+    throws !(pol*E) IllegalArgumentException, !(pol*E)  MPException
+    {
+    
+        try {
+            ?E ArrayList<E> encrypted = encr.getValueVector();
+            
+            ?(pol*E) DABigInteger<pol*E> x = DABigInteger.<pol*E>ZERO();
+            ?(pol*E) DABigInteger<pol*E> y = DABigInteger.<pol*E>ZERO();
+            ?(pol*E) int n = encrypted.size();
+    
+            
+            ?(pol*E) DABigInteger<pol*E> _p = 
+              new DABigInteger<pol*E>(p.getValue());
+            ?(pol*E) DABigInteger<pol*E> _q = 
+              new DABigInteger<pol*E>(q.getValue());
+            ?(pol*E) DABigInteger<pol*E> _m = 
+              new DABigInteger<pol*E>(m.getValue());
+    
+            ?(pol*E) DABigInteger<pol*E> rpi =new DABigInteger<pol*E>(rp.getValue());
+			?(pol*E) DABigInteger<pol*E> rqi =new DABigInteger<pol*E>(rq.getValue());
+			
+            for (?E int i = 0; i < n ; i++) {
+                ?(E) BigIntPair<E> pair = (BigIntPair<E>) encrypted.get(i);
+                ?(pol*E) DABigInteger<pol*E> a = 
+                    new DABigInteger<pol*E>(pair.getX().getValue());
+                ?(pol*E) DABigInteger<pol*E> b =
+                    new DABigInteger<pol*E>(pair.getY().getValue());
+                
+                // calculate rpi and rqi inverses
+    
+                ?(pol*E) DABigInteger<pol*E> rpii = rpi.modInverse(_p);
+                ?(pol*E) DABigInteger<pol*E> rqii = rqi.modInverse(_q);
+                //
+    
+                rpi = rpi.multiply(rpi).mod(_p);
+                rqi = rqi.multiply(rqi).mod(_q);
+                //
+                
+                x = x.add(a.multiply(rpii));
+                y = y.add(b.multiply(rqii));		
+                				
+            }
+            
+            ?(pol*E) DABigInteger<pol*E> d = 
+            new DABigInteger<pol*E>(CRT.<pol*E>crt2(x.getValue(),
+                y.getValue(),
+                _p.getValue(),
+                _q.getValue())).mod(_m);
+            return d;
+            
+        } catch (NullPointerException e) {
+        } catch (IndexOutOfBoundsException e) {
+        } catch (ClassCastException e) {
+        } catch (ArithmeticException e) {
+        }
+        throw new MPException("decryption of PHInteger failed...");
+        
+	}
+	
+	public ?(pol*E) <policy E> CardVector<pol*E> 
+	decrypt(?E EncryptedCardVector<E> ew)
+    throws  !(pol*E) MPException {
+        try {
+            BigIntVector<pol*E> w = new BigIntVector<pol*E>();
+            w.ensureCapacity(ew.getValueVector().size());
+            for (int i = 0; i < ew.getValueVector().size(); i++) {
+                PHInteger<E> ew_i = (PHInteger<E>)ew.getValueVector().get(i);
+                DABigInteger<pol*E> wi = this.<E>decrypt(ew_i);
+                w.add(wi);
+            }
+            return new CardVector<pol*E>(w);
+        } catch (NullPointerException e) {
+        } catch (IndexOutOfBoundsException e) {
+        } catch (ClassCastException e) {
+        } catch (IllegalArgumentException e) {
+        }
+        throw new MPException("decryption of card vector failed...");
+	}
+	
+	public ?pol DABigInteger<pol> getM() {
+		return this.m;
+	}
+	
+	
+	
+}
+

@@ -1,0 +1,22 @@
+public class UnaryActor {
+    
+    public static final Object alice = new Object();
+    
+    public static ?{Object x:} final lock myLock(Object);
+
+    public static final policy p = {Object x : myLock(x)};
+    
+    public static final policy apol = {alice : };
+    
+    public static void foo() {
+    
+        ?p int pData = 42;
+        ?apol int aliceData = 0;
+        
+        if (myLock(alice)) {
+            aliceData = pData;
+        }
+    
+    }
+
+}

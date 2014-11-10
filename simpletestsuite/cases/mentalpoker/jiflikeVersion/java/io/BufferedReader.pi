@@ -1,0 +1,9 @@
+import java.io.*;
+
+public class BufferedReader<policy p> {
+
+    public BufferedReader(?p InputStreamReader<p> isr) { }
+    
+    public ?p String readLine();
+
+}

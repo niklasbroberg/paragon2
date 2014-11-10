@@ -1,0 +1,342 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ */
+package mp;
+import jif.util.ArrayList;
+
+public class DeclassifyHelper[principal P, label L] {
+    
+    // let noone instantiate this class.
+    private DeclassifyHelper() {
+    }
+    
+    
+    public static Digest[L]{L} declassifyDigest{L}(Digest[{P:;L}]{P:;L} x1):{L}
+    where caller(P){
+        Digest[{P:;L}]{L} x = declassify (x1, {L});
+        if (x == null) return null;
+        
+        byte[] ba = x.toByteArray();
+        byte[] bb = declassifyByteArray(ba);
+        return new Digest[L] (bb);
+           
+    }
+    
+    public static byte{L}[]{L} declassifyByteArray{L}(byte{P:;L}[]{P:;L} x1):{L}
+	where caller (P) {
+		byte{P:;L}[]{L} x = declassify (x1, {L});
+		if (x == null) return null;
+
+		int t = x.length;
+		byte{L}[] y = new byte[t];
+		try {
+			for (int i = 0; i < t; i++)
+				y[i] = declassify (x[i], {L});
+			return y;
+		} catch (ArrayIndexOutOfBoundsException ignored) {
+			return null;
+		}
+	}
+    
+    
+    public static int{L}[]{L} declassifyIntArray{L}(int{P:;L}[]{P:;L} x1):{L}
+	where caller (P) {
+		int{P:;L}[]{L} x = declassify (x1, {L});
+		if (x == null) return null;
+
+		int t = x.length;
+		int{L}[] y = new int[t];
+		try {
+			for (int i = 0; i < t; i++)
+				y[i] = declassify (x[i], {L});
+			return y;
+		} catch (ArrayIndexOutOfBoundsException ignored) {
+			return null;
+		}
+	}
+    
+    public static DataFieldAttribute[L]{L} declassifyAttribute{L}(
+    DataFieldAttribute[{P:;L}]{P:;L} attrib1) where caller(P) {
+        DataFieldAttribute[{P:;L}]{L} attrib = declassify (attrib1, {L});
+        try {
+            if (attrib instanceof EncryptedCardVector[{P:;L}]) {
+                return declassifyEncCardVector((EncryptedCardVector[{P:;L}]) attrib);
+            } else if (attrib instanceof CardVector[{P:;L}] ) {
+                return declassifyCardVector((CardVector[{P:;L}]) attrib);
+            } else if (attrib instanceof BigIntVector[{P:;L}]) {
+                return declassifyBigIntVector((BigIntVector[{P:;L}]) attrib);
+            } else if (attrib instanceof PHIntVector[{P:;L}]) {
+                return declassifyPHIntVector((PHIntVector[{P:;L}]) attrib);
+            } else if (attrib instanceof PHInteger[{P:;L}]) {
+                return declassifyPHInteger((PHInteger[{P:;L}]) attrib);
+            } else if (attrib instanceof DABigInteger[{P:;L}]) {
+                return declassifyBigInt((DABigInteger[{P:;L}]) attrib);
+            } else if (attrib instanceof Digest[{P:;L}]) {
+                return declassifyDigest((Digest[{P:;L}]) attrib);
+            }
+        } catch (ClassCastException ignored) {
+        }
+        return null;        
+    }
+    
+    public static DAVector[L]{L} declassifyDAVector{L} (
+    DAVector[{P:;L}]{P:;L} x1) where caller(P) {
+        DAVector [{P:;L}]{L} x = declassify(x1, {L});
+        if (x == null) return null;
+        
+        int{L} t = declassify (x.size(), {L});
+        DAVector[L] y = new DAVector[L]();
+        
+        y.ensureCapacity(t);
+        for (int i = 0; i < t; i++) {
+            try {
+                DataFieldAttribute[{P:;L}] attrib  = (DataFieldAttribute[{P:;L}]) x.get(i);
+                declassify ({L}) 
+                    y.add(declassifyAttribute(attrib));
+            } catch (IndexOutOfBoundsException ignored) {
+            } catch (ClassCastException ignored) {
+            }
+        }
+        return y;
+    }
+    
+    
+    public static EncryptedCardVector [L] {L} declassifyEncCardVector{L} (
+    EncryptedCardVector[{P:;L}]{P:;L} x1) where caller (P) {
+        EncryptedCardVector [{P:;L}] x = declassify (x1, {L});
+        if (x == null) return null;
+        PHIntVector [{P:;L}] v = x.getValueVector();
+        PHIntVector [L] u = declassifyPHIntVector(v);
+        try {
+           return new EncryptedCardVector[L](u);
+        } catch (IllegalArgumentException ignored) {
+           return null;
+        }
+    }
+    
+    public static EncryptedCardVector [{P:;L}] {P:;L} upgradeEncCardVector{P:;L} (
+    EncryptedCardVector [L]{L} x) {
+        if (x == null) return null;
+        PHIntVector [L] v = x.getValueVector();
+        PHIntVector [{P:;L}] u = upgradePHIntVector(v);
+        try {
+            return new EncryptedCardVector [{P:;L}](u);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+    
+    public static CardVector [L] {L} declassifyCardVector{L} (
+    CardVector[{P:;L}]{P:;L} x1) where caller (P) {
+        CardVector [{P:;L}] x = declassify (x1, {L});
+        if (x == null) return null;
+        BigIntVector [{P:;L}] v = x.getValueVector();
+        BigIntVector [L] u = declassifyBigIntVector(v);
+        try {
+           return new CardVector[L](u);
+        } catch (IllegalArgumentException ignored) {
+           return null;
+        }
+    }
+    
+    
+    public static CardVector[{P:;L}]{P:;L} upgradeCardVector{P:;L} (
+        CardVector[L]{L} x) {
+        if (x == null) return null;
+        BigIntVector [L] v = x.getValueVector();
+        BigIntVector [{P:;L}] u = upgradeBigIntVector(v);
+        try {
+            return new CardVector[{P:;L}](u);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+    
+    
+    public static PermutationMatrix[L]{L} 
+    declassifyMatrix{L}(PermutationMatrix[{P:;L}]{P:;L} x1) where caller(P) {
+        PermutationMatrix[{P:;L}] x = declassify(x1, {L});
+        if (x == null) return null;        
+        ArrayList[{P:;L}] m = declassify(x.getMatrix(), {L});
+        if (m == null) return null;
+        
+        int t = declassify(m.size(),{L});
+        
+        
+        ArrayList[L] y = new ArrayList[L]();
+        y.ensureCapacity(t);
+        
+        for (int i = 0; i < t; i++){
+            try {
+                BigIntVector[{P:;L}]rowi = (BigIntVector[{P:;L}])m.get(i);
+                declassify ({L})
+                    y.add(declassifyBigIntVector(rowi));
+            } catch (IndexOutOfBoundsException ignored) {
+            } catch (ClassCastException ignored) {
+            }
+        }
+        
+        try {
+            return new PermutationMatrix[L](y);
+        } catch (IllegalArgumentException ignored){
+            return null;
+        }
+    }
+    
+    public static BigIntVector[L]{L} declassifyBigIntVector{L} (
+    BigIntVector [{P:;L}]{P:;L} x1) where caller (P) {
+        BigIntVector [{P:;L}] x = declassify (x1, {L});
+        if (x == null) return null;
+        
+        int t = declassify (x.size(), {L});
+        BigIntVector[L] y = new BigIntVector[L]();
+        y.ensureCapacity(t);
+        
+        for (int i = 0; i < t; i++) {
+            try {
+                DABigInteger[{P:;L}] big = x.getBI(i);
+                declassify ({L}) y.add(declassifyBigInt(big));
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        }
+        return y;
+    }
+    
+    
+    public static BigIntVector[{P:;L}] upgradeBigIntVector{P:;L} (
+    BigIntVector[L]{L} x):{L} {
+        if (x == null) return null;
+        int t = x.size();
+        BigIntVector[{P:;L}]{L} y = new BigIntVector[{P:;L}]();
+        y.ensureCapacity(t);
+        for (int i = 0; i < t; i++) {
+            try { 
+                DABigInteger[L] big = x.getBI(i);
+                y.add(upgradeBigInt(big));
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        } 
+        return y;
+    }
+    
+    public static PHIntVector[L]{L} declassifyPHIntVector{L} (
+    PHIntVector [{P:;L}]{P:;L} x1) where caller(P) {
+        PHIntVector [{P:;L}] x = declassify (x1, {L});
+        if (x == null) return null;
+        int t = declassify (x.size(), {L});
+        
+        PHIntVector [L] y = new PHIntVector [L] ();
+        y.ensureCapacity(t);
+        for (int i = 0; i < t; i++) {
+            try {
+                PHInteger[{P:;L}] phi = x.getPHI(i);
+                // At this point PC gets incremented!!!
+                // That's why we apply PC downgrading
+                declassify ({L}) y.add(declassifyPHInteger(phi));
+               
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        }
+        return y;
+    }
+    
+    
+    public static PHIntVector[{P:;L}]{P:;L} upgradePHIntVector{P:;L}(
+    PHIntVector [L]{L} x){
+        if (x == null) return null;
+        int t = x.size();
+        PHIntVector[{P:;L}] y = new PHIntVector [{P:;L}]();
+        y.ensureCapacity(t);
+        for (int i = 0; i < t; i++) {
+            try {
+                PHInteger[L] phi = x.getPHI(i);
+                y.add(upgradePHInteger(phi));
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        }
+        return y;
+    }
+    
+    public static PHInteger[L] {L} declassifyPHInteger{L} (
+    PHInteger[{P:;L}]{P:;L} x1) where caller(P) {
+        PHInteger [{P:;L}] x = declassify (x1, {L});
+        if (x == null) return null;
+        int t = declassify (x.size(), {L});
+        ArrayList [L] y = new ArrayList[L]();
+        y.ensureCapacity(t);
+        
+        for (int i = 0; i < t; i++) {
+            try {
+                y.add(declassifyBigIntPair(x.getBigIntPair(i)));
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        }
+        return new PHInteger[L](y);
+    }
+    
+    public static PHInteger[{P:;L}]{P:;L} upgradePHInteger{P:;L}(
+    PHInteger[L]{L} x) {
+        if (x == null) return null;
+        int t = x.size();
+        ArrayList [{P:;L}] y = new ArrayList[{P:;L}]();
+        y.ensureCapacity(t);
+        for (int i = 0; i < t; i++) {
+            try {
+                y.add(upgradeBigIntPair(x.getBigIntPair(i)));
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        } 
+        return new PHInteger[{P:;L}](y);
+    }
+    
+    
+    
+    public static BigIntPair[L] {L} declassifyBigIntPair(
+    BigIntPair[{P:;L}]{P:;L} x1) where caller(P) {
+        BigIntPair[{P:;L}] x = declassify (x1, {L});
+        if (x == null) return null;
+        
+        BigIntPair[L] y = new BigIntPair [L](
+            declassifyBigInt(x.getX()), declassifyBigInt(x.getY()));
+        return y;
+    }
+    
+    
+    public static BigIntPair[{P:;L}]{P:;L} upgradeBigIntPair{P:;L}(
+    BigIntPair[L]{P:;L} x) {
+        if (x == null) return null;
+        BigIntPair[{P:;L}] y = new BigIntPair [{P:;L}](
+            upgradeBigInt(x.getX()), upgradeBigInt(x.getY()));
+        return y;
+        
+    }
+    
+    
+    public static DABigInteger[L]{L} declassifyBigInt(DABigInteger[{P:;L}]{P:;L} x1)
+    where caller(P) {
+        DABigInteger[{P:;L}] x = declassify (x1, {L});
+        if (x == null) return null;
+        java.math.BigInteger y = declassify (x.getValue(), {L});
+        try {
+            return new DABigInteger[L](y);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+    
+    
+    public static DABigInteger[{P:;L}] upgradeBigInt(DABigInteger[L]{P:;L} x):{P:;L} {
+        if (x == null) return null;   
+        java.math.BigInteger y = x.getValue();
+        try {
+            return new DABigInteger[{P:;L}](y);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+    
+    
+
+}
+
+

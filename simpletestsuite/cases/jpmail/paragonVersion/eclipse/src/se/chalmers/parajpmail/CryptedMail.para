@@ -1,0 +1,155 @@
+package se.chalmers.parajpmail;
+
+
+public class CryptedMail<policy p> {
+
+    private ?p String fromJPMailUser;
+    private ?p String fromAddress;
+
+    private ?p String toJPMailUser;
+    private ?p String toAddress;
+
+    private ?p String subject;
+
+    public ?{'x:} static final int AES = 1;
+    public ?{'x:} static final int DES = 2;
+    public ?{'x:} static final int RSA = 3;
+
+    private ?p int symmencMode;
+    private ?p int asymmencMode;
+
+    private ?p String symmEncrBody;
+    private ?p String asymmEncrKey;
+    private ?p String asymmEncrIV;
+
+    public !p void setFromUser(?p String fromJPMailUser) {
+        this.fromJPMailUser = fromJPMailUser;
+    }
+    
+    public ?p String getFromUser() {
+        return this.fromJPMailUser;
+    }
+    
+    public !p void setFromAddress(?p String fromAddress) {
+        this.fromAddress = fromAddress;
+    }
+    
+    public ?p String getFromAddress() {
+        return this.fromAddress;
+    }
+    
+    public !p void setToUser(?p String toJPMailUser) {
+        this.toJPMailUser = toJPMailUser;
+    }
+    
+    public ?p String getToUser() {
+      return this.toJPMailUser;
+    }
+    
+    public !p void setToAddress(?p String toAddress) {
+        this.toAddress = toAddress;
+    }
+    
+    public ?p String getToAddress() {
+      return this.toAddress;
+    }
+    
+    public !p void setSubject(?p String subject) {
+        this.subject = subject;
+    }
+    
+    public ?p String getSubject() {
+        return this.subject;
+    }
+    
+    public !p void setSymMode(?p int symmencMode) {
+        this.symmencMode = symmencMode;
+    }
+    
+    public ?p int getSymMode() {
+        return this.symmencMode;
+    }
+    
+    public !p void setASymMode(?p int asymmencMode) {
+        this.asymmencMode = asymmencMode;
+    }
+    
+    public ?p int getASymMode() {
+        return this.asymmencMode;
+    }
+    
+    public !p void setSymmEncBody(?p String symmEncrBody) {
+        this.symmEncrBody = symmEncrBody;
+    }
+    
+    public ?p String getSymmEncBody() {
+        return this.symmEncrBody;
+    }
+    
+    public !p void setSymmKey(?p String asymmEncrKey) {
+        this.asymmEncrKey = asymmEncrKey;
+    }
+    
+    public ?p String getSymmKey() {
+        return this.asymmEncrKey;
+    }
+    
+    public !p void setSymmIV(?p String asymmEncrIV) {
+        this.asymmEncrIV = asymmEncrIV;
+    }
+    
+    public ?p String getSymmIV() {
+        return this.asymmEncrIV;
+    }
+
+    public CryptedMail( ?p String fromUser
+                      , ?p String toUser
+                      , ?p int symmencMode
+                      , ?p String symmEncrBody
+                      , ?p int asymmencMode
+                      , ?p String asymmEncrKey
+                      , ?p String asymmEncrIV
+                      ) {
+
+        this.fromJPMailUser = fromUser;
+        this.toJPMailUser   = toUser;
+        this.symmencMode    = symmencMode;
+        this.symmEncrBody   = symmEncrBody;
+        this.asymmencMode   = asymmencMode;
+        this.asymmEncrKey   = asymmEncrKey;
+        this.asymmEncrIV    = asymmEncrIV;
+    }
+    
+    public CryptedMail() { }
+
+    public ?p String asMailBody() {
+
+        return
+                fromJPMailUser + "\n" +
+                toJPMailUser + "\n" +
+                symmencMode + "\n" +
+                symmEncrBody + "\n" +
+                asymmencMode + "\n" +
+                asymmEncrKey + "\n" +
+                asymmEncrIV;
+    }
+
+    public static  <policy p> CryptedMail<p> parse(?p String data) 
+            throws !p ?p ParaJPMailException {
+
+        String[] lines = data.split("\n");
+        if (lines.length != 7) {
+            throw new ParaJPMailException("Illegal JPMail body format"); 
+        }
+        return new CryptedMail<p>(
+                lines[0].trim(),                   // fromUser
+                lines[1].trim(),                   // toUser
+                Integer.parseInt(lines[2].trim()), // symm encr mode
+                lines[3].trim(),                   // symm encr body
+                Integer.parseInt(lines[4].trim()), // asymm encr mode
+                lines[5].trim(),                   // symm key
+                lines[6].trim()                    // symm iv
+                );
+    }
+
+}

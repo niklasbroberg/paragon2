@@ -1,0 +1,8 @@
+public class ReturnDoWhileTrueBreak {
+  public int f() {
+    do {
+      break;
+    } while (true);
+    return 1;
+  }
+}

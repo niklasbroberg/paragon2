@@ -1,0 +1,10 @@
+public class Runtime {
+
+   void foo(Runtime runtime) {
+     runtime.<{Object x:}>bar(); 
+   }
+
+   <policy p> void bar() {
+   }
+
+}

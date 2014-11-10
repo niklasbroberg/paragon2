@@ -1,0 +1,15 @@
+public class TypeMethod {
+
+    public lock Flow(Object,Object);
+
+    public static typemethod policy pol(Object a) {
+        return {Object x : Flow(a, x)};
+    }
+
+    final Object alice = new Object();
+
+    public void test () {
+        ?pol(alice) int a = 4;
+    }
+
+}

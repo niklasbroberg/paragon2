@@ -1,0 +1,5 @@
+public class Defines {
+
+  public static final Object earl = new Object();
+
+}

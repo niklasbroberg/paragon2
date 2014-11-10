@@ -1,0 +1,517 @@
+package mp;
+
+import java.util.ArrayList;
+import java.security.*;
+
+public class TrustedEncrypter {
+
+  private static final actor encryptTrustor;
+  
+  public static final policy trusted = { encryptTrustor : } ;
+  
+  public ?trusted lock EncryptDeclassify;
+  
+  private static final policy declasable = { 'x : EncryptDeclassify };
+  
+  ~GameState.GameRunning
+  public !(m + everyone * m + target) ?(m + everyone * target)
+  static <policy m, policy everyone, policy target> 
+  PHInteger<m + everyone * target> encrypt(
+      ?(m+everyone*declasable) PHCrypto<m+everyone*declasable> key,
+      ?(m+target*declasable) DABigInteger<m+target*declasable> dab) 
+      throws 
+      !(m + everyone * m + target) IllegalArgumentException,
+      !(m + everyone * m + target) MPException
+  {
+      ?(m+target) DABigInteger<m+target> _dab =
+          TrustedEncrypter.<m,target>declassify(dab);
+      ?(m+everyone) PHCrypto<m+everyone> _key = 
+          TrustedEncrypter.<m,everyone>declassify(key);
+          
+      return (_key).<m+target>encrypt(_dab);
+      
+  }
+  
+  ~GameState.GameRunning
+  public !(m + everyone * m + target) ?(m + everyone * target)
+  static <policy m, policy everyone, policy target> 
+  EncryptedCardVector<m + everyone * target> encrypt(
+      ?(m+everyone*declasable) PHCrypto<m+everyone*declasable> key,
+      ?(m+target*declasable) CardVector<m+target*declasable> dab) 
+      throws 
+      !(m + everyone * m + target) IllegalArgumentException,
+      !(m + everyone * m + target) MPException
+  {
+      ?(m+target) CardVector<m+target> _dab =
+          TrustedEncrypter.<m,target>declassify(dab);
+      ?(m+everyone) PHCrypto<m+everyone> _key = 
+          TrustedEncrypter.<m,everyone>declassify(key);
+          
+      return (_key).<m+target>encrypt(_dab);
+      
+  }  
+  
+  ~GameState.GameRunning
+  public !(m + target) ?(m + target)
+  static <policy m, policy target> 
+  PHEPermutationMatrix <m + target> encryptedPermutation(
+      ?(m+target*declasable) PermutationMatrix<m+target*declasable> permutation,
+      ?(m+target) PHIntVector<m+target> d_p,
+      ?(m+target) PHIntVector<m+target> e_p,
+      ?(m+target) DABigInteger<m+target> z_i_p,
+      ?(m+target) DABigInteger<m+target> thisz
+      ) 
+      throws 
+      !(m + target) IllegalArgumentException,
+      !(m + target) MPException
+  {
+      ?(m+target) PermutationMatrix<m+target> _permutation =
+          TrustedEncrypter.<m,target>declassify(permutation);
+          
+      return new PHEPermutationMatrix<m + target>(_permutation, d_p, e_p, z_i_p, thisz);
+
+      
+  }    
+  
+  
+  // NOTE, no ~GameState.GameRunning, since required at validation time
+  public !(m + everyone * m + from) ?(m + everyone * from * declasable)
+  static <policy m, policy everyone, policy from>
+  DABigInteger<m + everyone * from * declasable> decrypt(
+      ?(m+everyone*declasable) PHCrypto<m+everyone*declasable> key,
+      ?(m+from) PHInteger<m+from> phi) 
+      throws 
+      !(m + everyone * m + from) IllegalArgumentException,
+      !(m + everyone * m + from) MPException
+  {
+      return (key).<m+from>decrypt(phi);
+      
+  }
+  
+  // NOTE, no ~GameState.GameRunning, since required at validation time
+  public !(m + everyone * m + from) ?(m + everyone * from * declasable)
+  static <policy m, policy everyone, policy from>
+  CardVector<m + everyone * from * declasable> decrypt(
+      ?(m+everyone*declasable) PHCrypto<m+everyone*declasable> key,
+      ?(m+from) EncryptedCardVector<m+from> phi) 
+      throws 
+      !(m + everyone * m + from) IllegalArgumentException,
+      !(m + everyone * m + from) MPException
+  {
+      return (key).<m+from>decrypt(phi);
+      
+  }
+  
+  
+  
+  ?(m+target)  private 
+  static <policy m, policy target> DABigInteger<m+target>
+  declassify(?(m+target*declasable) DABigInteger<m+target*declasable> bigInt) {
+      open EncryptDeclassify {
+          try {
+              return new DABigInteger<m+target>(bigInt.getValue());
+          } catch (IllegalArgumentException e) {
+              return null;
+          }
+      } 
+  }
+  
+  ?(m+target)  public 
+  static <policy m, policy target> DABigInteger<m+target>
+  declassifyZ(?(m+target*declasable) DABigInteger<m+target*declasable> z) {
+      return TrustedEncrypter.<m,target>declassify(z);
+  }
+  
+  ?(m+target) !(m+target)  public 
+  static <policy m, policy target> Digest<m+target>
+  declassifyDigest(?(m+target*declasable) Digest<m+target*declasable> digest) {
+      open EncryptDeclassify {
+          ?(m+target) byte[]<m+target> bA = TrustedEncrypter.<m,target>declassify(digest.toByteArray());
+          return new Digest<m+target>(bA);
+      } 
+  }
+  
+  ?(m+target) !(m+target) private static <policy m,policy target> byte[]<m+target>
+  declassify(?(m+target*declasable) byte[]<m+target*declasable> array) {
+      open EncryptDeclassify {
+          byte[]<m+target> result = new byte[array.length]<m+target>;
+          for (int i = 0; i < result.length; i++) {
+              result[i] = array[i];
+          }
+          return result;
+      } 
+  }
+  
+  ?(m+target) !(m+target) public static <policy m,policy target> byte[]<m+target>
+  releasePermutation(?(m+target*declasable) byte[]<m+target*declasable> array) {
+      return TrustedEncrypter.<m,target>declassify(array);
+  }
+  
+  ?(m+target)  private 
+  static <policy m, policy target> CardVector<m+target>
+  declassify(?(m+target*declasable) CardVector<m+target*declasable> cv) {
+      open EncryptDeclassify {
+          try {
+              return new CardVector<m+target>(          
+              TrustedEncrypter.<m,target>declassify(cv.getValueVector()));
+          } catch (IllegalArgumentException e) {
+              return null;
+          }
+      } 
+  }
+  
+  ?(m+target)  private 
+  static <policy m, policy target> BigIntVector<m+target>
+  declassify(?(m+target*declasable) BigIntVector<m+target*declasable> bi) {
+      open EncryptDeclassify {      
+          int size = bi.size();
+          BigIntVector<m+target> res = new BigIntVector<m+target>();
+          res.ensureCapacity(size);
+          for (int i = 0; i < size; i++)
+              try {
+                res.add(TrustedEncrypter.<m,target>declassify(bi.getBI(i)));
+              } catch (IndexOutOfBoundsException ignored) {
+            }
+          return res;
+      } 
+  }
+  
+  ?(m+target)  private 
+  static <policy m, policy target> PermutationMatrix<m+target>
+  declassify(?(m+target*declasable) PermutationMatrix<m+target*declasable> pm) {
+      open EncryptDeclassify {      
+          ArrayList<m+target*declasable> iv = pm.getMatrix();
+          ?(m+target*declasable) int size = iv.size();
+          ?(m+target) ArrayList<m+target> result = new ArrayList<m+target>();
+          result.ensureCapacity(size);
+          try {
+              for (int i = 0; i < iv.size(); i++)
+                  result.add(iv.get(i)); 
+          } catch (IndexOutOfBoundsException $) { }
+          return new PermutationMatrix<m+target>(result);
+      } 
+  }
+  
+  ?(m+target) private 
+  static <policy m, policy target> PHCrypto<m+target>
+  declassify(?(m+target*declasable) PHCrypto<m+target*declasable> phc) {
+      open EncryptDeclassify {
+          try {
+              return new PHCrypto<m+target>(
+              phc.getLength(),
+              TrustedEncrypter.<m,target>declassify(phc.getSecretKey())
+              );
+          } catch (IllegalArgumentException e) {
+              return null;
+          }
+      } 
+  }
+  
+////////////////////// Upgrading
+  
+    ////
+    // DNCLink
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> DNCLink<m+from*declasable>
+    upgrade(?(from+m) DNCLink<m+from> d) {
+    
+       return new DNCLink<m+from*declasable>(
+          d.getk(),
+          TrustedEncrypter.<m,from>upgrade(d.getData()),
+          TrustedEncrypter.<m,from>upgrade(d.getChainingValue())
+       );
+        
+    }
+      
+        
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> byte[]<m+from*declasable>
+    upgrade(?(from+m) byte[]<m+from> array) {
+        
+            byte[]<m+from*declasable> result = 
+              new byte[array.length]<m+from*declasable>;
+            for (int i = 0; i < result.length; i++) {
+                result[i] = array[i];
+            }
+            return result; 
+        
+    }
+    
+    
+    ////
+    // DataField
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> DataField<m+from*declasable>
+    upgrade(?(from+m) DataField<m+from> df) {
+    
+       return new DataField<m+from*declasable>(
+              df.getPlayerName(),
+              df.getTimestamp() ,
+              df.getInfo(),
+              TrustedEncrypter.<m,from>upgrade(df.getAttrib())
+          );
+    }
+    
+    ////
+    // DataFieldAttribute
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> DataFieldAttribute<m+from*declasable>
+    upgrade(?(from+m) DataFieldAttribute<m+from> attrib) {
+    
+       try {
+            int t = attrib.getType();
+            
+            
+            if (t == DataFieldAttribute.EncryptedCardVector) {
+                return TrustedEncrypter.<m,from>upgradeECV(
+                   (EncryptedCardVector<m+from>) attrib);
+            } else if (t == DataFieldAttribute.CardVector) {
+                return TrustedEncrypter.<m,from>upgradeCV(
+                   (CardVector<m+from>) attrib);
+            } else if (t == DataFieldAttribute.BigIntVector) {
+                return TrustedEncrypter.<m,from>upgradeBIV(
+                   (BigIntVector<m+from>) attrib);
+            } else if (t == DataFieldAttribute.PHIntVector) {
+                return TrustedEncrypter.<m,from>upgradePHIV(
+                   (PHIntVector<m+from>) attrib);
+            } else if (t == DataFieldAttribute.PHInteger) {
+                return TrustedEncrypter.<m,from>upgradePHI(
+                   (PHInteger<m+from>) attrib);
+            } else if (t == DataFieldAttribute.DABigInteger) {
+                return TrustedEncrypter.<m,from>upgradeDAB(
+                   (DABigInteger<m+from>) attrib);
+            } else if (t == DataFieldAttribute.Digest) {
+                return TrustedEncrypter.<m,from>upgradeDI(
+                   (Digest<m+from>) attrib);
+            } else if (t == DataFieldAttribute.DAVector) {
+                return TrustedEncrypter.<m,from>upgradeDAV(
+                   (DAVector<m+from>) attrib);
+            } 
+        
+
+       } catch(ClassCastException e) {
+       }
+       return null;
+    }
+  
+    ////
+    // CardVector
+    ////
+
+    public static !(from+m) ?(m+from*declasable) 
+    <policy m, policy from> CardVector<m+from*declasable>
+    upgradeCV(?(from+m) CardVector<m+from> cv) {
+        try {
+            BigIntVector<m+from> v = cv.getValueVector();
+            BigIntVector<m+from*declasable> u = TrustedEncrypter.<m,from>upgradeBIV(v);
+            return new CardVector<m+from*declasable>(u);
+         } catch (IllegalArgumentException e) {
+            return null;
+        }    
+    }
+    
+    ////
+    // BigIntVector
+    ////
+    
+    public static ?(m+from*declasable) 
+    <policy m, policy from> BigIntVector<m+from*declasable>
+    upgradeBIV(?(from+m) BigIntVector<m+from> iv) {
+   
+        BigIntVector<m+from*declasable> result = new BigIntVector<m+from*declasable>();
+        result.ensureCapacity(iv.size());
+        for (int i = 0; i < iv.size(); i++)  {
+            try { 
+                result.add(TrustedEncrypter.<m,from>upgradeDAB(iv.getBI(i)));
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        } 
+        
+        return result;
+    
+    }
+    
+    ////
+    // DABigInteger
+    ////
+    
+    public static ?(m+from*declasable) 
+    <policy m, policy from> DABigInteger<m+from*declasable>
+    upgradeDAB(?(from+m) DABigInteger<m+from> bi) {
+    
+        try {
+            return new DABigInteger<m+from*declasable>(bi.getValue());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    
+    }
+    
+    
+    ////
+    // EncryptedCardVector
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> EncryptedCardVector<m+from*declasable>
+    upgradeECV(?(from+m) EncryptedCardVector<m+from> ecv) {
+    
+        try {
+            PHIntVector<m+from> v = ecv.getValueVector();
+            PHIntVector<m+from*declasable> u = 
+               TrustedEncrypter.<m,from>upgradePHIV(v);
+            return new EncryptedCardVector<m+from*declasable>(u);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    
+    }
+    
+    ////
+    // PHIntVector
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> PHIntVector<m+from*declasable>
+    upgradePHIV(?(from+m) PHIntVector<m+from> phi) {
+        
+        PHIntVector<m+from*declasable> res = 
+            new PHIntVector<m+from*declasable>();
+        res.ensureCapacity(phi.size());
+        for (int i = 0; i < phi.size(); i++)
+            try {
+                 res.add(TrustedEncrypter.<m,from>upgradePHI(phi.getPHI(i)));
+            } catch (IndexOutOfBoundsException e) {
+            }
+        return res;
+    }
+    
+    ////
+    // PHInteger
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> PHInteger<m+from*declasable>
+    upgradePHI(?(from+m) PHInteger<m+from> phi) {
+        
+        ArrayList<m+from*declasable> res = 
+            new ArrayList<m+from*declasable>();
+        res.ensureCapacity(phi.size());
+        for (int i = 0; i < phi.size(); i++)
+            try {
+                 res.add(TrustedEncrypter.<m,from>upgrade(phi.getBigIntPair(i)));
+            } catch (IndexOutOfBoundsException e) {
+            }
+        return new PHInteger<m+from*declasable>(res);
+    }
+    
+    ////
+    // BigIntPair
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> BigIntPair<m+from*declasable>
+    upgrade(?(from+m) BigIntPair<m+from> bip) {
+    
+        return new BigIntPair<m+from*declasable>(
+             TrustedEncrypter.<m,from>upgradeDAB(bip.getX()),
+             TrustedEncrypter.<m,from>upgradeDAB(bip.getY())
+          );
+        
+    }
+    
+    
+    ////
+    // PermutationMatrix
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> PermutationMatrix<m+from*declasable>
+    upgrade(?(from+m) PermutationMatrix<m+from> pm) {
+    
+        return new PermutationMatrix<m+from*declasable>(
+             TrustedEncrypter.<m,from>upgrade(pm.getMatrix())
+          );
+        
+    }
+    
+    ////
+    // Digest
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> Digest<m+from*declasable>
+    upgradeDI(?(from+m) Digest<m+from> digest) {
+        byte[]<m+from*declasable> bA = TrustedEncrypter.<m,from>upgrade(digest.toByteArray());
+        return new Digest<m+from*declasable>(bA);
+        
+    }
+    
+    ////
+    // DAVector
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> DAVector<m+from*declasable>
+    upgradeDAV(?(from+m) DAVector<m+from> dav) {
+       DAVector<m+from*declasable> res = new DAVector<m+from*declasable>();
+       int t = dav.size();
+       res.ensureCapacity(t);
+       for (int i = 0; i < t; i++) {
+          try {
+             DataFieldAttribute<m+from> df = 
+                (DataFieldAttribute<m+from>) dav.get(i);
+             res.add(TrustedEncrypter.<m,from>upgrade(df));
+          } catch (IndexOutOfBoundsException ignored) {
+          } catch (ClassCastException ignored) {
+          }
+       }
+
+       return res;
+        
+    }
+    
+    
+    ////
+    // ArrayList
+    ////
+    
+    public static ?(m+from*declasable) !(from+m)
+    <policy m, policy from> ArrayList<m+from*declasable>
+    upgrade(?(from+m) ArrayList<m+from> pm) {
+    
+        ArrayList<m+from*declasable> res = 
+            new ArrayList<m+from*declasable>();
+        res.ensureCapacity(pm.size());
+        for (int i = 0; i < pm.size(); i++) {
+          try {
+             res.add(pm.get(i));
+          } catch (IndexOutOfBoundsException e) {
+          }
+        }
+        return res;
+        
+    }
+    
+    public static ?(m+from*declasable) 
+    <policy m, policy from> PHCrypto<m+from*declasable>
+    upgrade(?(from+m) PHCrypto<m+from> phc) {
+    
+        try {
+              return new PHCrypto<m+from*declasable>(
+              phc.getLength(),
+              TrustedEncrypter.<m,from>upgradeBIV(phc.getSecretKey())
+              );
+          } catch (IllegalArgumentException e) {
+              return null;
+          }
+        
+    }
+
+}

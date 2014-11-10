@@ -1,0 +1,1141 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ * Adapted in paragon
+ */
+package mp;
+
+import java.security.*;
+
+// We do not need an actor/principal as Jif does
+public class Player
+{
+
+    public static final policy atEndGame =
+        { Channel.channel : TrustedRevealer.RevealDeclassify };    
+    public static final policy duringEncryption =
+        { Channel.channel : TrustedEncrypter.EncryptDeclassify };
+    public static final policy duringSigning = 
+        { Channel.channel : TrustedSigner.SignDeclassify };
+    public static final policy gameSecret =
+      // compiler currently doesn't transcribe this to correct java
+      // atEndGame+duringEncryption*duringSigning;
+      { Channel.channel : TrustedRevealer.RevealDeclassify ;
+        Channel.channel : TrustedEncrypter.EncryptDeclassify, TrustedSigner.SignDeclassify };
+    public static final policy everyone = Channel.channelP;
+    
+    // Not annotated in jif version, but assumingly this is public info
+    public static final ?everyone int Z_BITLENGTH = 32;        
+    
+    /** number of cards in the deck, usually 52 in real games,
+     * maybe less when debugging */
+    private static final ?everyone int DECKSIZE = 8;
+
+    /** player's cryptosystem */
+    private ?(atEndGame+duringEncryption) 
+        PHCrypto<atEndGame+duringEncryption> ph = null;
+	
+    /** revealed cryptosystem - this is initialized after the key is revealed*/
+    private ?everyone PHCrypto<everyone> rph = null;
+    
+    /** list of available cards - this information is public
+     * everyone should know what cards are drawn :) */
+    private ?everyone boolean[]<everyone> available ; 
+    
+    /** player's hand */
+    private ?atEndGame int[]<atEndGame> hand; 
+    
+    /** number of cards player has - this is generally public information  */
+    // The jif version uses here {P:;L}, which does not match the above comment
+    // Instead we do make this field public, and make a change moving line 
+    // " this.ncards ++; " in finishCardDraw to the end of the method.
+    private ?everyone int ncards = 0; 
+    
+    /** player's name */
+    private ?everyone String name;
+
+    /** security parameter for encryption - determines on how many
+     * pieces the clear text value will be splitted */
+    private ?everyone int nlength = 3;
+
+    /** local timestamp, used in chain */
+    private ?everyone int timestamp = 0;
+
+    /** -- yet unclear, used in chain as a counter*/
+    private ?everyone int k = 0;
+
+    /** reference to a public chain */
+    private final ?everyone DNCChain<everyone> chain;
+
+    /** protocol parameter, used when constructing permutation matrix */
+    private ?everyone DABigInteger<everyone> z = DABigInteger.<everyone>ZERO();
+
+    /** Players key pair for signing */
+    private final ?everyone KeyPair<everyone, duringSigning> keyPair;
+
+    /** secret permutation */
+    // Not changing the variable name for now, but I would if I was programming.
+    private ?(gameSecret) 
+        byte[]<gameSecret> p;
+	
+	  /** revealed permutation */
+    private ?everyone byte[]<everyone> rPerm;
+
+    /** secret permutation matrix */
+    private ?(gameSecret) 
+        PermutationMatrix<gameSecret> matrix;
+    
+    /** copy of the original secret permutation matrix 
+      * since it is changed during the game 
+      */
+    private ?(gameSecret) 
+        PermutationMatrix<gameSecret> matrixCopy;
+
+    /** permutation matrix for the other player, which 
+     * is calculated on the basis of the random numbers in the chain
+     */ // encrypted, so only requires signing
+    private ?(atEndGame+duringSigning)
+        PHEPermutationMatrix<atEndGame+duringSigning>  matrix_o =  null;
+
+    /** deck of clear text cards */
+    private ?(gameSecret) DAVector<gameSecret> w  = new DAVector<gameSecret>();
+            
+
+    /** deck of permuted encrypted cards */
+    private ?(atEndGame+duringSigning) DAVector<atEndGame+duringSigning> 
+      ew = new DAVector<atEndGame+duringSigning>();
+
+
+    public !everyone Player(?everyone DNCChain<everyone> chain, 
+                            ?everyone String              name )
+    throws !everyone IllegalArgumentException, 
+           !everyone NoSuchAlgorithmException, 
+           !everyone MPException
+    {
+
+        if (chain == null || name == null)
+            throw new IllegalArgumentException();
+        
+        boolean[]<everyone> available = new boolean[DECKSIZE]<everyone>; 
+        int[]<atEndGame> hand = new int[DECKSIZE]<atEndGame>; // ISSUE 99
+
+        for (int i = 0; i < DECKSIZE; i++) {
+            try {
+                // this is side effect!
+                available[i] = true;
+                hand[i] = -1; // means no such card 
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        }
+        
+        // generate key pair     
+        ?everyone String dsa = "DSA"; // ISSUE 100
+        ?everyone KeyPairGenerator keyGen = KeyPairGenerator.getInstance(dsa);
+        
+        
+        if (keyGen == null)
+             throw new MPException("Key generation failed...");
+        
+        keyGen.initialize(1024, new SecureRandom<everyone>());
+   
+        this.keyPair = (keyGen).<everyone, duringSigning>generateKeyPair();
+        
+        this.chain = chain;
+        
+        this.available = available;
+        this.hand = hand;
+        this.name = name;
+      
+    }
+    
+/* REPLACED by trusted signer
+
+    private !everyone ?everyone 
+    DNCLink<everyone> computeLink(?everyone int k, 
+                                  ?duringSigning DataField<duringSigning> data, 
+                                  ?everyone byte[]<everyone> prevChainingValue) 
+    
+*/
+    
+    
+    
+    // provides actual link building
+    
+    ~GameState.GameRunning
+    private !everyone void 
+    buildLink (?duringSigning String info, 
+               ?duringSigning DataFieldAttribute<duringSigning> attr)
+    throws !everyone MPException 
+    {
+        
+        // next timestamp
+        int ts = this.timestamp + 1;
+        
+        // need to declassify attr here
+        // BvD: But is not done? Is already of lowest level?
+        DataField<duringSigning> data = 
+            new DataField<duringSigning>(name, ts, info, attr);
+        
+        byte[]<duringSigning> prev = null;
+        if (chain.size() > 0) {
+            try {
+                DNCLink<duringSigning> prevLink = 
+                    TrustedSigner.<{:},everyone>upgrade(chain.getLink(chain.size() - 1));
+                
+                prev = prevLink.getChainingValue();
+            } catch (IndexOutOfBoundsException ignored) {
+            }
+        } else {
+            prev = new byte[0]<duringSigning>; // if chain.size == 0
+        }        
+
+        DNCLink<everyone> link = TrustedSigner.<everyone>sign(
+        keyPair.getPrivate(), k, data, prev);
+        if (link == null)
+            throw new MPException("Computed link is null");
+
+        chain.addLink(link);
+        this.timestamp++;
+        k++;   
+
+    }
+
+    
+     // Protocol initalization, based on Protocol 1
+     // [Practical Mental Poker Without a TTP Based on Homomorphic Encryption]
+     
+
+    ~GameState.GameRunning
+    public !everyone ?everyone void initProtocol() throws 
+    !everyone MPException, 
+    !everyone SecurityException 
+    {        
+        Debug.println("Init protocol");
+        ?(gameSecret) Digest<gameSecret> C_p = null;
+        PHIntVector<atEndGame+duringSigning> d = new PHIntVector<atEndGame+duringSigning>();
+        PHIntVector<atEndGame+duringSigning> e = new PHIntVector<atEndGame+duringSigning>();
+        
+        ?(gameSecret) DABigInteger<gameSecret> 
+          z_u = null;
+        
+        try {
+
+            // a) generate a permutation Pi of the card deck and keep it duringSigning
+
+            // side effect here !!!
+            // this method also restricts the end-label 
+            Debug.println("Generating random permutation");
+            p = this.generatePermutation();
+
+            // b) Generate a symmetric key Ki, corresonding to a homomorphic
+            // cryptosystem...
+            Debug.println("Creating new PHCrypto, argument = 2");
+            ph = new PHCrypto<atEndGame+duringEncryption>(2);
+
+            // m is a public key of our cryptosystem 
+            ?(atEndGame+duringEncryption) DABigInteger<atEndGame+duringEncryption> 
+              m = ph.getPublicParam();
+
+            // c) Choose a prime value z_i which falls within the range of the
+            // cleartext space of the homomorphic cryptosystem used
+
+            // We impose some restrictions on Z_i... 
+       
+
+            ?(gameSecret) String sha1 = "SHA1PRNG";
+            ?(gameSecret) String _sha1 = "SHA1PRNG";
+            Debug.println("Getting SecureRandom instance SHA1PRNG");
+            z_u = new DABigInteger<gameSecret>
+              (Z_BITLENGTH, 80, SecureRandom.getInstance(_sha1));
+            Debug.println("Upgrading DAB");
+            DABigInteger<gameSecret> _m = TrustedSigner.<atEndGame,duringEncryption>upgradeDAB(m);
+            while (z_u.compareTo( 
+                     _m ) >= 0 || 
+                   z_u.compareTo(DABigInteger.
+                   <gameSecret>ZERO()) <= 0) 
+            {
+               Debug.println("Generated z_u not between _m and ZERO, creating new");
+               z_u = new DABigInteger<gameSecret>
+                  (Z_BITLENGTH, 80,  SecureRandom.getInstance(_sha1));
+            }
+           
+            // upgraded value of this.z
+            // we need it for some computations
+            
+          
+            // d) build a link of the DNC which contains the value z_i
+            // used by PL_i.
+         
+            // e) build the card permutation matrix P_i, corresponding to p_i, 
+            // using z_i;
+            matrix = new PermutationMatrix<gameSecret>(p, z_u);
+            matrixCopy = matrix.cloneMatrix();
+
+
+            // f) commit to this permutation P_i using a bit commitment protocol
+            // Denote the resulting commitment by C_p_i
+            C_p = matrix.getDigest();
+
+
+            
+            // g) build the next link of the DNC following the previous expanded
+            // link/
+            // The new link contains the commitment C_p_i
+            
+            // h) choose s values {delta_1, ... ,delta_s} such that 
+            // delta_j mod z_i = 0
+            // for any j from 1..s, and s>t
+            // &
+            // i) choose s values {epsilon_1,..., epsilon_s} such that 
+            // epsilon_j mod z_i = 0
+            // j from 1..s, s > t
+            // &
+            // j) Homomorphically encrypt the previous values under the symmetric 
+            // key K_i
+            // to get d_j = E_K_i(delta_j) and  e_j = E_K_i(eps_j);
+
+            int s = DECKSIZE + 2;
+            BigIntVector<gameSecret> delta = new BigIntVector<gameSecret>(s);
+            
+            
+            BigIntVector<gameSecret> eps = new BigIntVector<gameSecret>(s);
+       
+            for (int i = 0; i < s; i++) {
+                
+             
+                // h
+                DABigInteger<gameSecret> k = 
+                  new DABigInteger<gameSecret>(4, 
+                                                SecureRandom.getInstance(_sha1));
+                while (k.compareTo(DABigInteger.<gameSecret>ZERO()) == 0     ||
+                       k.multiply(z_u).compareTo(_m) >=0 ) 
+                {
+                    k = new DABigInteger<gameSecret>(4,
+                                                SecureRandom.getInstance(_sha1));
+                } 
+                
+                ?gameSecret DABigInteger<gameSecret> delta_i = k.multiply(z_u);
+                delta.add(i, delta_i);
+
+                // i
+                DABigInteger<gameSecret> eps_i = 
+                    new DABigInteger<gameSecret>(z_u.bitLength(), 
+                                                SecureRandom.getInstance(_sha1));
+                while
+                    (eps_i.mod(z_u).compareTo(DABigInteger.<gameSecret>ZERO()) == 0
+                    || eps_i.compareTo(_m) >= 0) 
+                {
+                    eps_i = new DABigInteger<gameSecret>(z_u.bitLength(), 
+                                                SecureRandom.getInstance(_sha1));
+                } 
+                
+                eps.add(i, eps_i);
+
+                // j
+                ?(atEndGame+duringSigning) PHInteger<atEndGame+duringSigning> d_i = 
+                    TrustedEncrypter.<atEndGame,everyone,duringSigning>
+                       encrypt(ph, delta_i);
+                d.add(d_i);
+
+                PHInteger<atEndGame+duringSigning> e_i = 
+                    TrustedEncrypter.<atEndGame,everyone,duringSigning>
+                        encrypt(ph, eps_i);
+
+                e.add(e_i);
+                
+            }
+            
+        
+            // checks  to avoid overflows of integers
+            // with respect to the clear text space
+            
+            ?gameSecret DABigInteger<gameSecret> deltasum = delta.getBI(0);
+            ?gameSecret DABigInteger<gameSecret> maxEps = eps.getBI(0);
+
+            for (int i = 1; i < s; i++) {
+                deltasum = deltasum.add(delta.getBI(i));
+                if (eps.getBI(i).compareTo(maxEps) >=0 ){
+                    maxEps = eps.getBI(i);
+                }
+            }
+            
+            if (deltasum.add(maxEps).compareTo(_m) >= 0 ) {
+                // ISSUE how to solve this?
+                //throw new IllegalArgumentException
+                //    ("wrong security parameters, checksum fails");
+            }
+            
+            
+            
+            ?(atEndGame+duringSigning) PHInteger<atEndGame+duringSigning> dsum = d.getPHI(0);
+            for (int i = 1 ; i < s; i++) {
+              dsum  = dsum.add(d.getPHI(i));
+            }
+            
+            DABigInteger<gameSecret> dSumDecrypted = 
+               TrustedEncrypter.<atEndGame,everyone,duringSigning>decrypt(ph, dsum);
+            
+            
+            // k) Build the next link of the DNC which contains the set
+            // D = {d_1, ..., d_s}
+            // &
+            // l) Build another link of the DNC which contains the set
+            // E = {e_1, ..., e_s}
+
+            // commit links
+
+            
+            // m) Generate the vector representation for the t cards in the deck 
+            // {w1, ... , wt} and encrypt them under K_i using the aforementioned
+            // homomorphyc cryptosystem to obtain w_j' = E_K_i (w_j)
+            
+              
+            for (int i = 0; i < DECKSIZE; i++) {
+               ?(gameSecret) CardVector <gameSecret> wi = new CardVector<gameSecret>(1 + i, 
+                    DECKSIZE, z_u, _m);
+               ?(atEndGame+duringSigning) EncryptedCardVector <atEndGame+duringSigning> ewi = 
+                    TrustedEncrypter.<atEndGame,everyone,duringSigning>encrypt(ph, wi);
+                
+                w.add(wi);
+                ew.add(ewi);
+            }
+            
+            // n) randomly permute the encrypted cards {w_1', ... w_t'}
+            ew.permute();
+            
+        } catch (NoSuchAlgorithmException ignored) {
+        } catch (IllegalArgumentException ignored) {
+        } catch (ArithmeticException ignored) {
+        } catch (IndexOutOfBoundsException ignored) {
+        }
+        
+        
+        
+        
+        // o) build the next link of the DNC, which contains
+        // the card deck encrypted and permuted by PL_i
+        
+        // Upgrading meet:
+        
+        DABigInteger<duringEncryption*duringSigning> m_z =        
+            TrustedRevealer.<atEndGame,duringEncryption*duringSigning>upgradeMeet(z_u);
+            
+        Digest<duringEncryption*duringSigning> m_C_p =        
+            TrustedRevealer.<atEndGame,duringEncryption*duringSigning>upgradeMeet(C_p);
+            
+        PHIntVector<duringSigning> m_d =        
+            TrustedRevealer.<atEndGame,duringSigning>upgradeMeet(d);
+            
+        PHIntVector<duringSigning> m_e =        
+            TrustedRevealer.<atEndGame,duringSigning>upgradeMeet(e);
+            
+        DAVector<duringSigning> m_ew =        
+            TrustedRevealer.<atEndGame,duringSigning>upgradeMeet(ew);
+        
+        // Releasing public components:
+        
+        DABigInteger<duringSigning> _z =
+                TrustedEncrypter.<{:},duringSigning>declassifyZ(m_z);
+
+        Digest<duringSigning> _C_p =
+                TrustedEncrypter.<{:},duringSigning>declassifyDigest(m_C_p);
+
+        try {
+            buildLink("z_i", _z); // d)
+            buildLink("C_p_i", _C_p);
+            buildLink("D", m_d);
+            buildLink("E", m_e);
+            buildLink("ew", m_ew);
+        } catch (IllegalArgumentException ex) {
+            throw new MPException("initialization failed");
+        }
+        
+        // Storing z publicly
+        
+        this.z = TrustedSigner.<everyone>declassifyZ(_z); // pretend signing
+
+    }
+
+
+    
+    private !gameSecret ?gameSecret byte[]<gameSecret> generatePermutation() {
+    
+        ?gameSecret byte[]<gameSecret> p = null;
+        try {
+            p = new byte[DECKSIZE]<gameSecret>;
+            for (int i = 0; i < DECKSIZE; i++)
+                p[i] = (byte) (i + 1);
+  
+            for (int i = 0; i < 100; i++) {
+                int u = (int) java.lang.Math.round((DECKSIZE - 1)
+                        * java.lang.Math.random());
+                int v = (int) java.lang.Math.round((DECKSIZE - 1)
+                        * java.lang.Math.random());
+                byte t = p[u];
+                p[u] = p[v];
+                p[v] = t;
+            }
+        } catch (IndexOutOfBoundsException ignored) { 
+        }
+        return p; 
+        
+    }
+    
+
+    // Protocol 2 (Card draw) in the mental poker paper
+     
+     
+    ~GameState.GameRunning
+    public !everyone void drawCard(?everyone int card)
+    throws !everyone IllegalArgumentException, !everyone MPException, !everyone SecurityException
+    {
+        
+        try {
+            if (!available[card - 1]) {
+                throw new IllegalArgumentException("drawCard: wrong card");
+            }
+        } catch (IndexOutOfBoundsException e) {
+            throw new IllegalArgumentException("drawCard: IOB for " + 
+                Integer.toString(card));
+        } catch (NullPointerException e) {
+            throw new MPException("drawCard: available is null");
+        }
+
+        try {
+            // Releasing public component
+            DABigInteger<atEndGame+everyone> pkey = 
+                TrustedEncrypter.<atEndGame, everyone>
+                    declassifyZ(ph.getPublicParam());
+                    
+            // Upgrading
+            
+            DABigInteger<duringSigning> _pkey =
+                TrustedRevealer.<atEndGame,duringSigning>upgradeMeet(
+                    TrustedSigner.<atEndGame,everyone>upgradeDAB(pkey)); 
+                    
+            DABigInteger<duringSigning> _z =
+                TrustedRevealer.<atEndGame,duringSigning>upgradeMeet(
+                    TrustedSigner.<atEndGame,everyone>upgradeDAB(z)); 
+                    
+            CardVector<duringSigning> w_0 
+                = new CardVector<duringSigning>(card, DECKSIZE, _z, _pkey);
+                
+            buildLink("w_i", w_0);
+            
+        } catch (NoSuchAlgorithmException e) {
+            throw new MPException("drawCard: NSA");
+        } catch (NullPointerException e) {
+            throw new MPException("drawCard: NPE");
+        }
+        
+    }
+    
+
+    ~GameState.GameRunning
+    public !everyone void processCardDraw() throws 
+    !everyone IllegalArgumentException, !everyone MPException, !everyone SecurityException 
+    {
+        
+        DABigInteger<everyone> z_i = null;
+        ?everyone CardVector<everyone> w_0 = null;
+        try {
+           //  PL_1 (j) does
+           //  a) Check the validity of the link sent by PL_i, compute
+           //  her equivalent card permutation P_1^j for the modulus
+           //  z_i, published by PL_i in the DNC and premute w_0
+           // to obtain w_1 = w_0 * P_1^j
+    
+    
+            for (int i = 0; i < chain.size(); i++) {
+                DNCLink<everyone> link = chain.getLink(i);
+                DataField<everyone> data = link.getData();
+                if (data.getPlayerName().compareTo(this.name) !=0 ) {
+                    if (data.getInfo().compareTo("z_i")  == 0)
+                        z_i = (DABigInteger<everyone>) data.getAttrib();
+                    else if (data.getInfo().compareTo("w_i") == 0)
+                        w_0 = (CardVector<everyone>) data.getAttrib();
+                }
+            }   
+        } catch (IndexOutOfBoundsException ex ) {
+            throw new MPException("processCardDraw: IOB{}");
+        } catch (NullPointerException ex) {
+            throw new MPException("processCardDraw: NPE{}");
+        } catch (ClassCastException ex ) {
+            throw new MPException("processCardDraw: CCE{}");
+        }
+            
+        if (z_i == null) 
+            throw new MPException("processCardDraw: z_i == null");
+        if (w_0 == null)
+            throw new MPException("processCardDraw: w_0 == null");
+        
+       //  above computations were on the {} level... 
+       //  Here we 
+       //  already have to upgrade the level to {P:}... so we can not 
+       //  assume that exceptions are transparently passed to the caller
+        
+        
+        ?duringSigning CardVector<duringSigning> w_1  = null;
+        
+        try {
+           //  TODO for efficiency one can calculate pi_ once and store it
+          //   for future
+            ?duringSigning CardVector<duringSigning> w_0_0 = null;
+            ?duringSigning PermutationMatrix<duringSigning> pi_ = null;
+           
+            w_0_0 = 
+                TrustedSigner.<{:},everyone>upgradeCV(w_0);
+           
+            pi_ = new PermutationMatrix<duringSigning>(
+                    TrustedEncrypter.<{:},duringSigning>releasePermutation(
+                    TrustedRevealer.<atEndGame,duringEncryption*duringSigning>upgradeMeet(this.p)),                     
+                    TrustedSigner.<{:},everyone>upgradeDAB(z_i));
+            
+            w_1 = w_0_0.multMatrix(pi_);
+    
+          //   b) Build the next link of the DNC, which contains w_1 and the name of the next 
+          //   player PL_2 in the computation
+          
+            
+        } catch (NoSuchAlgorithmException ignored) {
+            
+        }
+        
+        // if w_1 is null, we will get an exception 
+        // from the buildLink
+        // 
+        try {
+            this.buildLink("w_i", w_1);
+        } catch (IllegalArgumentException ex){      
+            throw new MPException("processCardDraw failed: IAE");
+        }
+        
+    }
+    
+ 
+    ~GameState.GameRunning
+    public !everyone void processSelfCardDraw()
+    throws !everyone MPException, !everyone SecurityException {
+        
+        
+        ?duringSigning EncryptedCardVector<duringSigning> ew_i = null;
+        
+        try {
+            // Player PL_i does
+            // a) check the validity of the link sent by PL_i-1 
+            // and permute w_i-1 with her permutation matrix P_i
+            // to obtain w_i = w_i-1 * P_i
+    
+
+    
+            CardVector<everyone> w_prev = null;
+            for (int i = 0; i < chain.size(); i++) {
+                DNCLink<everyone> link = chain.getLink(i);
+                DataField<everyone> data = link.getData();
+                
+                    if (data.getInfo().compareTo( "w_i") == 0){
+                        w_prev = (CardVector<everyone>) data.getAttrib();
+                    }
+                
+            }
+            
+            int m =  w_prev.getCardValue(z);
+            
+            CardVector <gameSecret> w_prev_p = 
+                TrustedEncrypter.<atEndGame,duringSigning>upgradeCV(
+                    TrustedSigner.<atEndGame,everyone>upgradeCV(
+                        TrustedRevealer.<everyone,everyone>upgradeCV(w_prev)));
+            
+            DABigInteger<gameSecret> z_upgr =
+                TrustedEncrypter.<atEndGame,duringSigning>upgradeDAB(
+                    TrustedSigner.<atEndGame,everyone>upgradeDAB(
+                        TrustedRevealer.<everyone,everyone>upgradeDAB(this.z)));
+            
+            CardVector<gameSecret> w_i = w_prev_p.multMatrix(this.matrix);
+            
+            // b) Modify the m-th row of  P_i where m <- {1..t} is
+            // the value of card w_i-1. All values in the m-th row 
+            // are changed to values that are nonzero modulo z_i
+             
+              
+           
+            this.matrix.setNonZero(m - 1, z_upgr);
+     
+            // c) Pick the encrypted card w_i' corresponding to clear card w_i
+            // we can easily take the card w_i, encrypt it and return the 
+            // encrypted value
+    
+            int mi = w_i.getCardValue(z_upgr);
+            
+            CardVector<gameSecret> ww_i = (CardVector<gameSecret>) this.w.get(mi-1);
+            
+            ew_i = 
+                TrustedRevealer.<atEndGame,duringSigning>upgradeMeet(
+                    TrustedEncrypter.<atEndGame,everyone,duringSigning>encrypt(ph, ww_i));
+    
+            // build the next link of the DNC, which contains w_i', and 
+            // the name of the
+            // next player PL_i+1 
+            // note that name of the next player is omitted here, we just assume 
+            // that this is handled by the protocol control on the upper level...
+
+        } catch (IndexOutOfBoundsException ignored) {
+        } catch (IllegalArgumentException ignored) {
+        } catch (MPException  ignored) {
+        }
+        
+        // back to public level again
+        // if the ew_i is null, we will - that is something wrong happened
+        // in the above code, we should get an exception from 
+        // the method which we call...
+
+        try {
+           this.buildLink("en_wi", ew_i);
+        } catch (IllegalArgumentException ex) {
+           throw new MPException("processSelfCardDraw: IAE");
+        }
+        
+            
+    }
+    
+
+    ~GameState.GameRunning
+    public !everyone void processCardDrawO() 
+    throws !everyone MPException, !everyone SecurityException
+    {
+        
+        
+        DABigInteger<everyone> z_i = null;
+        EncryptedCardVector<everyone> ew_i = null;
+        PHIntVector<everyone> d = null;
+        PHIntVector<everyone> e = null;
+        
+        // public level
+        try {
+            // a) Check the validity of the link sent by PL_j-1 and compute her 
+            // equivalent card permutation matrix P_j' for the modulus z, published
+            // by PL_i. Use Protocol 3 below to encrypt P_j' as P_j^c under the key
+            // K_i, corresponding to PL_i
+            
+            for (int i = 0; i < chain.size(); i++) {
+                DNCLink<everyone> link = chain.getLink(i);
+                DataField<everyone> data = link.getData();
+                if (data.getPlayerName() != this.name) {
+                    if (data.getInfo().compareTo( "z_i") == 0)
+                        z_i = (DABigInteger<everyone>) data.getAttrib();
+                    else if (data.getInfo().compareTo( "en_wi") == 0)
+                        ew_i = (EncryptedCardVector<everyone>) data.getAttrib();
+                    else if (data.getInfo().compareTo("D") == 0)
+                        d = (PHIntVector<everyone>) data.getAttrib();
+                    else if (data.getInfo().compareTo ("E") == 0)
+                        e = (PHIntVector<everyone>) data.getAttrib();
+                }
+            }
+        } catch (IndexOutOfBoundsException ex) {
+            throw new MPException("processCardDrawo: IOB{}");
+        } catch (NullPointerException ex) {
+            throw new MPException("processCardDrawo: NPE{}");
+        } catch (ClassCastException ex) {
+            throw new MPException("processCardDrawo: CCE{}");
+        }
+        
+        if (z_i == null)
+            throw new MPException("processCardDrawO: z_i == null");
+        if (ew_i == null)
+            throw new MPException("processCardDrawO: ew_i == null");
+        if (d == null)
+            throw new MPException("processCardDrawO: d == null");
+        if (e == null)
+            throw new MPException("processCardDrawO: e == null");
+          
+        // end of public level computation
+        
+        EncryptedCardVector<duringSigning> ew = null;
+        
+        // entering classified level
+        try {
+            
+            DABigInteger<atEndGame+duringSigning> z_i_p = 
+                    TrustedSigner.<atEndGame,everyone>upgradeDAB(
+                        TrustedRevealer.<everyone,everyone>upgradeDAB(z_i));
+                        
+            DABigInteger<atEndGame+duringSigning> thisz  = 
+                    TrustedSigner.<atEndGame,everyone>upgradeDAB(
+                        TrustedRevealer.<everyone,everyone>upgradeDAB(this.z));
+                         
+            EncryptedCardVector<atEndGame+duringSigning> ew_i_p = 
+                    TrustedSigner.<atEndGame,everyone>upgradeECV(
+                        TrustedRevealer.<everyone,everyone>upgradeECV(ew_i));
+            
+            PHIntVector<atEndGame+duringSigning> d_p = 
+                    TrustedSigner.<atEndGame,everyone>upgradePHIV(
+                        TrustedRevealer.<everyone,everyone>upgradePHIV(d));
+                        
+            PHIntVector<atEndGame+duringSigning> e_p = 
+                    TrustedSigner.<atEndGame,everyone>upgradePHIV(
+                        TrustedRevealer.<everyone,everyone>upgradePHIV(e));
+            
+            
+            if (this.matrix_o == null) {
+                matrix_o = 
+                    TrustedEncrypter.<atEndGame,duringSigning>encryptedPermutation(this.matrix, d_p, e_p, z_i_p, thisz);
+            }
+                        
+            // b) Permute the encrypted card w'_j-1 using encrypted matrix
+            // P_j^c to obtain w'_j = w'_j-1 * P_j^c
+    
+            ew = 
+                TrustedRevealer.<atEndGame,duringSigning>upgradeMeet(ew_i_p.multMatrix(matrix_o));
+            
+        } catch (IllegalArgumentException ignored) {
+        } catch (MPException ignored) {
+        }
+       
+              
+        // c) Build the next link of the DNC, which contains w'_j.
+          
+        try {
+            buildLink("en_wi", ew);
+        } catch (IllegalArgumentException ex) {
+            throw new MPException("processCardDrawO failed");
+        }
+        
+    }
+    
+
+    ~GameState.GameRunning
+    public !everyone void finishCardDraw()
+    throws !everyone MPException, !everyone SecurityException 
+    {
+        
+        boolean ok  = false;
+        
+        try {
+            // When PL_i "sees" the link computer by PL_n, she does
+            // a) Check the validity of the link computed by PL_n
+            // b) Decrypt the card w_n' contained in the link
+            // computed by PL_n under her private key K_i to obtain
+            // the drawn card w_n = D_K_i (w'_n). This finishes
+            // the card draw protocol
+    
+            
+            EncryptedCardVector<everyone> en_wi = null;
+            
+            for (int i = 0; i < chain.size(); i++) {
+                DNCLink<everyone> link = chain.getLink(i);
+                DataField<everyone> data = link.getData();
+                if (data.getInfo().compareTo( "en_wi") == 0){
+                    en_wi = (EncryptedCardVector<everyone>) data.getAttrib();
+                }
+            }
+            
+            EncryptedCardVector<atEndGame+duringSigning> en_wi_p = 
+                    TrustedSigner.<atEndGame,everyone>upgradeECV(
+                        TrustedRevealer.<everyone,everyone>upgradeECV(en_wi));
+            
+        
+            // got PC incremented here by the end-label of the called
+            // method.
+            
+            CardVector<gameSecret> w = 
+               TrustedEncrypter.<atEndGame,everyone,duringSigning>decrypt(ph, en_wi_p);
+            
+         
+            DABigInteger<gameSecret> thisz =
+                TrustedEncrypter.<atEndGame,duringSigning>upgradeDAB(
+                    TrustedSigner.<atEndGame,everyone>upgradeDAB(
+                        TrustedRevealer.<everyone,everyone>upgradeDAB(this.z)));
+            int m = w.getCardValue(thisz);
+            Debug.println("Obtained card: " + m);
+            
+            this.hand[ncards] = m; 
+            this.ncards ++;
+            
+
+            
+            // this last statement indicates that no exception has
+            // been thrown so far.
+            
+            ok = true; 
+        } catch (IndexOutOfBoundsException ex) {
+          Debug.printException(ex);
+        } catch (IllegalArgumentException ex) {
+          Debug.printException(ex);
+        } catch (MPException ex) {
+          Debug.printException(ex);
+        }
+        
+        if (!ok) {
+            throw new MPException();
+        }
+        
+    }
+    
+ 
+    
+    ~GameState.GameEnded
+    public ?everyone !everyone BigIntVector<everyone> revealPrivateKey() 
+    {
+     
+        ?everyone BigIntVector<everyone> key = null;
+        
+        try {
+            PHCrypto<atEndGame+duringEncryption> ph = this.ph;
+            BigIntVector<atEndGame+duringEncryption> key1 = ph.getSecretKey();
+            key = TrustedRevealer.<duringEncryption,everyone>declassify(key1);
+        } catch (NullPointerException ex){
+        }
+		
+        try {
+            this.rph = new PHCrypto<everyone>(this.nlength, key);
+        } catch (IllegalArgumentException ignored) {		
+        }
+	    
+        return key;
+        
+    }
+    
+  
+    ~GameState.GameEnded
+    public ?everyone !everyone byte[]<everyone> revealPermutation()
+    {
+        this.rPerm = TrustedRevealer.<gameSecret,everyone>declassify(p);
+        return rPerm;
+    }
+    
+
+    ~GameState.GameEnded
+    public ?everyone !everyone PermutationMatrix<everyone> revealMatrix() 
+    {
+        return TrustedRevealer.<gameSecret,everyone>declassify(matrixCopy);
+    }
+    
+
+    ~GameState.GameEnded
+    public !everyone ?everyone int[]<everyone> showCards() 
+    {
+       return TrustedRevealer.<atEndGame,everyone>declassify(hand);
+    }
+    
+    
+    public ?everyone !everyone boolean 
+    validate(?everyone BigIntVector<everyone> oKey, 
+    ?everyone byte[]<everyone> oPerm,
+    ?everyone PermutationMatrix<everyone> oMatrix) throws 
+    !everyone IllegalArgumentException, 
+    !everyone MPException
+    {
+
+        if (oKey == null)
+            throw new IllegalArgumentException("validate: oKey null");
+        if (oPerm == null)
+            throw new IllegalArgumentException("validate: oPerm null");
+        if (oMatrix == null)
+            throw new IllegalArgumentException("validate: oMatrix null");
+        
+        
+        // collect necessary information from the chain
+        DABigInteger<everyone> z_i = null;
+        Digest<everyone> C_p_i = null;
+        DAVector<everyone> ew = null;
+        try {
+            for (int i = 0; i < chain.size(); i++) {
+                DNCLink<everyone> link = chain.getLink(i);
+                DataField<everyone> data = link.getData();
+                if (data.getPlayerName().compareTo(this.name) !=0 ) {
+                    if (data.getInfo().compareTo("z_i")  == 0)
+                        z_i = (DABigInteger<everyone>) data.getAttrib();
+                    if (data.getInfo().compareTo("C_p_i")  == 0)
+                        C_p_i = (Digest<everyone>) data.getAttrib();
+                    if (data.getInfo().compareTo("ew") == 0)
+                        ew = (DAVector<everyone>) data.getAttrib();
+                }
+            } 
+        } catch (NullPointerException ex){
+            throw new MPException("validate: NPE");
+        } catch (IndexOutOfBoundsException ex) {
+            throw new MPException("validate: IOB");
+        } catch (ClassCastException ex) {
+            throw new MPException("validate: CCE");
+        }
+        
+        
+        
+        // 1. Check that the permutation revealed and used by each other 
+        // Player PL_i is the same permutation p_i, to which she committed
+        // when publishing the commitment C_p_i in Protocol 1(initialization)
+        // This check implies verifying the bit commitment for player PL_i
+        
+        // get users z_i and C_p from the chain
+        // let's validate the matrix
+      
+        if (!oMatrix.validate(oPerm, z_i))
+            return false;
+        
+        Digest<everyone> oDig = oMatrix.getDigest();
+        if (oDig == null) return false;
+        if (!oDig.equals(C_p_i)) return false;
+        
+        // 2. Decrypt cards {w_1', ...., w_t'} published by each other player
+        // PL_i, in the last step of Protocol 1 and check that the card deck is
+        // correct
+        
+        // create instance of the other user encryption schema
+        // decrypt all of the cards
+        // 
+        
+        PHCrypto<everyone> oph = null;
+        try {
+            // actually the value of nlength parameter here
+            // is not important since we are not going to encrypt anything            
+            oph = new PHCrypto<everyone>(this.nlength, 
+                (DABigInteger<everyone>)oKey.get(0),
+                (DABigInteger<everyone>)oKey.get(1),
+                (DABigInteger<everyone>)oKey.get(2), 
+                (DABigInteger<everyone>)oKey.get(3));
+            
+        } catch (IndexOutOfBoundsException ignored) {
+            return false;
+        } catch (ClassCastException ignored){
+            return false;
+        } catch (IllegalArgumentException ignored) {
+            return false;
+        }
+
+        
+        try {
+        
+            if (ew.size() != DECKSIZE)
+                return false;
+            
+            boolean[]<everyone> verifiedCards = new boolean[DECKSIZE]<everyone>;
+            for (int i = 0; i< DECKSIZE; i++)
+                verifiedCards[i] = false;
+    
+            for (int i = 0; i<DECKSIZE; i++) {
+                EncryptedCardVector<everyone> ewi = (EncryptedCardVector<everyone>) ew.get(i);
+                CardVector<everyone> wi = 
+                    TrustedEncrypter.<everyone,everyone,everyone>decrypt(oph,ewi);
+                int value = wi.getCardValue(z_i);
+                
+                verifiedCards[value-1] = true;                
+            }
+            
+            for (int i = 0; i < DECKSIZE ;i++)
+                if (!verifiedCards[i]) 
+                    return false;
+                    
+        } catch (IndexOutOfBoundsException ignored){
+            return false;
+        } catch (ClassCastException ignored){
+            return false;
+        } catch (NullPointerException ex ) {
+            return false;
+        }
+        
+        // 3. Use the private key K_i of each other player PL_i, to decrypt the
+        // result of permuting encrypted cards at Step (5b) of Protocol 2
+        // Check that the permutations were correctly performed
+        
+		
+		int state = 0; 
+		// state 
+		//  0 - no idea about whos turn it is
+		//  1 - the card was initially asked by us
+		//  2 - the card was initially asked by other rplayer
+		
+		try {
+		
+			for (int i = 0; i < chain.size(); i++) {
+				DNCLink<everyone> link = chain.getLink(i);
+				DataField<everyone> data = link.getData();
+				
+				
+				
+				
+				// draw Card
+				if ( data.getInfo().compareTo("w_i") == 0) {
+					if (data.getPlayerName().compareTo(this.name) == 0) {
+					
+						// calculate the value of the card
+						
+						CardVector<everyone> wi = (CardVector<everyone>) data.getAttrib();
+						
+						int value = 0;
+						try {
+							value = wi.getCardValue(this.z);
+						} catch (IllegalArgumentException ex) {
+							throw new MPException("IAE: "); //  + ex.toString());
+						}
+						
+						int pvalue = rPerm[value-1]; 
+						
+						i++;
+                        
+            link = chain.getLink(i);
+						data = link.getData();
+						
+            
+            if (data.getPlayerName().compareTo(this.name) == 0) {
+                // 5 b here
+                if (data.getInfo().compareTo("en_wi") != 0) {
+                    throw new MPException
+                        ("validate:unexpected chain link en_wi");
+                }
+                
+                
+                i++;
+                
+                link = chain.getLink(i);
+                data = link.getData();
+                
+                if (data.getPlayerName().compareTo(this.name) == 0)
+                    throw new MPException
+                        ("validate: unexpected chain link name"); 
+                
+                EncryptedCardVector<everyone> ewi = 
+                    (EncryptedCardVector<everyone>) data.getAttrib();
+                CardVector<everyone> wi_ = 
+                    TrustedEncrypter.<everyone,everyone,everyone>decrypt(rph,ewi);
+                int ppvalue = 0;
+                //String ewstr = ewi.toString();
+                //String wistr = wi_.toString();
+                
+                try {
+                    ppvalue = wi_.getCardValue(this.z);
+                } catch (IllegalArgumentException ex) {
+                    
+                    throw new MPException("IAE: "); //  + ex.toString () 
+                        //+ ", " + z.toString() + wistr);
+                }
+                
+                
+                if (oPerm[pvalue-1] != ppvalue )
+                    throw new MPException(""); //Integer.toString(value) + " " 
+                    //+ Integer.toString(pvalue) + " " + 
+                    //Integer.toString(ppvalue)  );
+                
+            }
+                        
+					} else {
+						i+=2; //skip the next chain
+					}
+				}
+			}
+			
+		} catch (IndexOutOfBoundsException ex ) {
+			return false;
+		} catch (NullPointerException ex ){
+			return false;
+		} catch (ClassCastException ex) { 
+			return false;
+		} 
+		
+		
+        return true;
+    }
+    
+}
+
+
+

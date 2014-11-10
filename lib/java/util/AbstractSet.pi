@@ -1,0 +1,51 @@
+package jif.util;
+
+/**
+ * Base implementation for Set.
+ */
+public abstract native class AbstractSet<policy p> 
+  extends AbstractCollection<p> 
+  implements Set<p> {
+  
+    protected AbstractSet() {
+    }
+
+	// TODO NOTE ISSUE
+	// This is a bit of problem I think.
+	// IDComparable is just like java.lang.Comparable, but with objects
+	// parametrized over a policy, since equality of objects implies
+	// equality of fields. We do not have special objects that are
+	// parametrized, but this would be an issue indeed. How to handle
+	// this gracefully?
+    public ?(p*policyof(o)) boolean equals(IDComparable<p> o) {
+    }
+    
+    public boolean{L} removeAll{L}(Collection[L]{L} c) {
+        if (c == null) return false;
+
+        boolean modified = false;
+
+        if (size() > c.size()) {
+            for (Iterator[L] i = c.iterator(); i != null && i.hasNext(); )
+                try {
+                    modified |= remove(i.next());
+                }
+                catch (NoSuchElementException impossible) { }
+        } 
+        else {
+            for (Iterator[L] i = iterator(); i != null && i.hasNext(); ) {
+                try {
+                    if (c.contains(i.next())) {
+                        i.remove();
+                        modified = true;
+                    }
+                }
+                catch (NoSuchElementException impossible) { }
+                catch (IllegalStateException impossible) { }
+
+            }
+        }
+        return modified;
+    }
+
+}

@@ -1,0 +1,4 @@
+To install:
+  ant example 
+To run:
+  java -cp bin:../lib/paragonRT.jar BidSystem

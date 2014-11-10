@@ -1,0 +1,5 @@
+public class MethodOverloadingReturnType {
+  public void f() {}
+
+  public int f() { return 1; }
+}

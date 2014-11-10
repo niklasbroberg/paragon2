@@ -1,0 +1,107 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+import java.math.BigInteger;
+import jif.util.ArrayList;
+
+public class BigIntVector[label L] extends jif.util.ArrayList[L] 
+implements DataFieldAttribute[L] {
+	/** inherited from Vector */
+	private static final long serialVersionUID = -2767605614048989439L;
+
+	/**
+	 * 
+	 */
+	public BigIntVector() {
+		super();
+	}
+	/**
+	 * @param initialCapacity
+	 */
+     public BigIntVector{L}(int {L} initialCapacity) {
+		super();
+        ensureCapacity(initialCapacity);
+	}
+    
+	/* (non-Javadoc)
+	 * @see poker.DataFieldAttribute#toByteArray()
+	 */
+     public byte{L}[]{L} toByteArray{L}() {       
+		int size = this.byteLength();
+		byte [] retval = new byte[size];
+		int i = 0;
+        try {
+            for (int j = 0 ; j < size; j++) {
+                try  {
+                    byte [] x_i =  this.getBI(i).toByteArray();
+                    System.arraycopy(x_i, 0, retval, i, x_i.length);
+                } catch (NullPointerException e) {
+                } catch (ArrayStoreException e) {
+                }
+            }
+            return retval;
+        }catch(IndexOutOfBoundsException ignored) {            
+        }
+        return null;
+	}
+
+	/* (non-Javadoc)
+	 * @see poker.DataFieldAttribute#byteLength()
+	 */
+     public int{L} byteLength() {
+       
+		int n = this.size();
+		int size = 0;
+        try {
+            for (int j = 0; j < size; j++) {
+                    DABigInteger[L] x =  this.getBI(j);
+                    if (x != null)
+                        size += Math.ceil((x.bitLength() + 1)/8.0);
+            }
+            return size;
+        } catch (IndexOutOfBoundsException ignored) {
+        } catch (ArithmeticException ignored) {
+        }
+        // unreachable
+        return 0;
+	}
+	
+
+    
+
+	/**
+	 * returns the BigInteger stored in the value
+	 * @param i
+	 * @return
+	 */
+     public DABigInteger[L]{L} getBI(int i):{L;i}
+     throws (IndexOutOfBoundsException){
+		 try {
+         	return (DABigInteger[L]) this.get(i);
+        } catch (ClassCastException e) { return null; } 
+	 }
+     
+     
+     public String{L} toString() {
+        try {
+            int n = this.size();
+            String s = "{";
+            for (int i = 0; i < n; i++ ){
+                DABigInteger[L] bi = this.getBI(i);
+                s+=bi.toString();
+                if (i < n- 1) 
+                    s+= ",";
+            }
+            s += "}";
+            return s;
+        } catch (NullPointerException ignored) {
+        } catch (IndexOutOfBoundsException ignored ) {
+        }
+        return "";
+	}
+     
+}
+
+

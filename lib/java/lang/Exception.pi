@@ -1,0 +1,13 @@
+package java.lang;
+
+public native class Exception {
+
+  public Exception() {}
+  
+  public Exception(?policyof(this) String s) {}
+
+  public ?policyof(this) String toString() { }
+  
+  public ?policyof(this) String getMessage() { }
+
+}

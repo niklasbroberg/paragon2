@@ -1,0 +1,10 @@
+public class Extending extends Exception {
+
+
+    public static void foo()
+    {
+        // Constructor should have been inherited:
+        Exception e = new Extending("Err message");
+    }
+
+}

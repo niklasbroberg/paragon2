@@ -1,0 +1,71 @@
+// ISSUE 120
+package policyp;
+
+import java.util.Set;
+
+import jif.util.LinkedListSet;
+
+// import jif.util.Set;
+// import jif.util.LinkedListSet;
+// import jif.util.Iterator;
+// import jif.util.NoSuchElementException;
+
+// another option is to store the label along with the Principal in the Set principals
+// for example, we could have Principal{*lb} addNewPrincipal(String{*lb} name, label lb)
+// which would store the Principal and its label in the PrincipalStore
+// this would require some declassifications, because {P:} will dominate all the labels
+// otherwise.
+
+// P is the manager of the PrincipalStore
+// All the principals in the Store are owned by P
+// In order to get a principal, P must authorize the access and declassify the principal
+// This should be OK in general
+// We'll make a closure to enforce this policy: GetPrincipalClosure
+// P should be a ManagerPrincipal if the Store is going to be properly protected
+
+public class PolicyStore
+{      
+    final ?{'x:} Set<{'x:}> principals;
+
+    // we could restrict the principal to be a manager principal by using "instanceof"
+    public PolicyStore()
+    {
+    		this.principals = new LinkedListSet<{'x:}>();
+    }
+
+    // Similarly, it may be good to allow the name to be an arbitrary label and 
+    // raise the security of the call accordingly; we could do this with another 
+    // parameter which is a dynamic label
+
+    // We don't use iterators here, because they have side-effects.
+    // A simple loop avoids this problem
+
+    // To be useful this must be called through a Closure with the Manager's authorization
+    // Otherwise, it can only be called by the Manager
+
+    public !{'x:} ?{'x:} policy getPrincipalLabel(?{'x:} String name)
+    {
+		?{'x:} policy ret_lbl = {'x:};  // default value is public
+    		
+    	if (principals == null) return ret_lbl; // bogus label -- should never happen!
+		/*
+		int length = principals.size();
+		for (int i = 0; i < length; i++) {
+		    try {
+				final PrincipalWrapper wrapper = (PrincipalWrapper)principals.get(i);
+				
+				if (wrapper != null) {
+					if (wrapper.getName().compareTo(name) == 0) {
+						ret_lbl = wrapper.getLabel();
+						break;
+				    }
+				}
+		    }
+		    catch (IndexOutOfBoundsException impossible) {}
+		    catch (NullPointerException impossible) {}
+		    catch (ClassCastException e) {} // this shouldn't occur -- knock on wood
+		}*/
+		return ret_lbl;
+	}
+    		
+}

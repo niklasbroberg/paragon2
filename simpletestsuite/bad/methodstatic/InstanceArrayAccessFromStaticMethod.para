@@ -1,0 +1,7 @@
+public class InstanceArrayAccessFromStaticMethod {
+  private int[] a = new int[1];
+
+  private static void stat() {
+    int x = a[0];
+  }
+}

@@ -1,0 +1,5 @@
+class BadPolicyOf {
+
+  ?policyof(bad) int foo;
+
+}

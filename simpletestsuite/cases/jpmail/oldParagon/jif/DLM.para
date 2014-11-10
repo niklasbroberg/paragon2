@@ -1,0 +1,9 @@
+package jif;
+
+public class DLM {
+	
+	public static final lock RunsFor(someActor);
+	
+	public static final lock ActsFor(a, b);
+	
+}

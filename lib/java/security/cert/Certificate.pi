@@ -1,0 +1,7 @@
+package java.security.cert;
+
+public native class Certificate {
+
+  public abstract ?policyof(this) java.security.PublicKey getPublicKey();
+
+}

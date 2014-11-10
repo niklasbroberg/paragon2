@@ -1,0 +1,8 @@
+public class NandM
+{
+  private lock Foo;
+  ?policyof(p) int m(int p)
+  ;
+  ?policyof(x) int n(int x)
+  ;
+}

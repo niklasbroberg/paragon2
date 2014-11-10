@@ -1,0 +1,4 @@
+In the context of class Bad3:
+In the context of method bar:
+In the context of lock state []:
+Cannot assign result of expression aliceData with policy { Alice#0 :} to location secretData with policy { java.lang.Object y : Declassified(y)}

@@ -1,0 +1,10 @@
+public class ParamStat<policy q> {
+
+  public static final policy p = {Object x:};
+
+  public void foo()
+  {
+    ?ParamStat.p int y;
+  }
+  
+}

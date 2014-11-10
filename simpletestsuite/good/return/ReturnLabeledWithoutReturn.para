@@ -1,0 +1,7 @@
+public class ReturnLabeledWithoutReturn {
+  public int f() {
+    int i = 0;
+stmt: i++;
+    return 1;
+  }
+}

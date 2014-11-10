@@ -1,0 +1,7 @@
+public class C {
+
+    public static final lock CLock;
+    
+    private D d = new D();
+
+}

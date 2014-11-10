@@ -1,0 +1,16 @@
+public class WriteException {
+
+    public static final Object a = new Object();
+
+    public static final policy pol = {a:};
+
+    public static
+    !pol
+    void foo()
+    throws !pol Exception
+    {
+        ?pol Exception e = new Exception();
+        throw e;
+    }
+
+}

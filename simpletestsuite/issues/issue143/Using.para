@@ -1,0 +1,7 @@
+public class Using {
+
+    final Object alice = new Object();
+    public ?TypeMethod.pol(alice) int myA;
+    public ?TypeMethod.pol(alice) int myB;
+
+}

@@ -1,0 +1,277 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ * Adapted to paragon
+ */
+package mp;
+
+import java.math.BigInteger;
+import java.util.Random;
+/**
+ * BigInteger class which implements from DataFieldAttribute,
+ * since we may need to keep BigIntegers as an attribute in the chain
+ */
+public class DABigInteger<policy p>
+implements DataFieldAttribute<p> // needs to be parametrized because of Digest...
+{
+    
+    // this is non-zero after initialization 
+    private final ?p BigInteger value;
+
+
+    public ?p BigInteger getValue() 
+    {
+        return this.value;
+    }
+    
+    
+	/* (non-Javadoc)
+	 * @see poker.DataFieldAttribute#byteLength()
+	 */
+	 
+    public ?p int byteLength() 
+    { 
+        BigInteger v = this.value;
+        if (v != null)        
+            try 
+            {
+                return (int) (Math.ceil((v.bitLength() + 1)/8.0));
+            } catch (ArithmeticException ignored) {       
+            }
+        return -1;
+    }
+	
+	
+    
+    public !p ?p byte[]<p> toByteArray() {
+        return value.toByteArray();
+    }
+    
+      
+        
+    
+    public DABigInteger (?p java.math.BigInteger val)
+    throws !p IllegalArgumentException 
+    {
+      if (val == null)
+          throw new IllegalArgumentException();
+    	this.value = val;
+    }
+    
+
+    public  DABigInteger(?p int numBits, ?p Random<p> rnd) 
+    throws !p IllegalArgumentException {
+        if (rnd == null)
+            throw new IllegalArgumentException();
+        this.value = null; // new BigInteger (numBits, rnd);
+    }
+
+    
+    /*
+   
+    public DABigInteger(byte{L}[]{L}val):{L} 
+    throws NumberFormatException {
+        if (val != null)
+            this.value  = new BigInteger (val);
+        else 
+            this.value = null;
+    }
+    
+    public DABigInteger(int {L} signum, byte{L}[]{L} magnitude):{L} 
+    throws NumberFormatException{
+        value = new BigInteger(signum, magnitude);
+    }
+    */
+    public !p DABigInteger(?p int bitLength, ?p int certainty, 
+        ?p Random<p> rnd) throws !p ArithmeticException {        
+        this.value = new BigInteger (bitLength, certainty, rnd);
+	}
+	/*
+    public DABigInteger(int{L} numBits, Random {L}rnd):{L}  
+    throws (IllegalArgumentException){
+        this.value = new BigInteger (numBits, rnd);
+    }
+    */
+    public !p DABigInteger(?p String val)
+    throws !p NumberFormatException 
+    {
+		this.value = new BigInteger(val);
+	}
+    /*
+    public DABigInteger(String {L}  val, int {L} radix):{L}  
+    throws (NumberFormatException){
+		this.value = new BigInteger(val, radix);
+	}
+    */
+    
+    // How to for arbitrary policies?
+    
+    public ?q static <policy q> DABigInteger<q> ZERO() {
+        try {
+            return new DABigInteger<q>(BigInteger.ZERO);
+        } catch (IllegalArgumentException impossible) {}
+        return null;
+    }
+    // current solution -see constructor higher in scope
+
+
+    
+    /*
+    public static DABigInteger[{val}] valueOf(long val) {
+        BigInteger{val} v = BigInteger.valueOf(val);
+        try {
+            return new DABigInteger[{val}](v);
+        } catch (IllegalArgumentException impossible) {}
+        return null;
+    }
+    */
+    
+    public ?p int compareTo (?p mp.DABigInteger<p> that)
+    throws !p IllegalArgumentException{     
+        if (that == null)
+            throw new IllegalArgumentException("that is null");
+        
+        if (value != null)
+            return this.value.compareTo(that.value);
+        return 0;  // impossible
+    }
+    
+    
+    
+    
+    public ?p DABigInteger<p>  add(?p DABigInteger<p> that)
+    throws !p IllegalArgumentException{
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.add(thatvalue);
+        
+        return new mp.DABigInteger<p>(res);
+    }
+    
+    public ?p DABigInteger<p>  multiply(?p DABigInteger<p> that)
+    throws !p IllegalArgumentException{
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.multiply(thatvalue);
+        
+        return new mp.DABigInteger<p>(res);
+    }
+    public ?p DABigInteger<p>  subtract(?p DABigInteger<p> that)
+    throws !p IllegalArgumentException{
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.subtract(thatvalue);
+        
+        return new mp.DABigInteger<p>(res);
+    }
+    public ?p DABigInteger<p>  mod(?p DABigInteger<p> that)
+    throws !p IllegalArgumentException,
+    !p ArithmeticException {
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.mod(thatvalue);
+        
+        return new mp.DABigInteger<p>(res);
+    }
+    
+    public ?p DABigInteger<p>  modInverse(?p DABigInteger<p> that)
+    throws !p IllegalArgumentException,
+    !p ArithmeticException {
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.modInverse(thatvalue);
+        
+        return new mp.DABigInteger<p>(res);
+    }
+    
+    
+    /*
+    public DABigInteger[L]{L;that} divide{L}(DABigInteger[L]{L} that):{L;that}
+    throws (IllegalArgumentException, ArithmeticException){
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.divide(thatvalue);
+        return new DABigInteger[L](res);        
+    }
+    
+    public DABigInteger[L]{L;that} mod{L}(DABigInteger[L]{L} that):{L;that}
+    throws (IllegalArgumentException, ArithmeticException){
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.mod(thatvalue);
+        return new DABigInteger[L](res);
+    }
+    
+    public DABigInteger[L]{L;that} modInverse{L}(DABigInteger[L]{L} that):{L;that}
+    throws (IllegalArgumentException, ArithmeticException){
+        if (that == null) throw new IllegalArgumentException();
+        BigInteger thisvalue = this.value;
+        BigInteger thatvalue = that.value;
+        BigInteger res = null;
+        if (thisvalue != null && thatvalue != null)
+            res  = thisvalue.modInverse(thatvalue);
+        return new DABigInteger[L](res);
+    }
+    
+    */
+    
+    public !p static <policy p> DABigInteger<p> 
+    probablePrime(?p int bitLength, ?p Random<p> rnd)
+    throws !p ArithmeticException {
+        try {
+         return new DABigInteger<p>(BigInteger.<p>probablePrime(bitLength, rnd));
+        } catch (IllegalArgumentException notprobable) { // :)
+        }
+        return null;
+    }
+
+    
+    
+    
+    public ?p String toString() {
+        ?p BigInteger v = this.value;
+        if (v == null) return "";
+        return v.toString();
+    }
+    /*
+    public ?p int hashCode() {
+        BigInteger v = this.value;
+        if (v == null) return -1;
+        return v.hashCode();
+    }
+    */
+    /*
+    public boolean{L; obj} equals(IDComparable [L] obj) {
+        return true;
+    }
+    */
+    public ?p int bitLength() {
+        BigInteger v = this.value;
+        if (v == null) return -1;
+        return v.bitLength();
+    }
+    
+}
+
+

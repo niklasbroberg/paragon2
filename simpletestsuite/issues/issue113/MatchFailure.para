@@ -1,0 +1,5 @@
+public class MatchFailure {
+    // Pattern match failure in do expression at src/Language/Java/Paragon/TypeCheck.hs:735:3-38
+    public Object act;
+    public static Object staticAct;
+}

@@ -1,0 +1,24 @@
+package javax.mail;
+
+public native interface Part<policy p> {
+  
+  public !p void setHeader(?p String header_name,
+                           ?p String header_value)
+  throws !p ?p javax.mail.MessagingException,
+         !p ?p javax.mail.IllegalWriteException,
+         !p ?p java.lang.IllegalStateException;
+
+  public !p void setText(?p String text)
+  throws !p ?p javax.mail.MessagingException,
+         !p ?p javax.mail.IllegalWriteException,
+         !p ?p java.lang.IllegalStateException;
+
+  public ?p Object getContent()
+                  throws ?p !p java.io.IOException,
+                         ?p !p MessagingException;
+
+  public ?p String[]<p> getHeader(?p String header_name)
+                   throws ?p !p MessagingException;
+
+
+}

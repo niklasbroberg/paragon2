@@ -1,0 +1,12 @@
+The Makefile and patches automatically set up the JPMail demo from 2006.
+Has been tested under openjdk 1.6 and 1.7
+
+First:
+  Set the environment variable JAVA_HOME to the root of your jdk install
+  Eg:
+    export JAVA_HOME=/usr/lib/jvm/java-6-openjdk-i386
+
+Run:
+  make download - to download jif 2.0.1 and jpmail (latest/last)
+  make          - to patch and build jpmail
+  make clean    - to remove the extracted and compiled jif and jpmail

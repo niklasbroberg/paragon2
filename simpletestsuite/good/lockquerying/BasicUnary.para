@@ -1,0 +1,22 @@
+public class BasicUnary {
+    
+    public static final Object a = new Object();
+    
+    public static final ?{Object x:} lock myLock(Object);
+
+    public static final policy p = {Object x : myLock(a)};
+    
+    public static final policy bot = {Object x : };
+    
+    public static void foo() {
+    
+        ?p int pData = 42;
+        ?bot int botData = 0;
+        
+        if (myLock(a)) {
+            botData = pData;
+        }
+    
+    }
+
+}

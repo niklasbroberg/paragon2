@@ -1,0 +1,6 @@
+public class BasicArray
+{
+  public int[] myArray;
+  public !{java.lang.Object x:} void foo()
+  ;
+}

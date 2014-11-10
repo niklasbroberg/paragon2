@@ -1,0 +1,40 @@
+public class MemberPolicyLeak {
+    
+    public static ?pub int globalLeak = 0;
+    
+    public ?pub int dataInSecObj;
+    
+    public static final policy pub = {Object x:};
+    public static final policy sec = { : };
+    
+    public MemberPolicyLeak(?pub int data) {
+        this.dataInSecObj = data;
+    }
+    
+    public !pub void doLeak() {
+        globalLeak = dataInSecObj;
+    }
+    
+    public !pub int getDataInSecObj() {
+        return dataInSecObj;
+    }   
+    
+    public static !pub ?pub boolean leakit(?sec boolean secretBool) {
+        ?sec MemberPolicyLeak leakerA = new MemberPolicyLeak(1);
+        ?sec MemberPolicyLeak leakerB = new MemberPolicyLeak(2);
+        ?sec MemberPolicyLeak leaker = leakerB;
+        if (secretBool)
+            leaker = leakerA;
+        
+        // Not allowed, data protected by leakers policy.
+        // ?pub int leakedData = leaker.getDataInSecObj();
+
+        leaker.doLeak();
+
+        // Data from secret object written to global public variable.
+        ?pub int leakedData = globalLeak;
+        // Profit:
+        return leakedData == 1;
+    }
+
+}

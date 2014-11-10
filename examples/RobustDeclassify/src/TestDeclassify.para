@@ -1,0 +1,70 @@
+/**
+ * Class testing the robus declassification mechanism.
+ **/
+public class TestDeclassify {
+
+    // Policy shorthands:
+    static final policy trusted   = RobustDeclassify.trusted;
+    static final policy untrusted = RobustDeclassify.untrusted;
+    static final policy low       = RobustDeclassify.low;
+    static final policy high      = RobustDeclassify.high;
+
+    // Note that "(p + untrusted) == p" for any policy p
+    
+    // Declassifying untrusted data in a trusted context
+    !trusted public void dec_A() {
+    
+        ?low  Object lowUntrData;
+        ?high Object highUntrData;
+    
+        lowUntrData = RobustDeclassify.<Object,untrusted>declassify(highUntrData);
+    
+    }
+
+    // Declassifying trusted data in a trusted context
+    !trusted public void dec_B() {
+
+        ?(low  + trusted) Object lowTrData;
+        ?(high + trusted) Object highTrData;
+
+        lowTrData = RobustDeclassify.<Object,trusted>declassify(highTrData);
+
+    }
+
+    // Trying to declassify in an untrusted context fails
+    !trusted public void dec_C() {
+
+        ?low  Object lowData;
+        ?high Object highData;
+
+        ?(low + untrusted) Object untrData;
+
+        if (untrData == null) { // Entering untrusted context
+            // lowData = RobustDeclassify.<Object,untrusted>declassify(highData);
+        }
+
+    }
+
+    // Similar if a method is called in an untrusted context
+    public void dec_D() {
+
+        ?low  Object lowData;
+        ?high Object highData;
+
+        // lowData = RobustDeclassify.<Object,untrusted>declassify(highData);
+
+    }
+
+    // Declassify mechanism cannot be used to make untrusted data trusted:
+    !trusted public void dec_E() {
+
+        ?(low + trusted)    Object lowTrData;
+        ?(high + untrusted) Object highUntrData;
+
+        // lowTrData = RobustDeclassify.<Object, untrusted>declassify(highUntrData);
+
+        // lowTrData = RobustDeclassify.<Object, trusted>declassify(highUntrData);
+        
+    }
+
+}

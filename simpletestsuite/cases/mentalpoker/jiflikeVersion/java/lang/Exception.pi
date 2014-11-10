@@ -1,0 +1,11 @@
+package java.lang;
+
+public class Exception {
+
+  public Exception() {}
+  
+  public Exception(?policyof(this) String s) {}
+
+  public ?policyof(this) String toString() { }
+
+}

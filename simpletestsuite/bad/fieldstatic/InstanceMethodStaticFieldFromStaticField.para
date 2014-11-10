@@ -1,0 +1,9 @@
+public class InstanceMethodStaticFieldFromStaticField {
+  private static int x = inst().y;
+
+  public static int y = 1;
+
+  private InstanceMethodStaticFieldFromStaticField inst() {
+    return new InstanceMethodStaticFieldFromStaticField();
+  }
+}

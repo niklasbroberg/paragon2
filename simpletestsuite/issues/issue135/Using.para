@@ -1,0 +1,9 @@
+public class Using {
+
+  public void foo(Defining d) {
+    if (d != null) {
+      ?d.p int x;
+    }
+  }
+  
+}

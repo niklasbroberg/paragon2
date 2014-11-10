@@ -1,0 +1,7 @@
+package java.util;
+
+public native class Properties<policy pK, policy pV> extends java.util.HashTable<Object,Object,pK,pV> {
+
+  public Properties() { }
+
+}

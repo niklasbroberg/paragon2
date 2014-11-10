@@ -1,0 +1,4 @@
+public class ClassActorRedeclaration {
+  public static final Object act = new Object();
+  public static final Object act = new Object();
+}

@@ -1,0 +1,27 @@
+package se.chalmers.parajpmail.cryptmessage;
+
+import se.chalmers.parajpmail.jpmailpol.GlobalPol;
+import se.chalmers.parajpmail.jpmailpol.JPMailPolicy;
+import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+
+
+/**
+* Actually would prefer to have this in GlobalPol or similar, but
+* circular dependencies in Java are not handled right now by Paragon.
+**/
+public class ASymPol {
+
+  /**
+  * Short-hand for all policies for declassification based on a-symmetric crypto
+  **/
+  public static final policy allASymPol = 
+    RSAEncryption.encPol * { SimpleUnixRuntime.currentUser : 
+                           ; GlobalPol.network : JPMailPolicy.AllowsRSAEncryption('x), GlobalPol.Receiver('x)
+                           }
+  + ECCEncryption.encPol * { SimpleUnixRuntime.currentUser : 
+                           ; GlobalPol.network : JPMailPolicy.AllowsECCEncryption('x), GlobalPol.Receiver('x)
+                           }
+  // + FilterMessage.filtPol
+  ;
+
+}

@@ -1,0 +1,14 @@
+public class ArrayPolOf {
+
+  public void moo(byte[]<policyof(data)> data)
+  {
+  }
+  
+  public void foo() {
+    ?{:} byte[]<{:}> bb = new byte[20]<{:}>;
+    
+    moo(bb);
+    
+  }
+
+}

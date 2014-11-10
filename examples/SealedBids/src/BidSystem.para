@@ -1,0 +1,156 @@
+/**
+ * The bidding system simulates an auction. It requests the bids from all the
+ * participants, determines who made the highest offer and send the spoils to
+ * the winner. Those who have bid are allowed to see the value of the highest
+ * offer.
+ * We use Paragon's policy language to ensure that the implementation adheres
+ * to this behavior.
+ **/
+public class BidSystem {
+
+    /**
+     * Array representing all the bidders involved.
+     **/
+    Bidder[] bidders;
+    
+    /**
+     * Information that is considered to be public can be labeled with this
+     * policy. We mainly use it for saying that the side-effects of methods are
+     * public, i.e. if the auction is closed, if people placed a bid, etc.
+     **/
+    public static final policy bottom = {'x:};
+    
+    /**
+     * Policy for information that can flow to any bidder that has placed a bid
+     * after the auction is over; used for the winning bid.
+     **/
+    private static final policy allBidders = 
+        { 'x : BidLocks.AuctionClosed, BidLocks.HasBid('x) };
+
+    /**
+     * Constructor, runs the auction.
+     * Everyone is allowed to know the number of participants, hence the
+     * argument to the constructor has policy "bottom". We collect the bids,
+     * determine the winner and, if there is any, we inform all the bidders
+     * of the winning bid and send the spoils to the winner.
+     **/
+    !bottom BidSystem(?bottom int nbidders) {
+        generateBidders(nbidders);
+        collectBids();
+        Bidder winner = determineWinner();
+        if (winner != null) {
+            open BidLocks.Winner(winner.id);
+            reportResult(winner.bid);
+            sendSpoils(winner);
+        }
+    }
+
+    /**
+     * Sends the spoils to the winner of the auction.
+     * We here use a runtime query; in the upcoming type system for Paragon
+     * where objects double as actors it can be made a static guarantee that
+     * the method is only called for the appropriate bidder.
+     **/
+    void sendSpoils(?allBidders notnull Bidder winner) {
+        if (BidLocks.Winner(winner.id)) {
+            winner.chan.put(
+                  "                               o==)_L                  \n"
+                + "                                 ',====_               \n"
+                + "      _-~_                         L L  L_____         \n"
+                + " L _-~_-~_),-._____..______         L L  `L  ||        \n"
+                + "  ~_-~_-~L_|_______||______|         L L   `L||        \n"
+                + "  (_-~L,-'_--~~~~___~~~L    L        |  |    `L_       \n"
+                + "  ())=/ /~      (_~_)   | _ /        / /        `-_    \n"
+                + "     / (           __  / ==/        / /            L   \n"
+                + "    (___L_________===_/___/________/_/___==O=====O==O  \n"
+                + "   _//|  ( () )/ |~`-----------------'  |  ( ()')  |   \n"
+                + "  '-'  L_ `--' _/                        L_ `--' _/    \n"
+                + "         `----'        The Spoils          `----'        ");
+        }
+    }
+
+    /**
+     * Creates and fills the array with the required number of bidders.
+     **/
+    !bottom void generateBidders(?bottom int nbidders) {
+        bidders = new Bidder[nbidders];
+        for (int id = 0; id < nbidders; id++)
+            bidders[id] = new Bidder(id);
+    }
+
+    /**
+     * Collect the bids from the bidders, if a no bidding exception is thrown
+     * we simply ignore it.
+     **/
+    !bottom void collectBids() {
+        for (int i = 0; i < bidders.length; i++) {
+            Bidder b = bidders[i];
+            try {
+                b.getBid();
+            } catch (NoBidExc e) {
+
+            }
+        }
+    }
+
+    /**
+     * Determine the winner of the auction. This closes the auction, as
+     * indicated in the method signature.
+     * The null-pointer analysis makes the code differ a bit from how it is
+     * presented in the paper on Paragon.
+     *
+     * @return The bidder with the highest offer, or null if no offer was made
+     *         by any bidder.
+     **/
+    +BidLocks.AuctionClosed 
+    ?allBidders Bidder determineWinner() {
+        Bidder winner = null;
+        open BidLocks.DetermineWinner {
+            for (int i = 0; i < bidders.length; i++) {
+                Bidder b = bidders[i];
+                if (b != null) {
+                    if (BidLocks.HasBid(b.id)) {
+                        if (winner == null) {
+                            winner = b;
+                        } else {
+                            boolean res = b.bid > winner.bid;
+                            if (res) {
+                                winner = b;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        open BidLocks.AuctionClosed;
+        return winner;
+    }
+    
+    /**
+     * Let everyone who participated know what was the highest bid. Note that
+     * if we forget to query if the participant has bid or not, the type system
+     * will yield an error. Similarly if we remove the constraint that the
+     * auction has to be closed before calling this method.
+     **/
+    ~BidLocks.AuctionClosed
+    !allBidders void reportResult(?allBidders int winBid) {
+        for (int i = 0; i < bidders.length; i++) {
+            Bidder b = bidders[i];
+            if (b != null) {
+                if (BidLocks.HasBid(b.id)) {
+                    b.chan.put(winBid);
+                }
+            }
+        }
+    }
+
+    /**
+     * Simple main method for running the demo (cannot be done in the web-based
+     * version).
+     **/
+    public static !bottom void main(String[] arg) {
+        new BidSystem(3);
+    }
+
+}
+

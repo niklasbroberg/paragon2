@@ -1,0 +1,11 @@
+--- src/se/chalmers/parajpmail/ReadMail.java.old	2013-02-06 17:32:41.282561650 +0100
++++ src/se/chalmers/parajpmail/ReadMail.java	2013-02-06 17:33:12.390561539 +0100
+@@ -36,7 +36,7 @@
+ import se.chalmers.parajpmail.runtime.JPMailUserID;
+ import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+ import se.chalmers.parajpmail.runtime.UnixFile;
+-public class ReadMail extends javax.swing.event.ListSelectionListener
++public class ReadMail implements javax.swing.event.ListSelectionListener
+ {
+   public static final se.chalmers.paragon.Policy toMe = se.chalmers.paragon.Policy.newPolicy("toMe", se.chalmers.paragon.Policy.newPClause(se.chalmers.parajpmail.runtime.SimpleUnixRuntime.currentUser));
+   private static java.lang.String decrypt(se.chalmers.parajpmail.CryptedMail mail, se.chalmers.parajpmail.UserSettings userSettings) throws se.chalmers.parajpmail.ParaJPMailException

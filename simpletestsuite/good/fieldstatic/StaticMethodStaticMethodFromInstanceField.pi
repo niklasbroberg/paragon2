@@ -1,0 +1,8 @@
+public class StaticMethodStaticMethodFromInstanceField
+{
+  private int x = stat1().stat2();
+  private static StaticMethodStaticMethodFromInstanceField stat1()
+  ;
+  public static int stat2()
+  ;
+}

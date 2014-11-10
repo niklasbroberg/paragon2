@@ -1,0 +1,247 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ */
+package mp;
+
+import java.io.*;
+import java.security.*;
+
+public class Communicator {
+    
+    !Channel.channelP 
+    -GameState.GameRunning
+    public static void play(?Channel.channelP String playerName) {
+
+        try {
+            Debug.println("Begin method play, for player " + playerName);
+            Debug.setPlayerName(playerName);
+            PrintStream<Channel.channelP> out = Channel.out;
+            InputStream<Channel.channelP> in = Channel.in;
+   
+            out.println("Playing mental poker...");
+   
+            SerializeWriteHelper<Channel.channelP> writer = 
+                new SerializeWriteHelper<Channel.channelP>(out);
+            
+            InputStreamReader<Channel.channelP> sr = 
+                new InputStreamReader<Channel.channelP>(in);
+            BufferedReader<Channel.channelP> br = 
+                new BufferedReader<Channel.channelP>(sr);
+            SerializeReadHelper<Channel.channelP> reader = 
+                new SerializeReadHelper<Channel.channelP>(br);
+
+            // Game starts here !
+            
+            DNCChain<Channel.channelP> chain = 
+                new DNCChain<Channel.channelP>(writer);
+
+            Player player = new Player(chain, playerName);
+
+            out.println("Initializing " + playerName);
+           
+
+            try {
+                Debug.println("Calling GameState.startGame()");
+                
+                GameState.startGame();
+                Debug.println("Calling player.initProtocol()");
+                player.initProtocol();                 
+                Debug.println("Finished initProtocol.");
+                out.println("wrote " + chain.size() + " links");
+                out.flush();     
+
+                for (int i = 0; i < 5; i++){
+                    DNCLink<Channel.channelP> link = reader.readDNCLink();
+                    chain.appendLink(link);
+                    out.println("read " +  Integer.toString(i+1) + " links");
+                    out.flush();                    
+                }            
+                out.println("total " + chain.size() + " links");         
+                out.flush();
+            
+                // dealing 6 cards
+                
+                for (int  i = 1; i <= 6 ; i++) {				
+                    if (i % 2 == 0) {
+                        if (playerName.compareTo("Alice") == 0) { // we're Alice
+                            out.println("Alice trying to obtain card # " +
+                                Integer.toString(i));                             
+
+                            player.drawCard(i);   // produces 1 link                                                     
+                            out.println("drawCard OK"); // 2
+                            out.flush();
+                            
+                            player.processSelfCardDraw(); // produces 1 link
+                            out.println("processSelfCardDraw OK"); // 3
+                            out.flush();
+                            
+                            DNCLink<Channel.channelP> link = 
+                                reader.readDNCLink();
+                            chain.appendLink(link);
+                            out.println("got processCardDraw0 link");
+                            out.flush();
+                            
+                            player.finishCardDraw();
+                            out.println("finishCardDraw OK");                                                    
+                            out.println("Card obtained");
+                            out.flush();
+
+                        } else {  // we are bob
+                            // drawCard
+
+                            DNCLink<Channel.channelP> link = 
+                                reader.readDNCLink();
+                            chain.appendLink(link);
+                            out.println("got drawCard link");
+                            out.flush();
+                            
+                            // processSelfCardDraw
+                            link = reader.readDNCLink();
+                            chain.appendLink(link);
+                            out.println("got processSelfCardDraw link");
+                            out.flush();
+                            
+                            player.processCardDrawO();
+                            out.println("processCardDraw0 OK");
+                            out.flush();
+
+                        }
+                    } else {
+                        if (playerName.compareTo("Bob") == 0) {
+
+                            out.println("Bob trying to obtain card # "
+                                + Integer.toString(i));                             
+                            out.flush();
+                            
+                            player.drawCard(i);
+                            out.println("drawCard OK");
+                            out.flush();
+                            
+                            DNCLink<Channel.channelP> link = 
+                                reader.readDNCLink();
+                            chain.appendLink(link);
+                            out.println("got processCardDraw link");
+                            out.flush();
+                            
+                            player.processSelfCardDraw();
+                            out.println("processSelfCardDraw OK");
+                            out.flush();
+                            
+                            player.finishCardDraw();
+                            out.println("Card obtained");
+                            out.flush();
+
+                     
+                        } else { // we are Alice 
+
+                            DNCLink<Channel.channelP> link = 
+                                reader.readDNCLink();
+                            chain.appendLink(link);
+                            out.println("got drawCard link");
+                            out.flush();
+                            
+                            player.processCardDraw();
+                            out.println("processCardDraw OK");
+                            out.flush();
+                            
+                            // processSelfCardDraw
+                            link = reader.readDNCLink();
+                            chain.appendLink(link);
+                            out.println("got processSelfCardDraw link");
+                            out.flush();
+
+                        }                
+                    }
+                }
+
+                GameState.endGame();
+
+                out.println("Revealing encryption key");
+                writer.writeBigIntVector(player.revealPrivateKey());
+                
+                out.println("Revealing permutation");
+                writer.writeByteArray(player.revealPermutation());
+                
+                
+                out.println("Revealing permutation matrix");
+                PermutationMatrix <Channel.channelP> theMatrix = player.revealMatrix();
+                writer.writeMatrix(theMatrix);
+                
+                
+                out.println("Reading other encryption key");
+              
+                BigIntVector<Channel.channelP> oKey = reader.readBigIntVector();
+                
+                out.println("Reading other permutation");
+                byte[]<Channel.channelP> oPerm = reader.readByteArray();
+
+                out.println("Reading other permutation matrix");
+                PermutationMatrix<Channel.channelP> oMatrix = reader.readMatrix();
+                
+                out.println("validation");
+                
+                
+                // printing the chain for debugging
+
+                for (int i = 0; i < chain.size(); i++) {
+                    DNCLink<Channel.channelP> link = chain.getLink(i);
+                    DataField<Channel.channelP> data = link.getData();
+                    
+                    String str = data.getPlayerName();
+                    str += " " + data.getInfo() + " ";
+                    if (data.getAttrib() == null)
+                       str += "null";
+                    else
+                       str += "value";
+                    
+                    if (data.getInfo().compareTo("z_i") == 0) {
+                        str += " " + data.getAttrib().toString();
+                    }
+                    
+                    out.println(str);
+                }  
+ 
+                boolean vv = player.validate(oKey, oPerm, oMatrix);
+                out.println("validation result");
+                out.println(vv);
+                
+                
+            } catch (?Channel.channelP MPException ignored) { 
+                Debug.println("MPExc: " + ignored.getMessage());
+                Debug.printException(ignored);
+            } catch (IOException ignored) {            
+                Debug.println("IOExc: " + ignored.getMessage());
+                Debug.printException(ignored);
+            } catch (IndexOutOfBoundsException ignored) {            
+                Debug.println("IndOutOfBouExc: " + ignored.getMessage());
+                Debug.printException(ignored);
+            } catch (Exception e) { // ISSUE 93
+                out.println("Exception: " + e.getMessage());
+                Debug.printException(e);
+                out.flush();
+            }
+
+            
+            int[]<Channel.channelP> h1 = player.showCards();
+            
+            out.print("  Cards obtained: [");
+            int j = 0;
+            while (h1[j] != -1) {
+                out.print(h1[j]);
+                out.print(" ");
+                j ++;
+            }
+            out.println(" ]");
+        } catch (IllegalArgumentException ignored) {            
+        } catch (NoSuchAlgorithmException ignored) {            
+        } catch (MPException ignored) {            
+        } catch (SecurityException ignored) {            
+        } catch (Exception ignored) { // ISSUE 93
+        }     
+
+    }
+    
+    
+}
+
+

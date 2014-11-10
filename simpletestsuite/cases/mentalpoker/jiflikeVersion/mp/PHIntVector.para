@@ -1,0 +1,91 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import java.util.ArrayList;
+
+/**
+ * Cards are represented as a vector of PHInteger
+ */
+public class PHIntVector<policy p>
+extends java.util.ArrayList<p>
+implements DataFieldAttribute<p> {
+
+	public PHIntVector() {
+		super();
+	}
+
+	public !p ?p String toString() {
+        try {
+            int n = this.size();
+            String s = "{";
+            for (int i = 0; i < n; i++ ){
+                ?p PHInteger<p> ph_i = this.getPHI(i);
+                s+=ph_i.toString();
+                if (i < n- 1) 
+                    s+= ",";
+            }
+            s += "}";
+            return s;
+        } catch (NullPointerException ignored) {
+        } catch (IndexOutOfBoundsException ignored ) {
+        }
+        return "";
+	}
+	
+//	/* (non-Javadoc)
+//	 * @see poker.DataFieldAttribute#toByteArray()
+//	 */
+//     public byte{L}[]{L} toByteArray{L}() {
+//		// TODO this implementation is not optimized
+//		// should be better to avoid redundant array copying
+//        try {
+//            int size = this.byteLength();
+//            int n = this.size();
+//            byte [] retval = new byte[size];
+//            int i = 0;
+//            for (int j = 0; j < n; j++ ) {
+//                byte[] ph_j = ((PHInteger<p>) this.get(j)).toByteArray();
+//                System.arraycopy(ph_j, 0, retval, i, ph_j.length);
+//                i += ph_j.length;
+//            }
+//            return retval;
+//        } catch (NullPointerException ignored) {
+//        } catch (IndexOutOfBoundsException ignored) {
+//        } catch (ClassCastException ignored) {
+//        } catch (ArrayStoreException ignored){
+//        }
+//        return null;
+//	}
+
+//	/* (non-Javadoc)
+//	 * @see poker.DataFieldAttribute#byteLength()
+//	 */
+//    public int{L} byteLength() {
+//        try {
+//            int size = 0;
+//            int n = this.size();
+//            for (int j = 0; j < n; j++) {
+//                PHInteger<p> v_j = this.getPHI(j);
+//                size += v_j.byteLength();
+//            }
+//            return size;
+//        } catch (NullPointerException ignored) {
+//        } catch (IndexOutOfBoundsException ignored) {
+//        }
+//        return 0;
+//	}
+//	
+	public !p ?p PHInteger<p> getPHI (?p int i) 
+    throws !p IndexOutOfBoundsException {
+        try {
+            return (PHInteger<p>) this.get(i);
+        } catch (ClassCastException ignored) {
+        //} catch (NullPointerException ignored) {
+        }
+        return null;
+	}
+}
+

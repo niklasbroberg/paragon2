@@ -1,0 +1,212 @@
+import mp.*;
+
+class Test {
+
+    ?{:} boolean test(?{:} BigIntVector<{:}> oKey) throws !{:} MPException {
+        PHCrypto<{:}> oph = null;
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        try {
+	    oph = new PHCrypto<{:}>(0,
+                (DABigInteger<{:}>)oKey.get(0),
+                (DABigInteger<{:}>)oKey.get(1),
+                (DABigInteger<{:}>)oKey.get(2), 
+                (DABigInteger<{:}>)oKey.get(3));
+	    oph.decryptCardVector(null);
+        } catch (IllegalArgumentException ignored) {
+	                return false;
+        }
+        
+        // try {
+        //     // actually the value of nlength parameter here
+        //     // is not important since we are not going to encrypt anything            
+	//     oph = new PHCrypto<{:}>(0,
+        //         (DABigInteger<{:}>)oKey.get(0),
+        //         (DABigInteger<{:}>)oKey.get(1),
+        //         (DABigInteger<{:}>)oKey.get(2), 
+        //         (DABigInteger<{:}>)oKey.get(3));
+            
+        // } catch (IndexOutOfBoundsException ignored) {
+	//                return false;
+        // } catch (ClassCastException ignored){
+	//                 return false;
+        // } catch (IllegalArgumentException ignored) {
+	//                 return false;
+        // }
+	// oph.decryptCardVector(null);
+        
+        // try {
+        //     // actually the value of nlength parameter here
+        //     // is not important since we are not going to encrypt anything            
+	//     oph = new PHCrypto<{:}>(0,
+        //         (DABigInteger<{:}>)oKey.get(0),
+        //         (DABigInteger<{:}>)oKey.get(1),
+        //         (DABigInteger<{:}>)oKey.get(2), 
+        //         (DABigInteger<{:}>)oKey.get(3));
+            
+        // } catch (IndexOutOfBoundsException ignored) {
+	//                return false;
+        // } catch (ClassCastException ignored){
+	//                 return false;
+        // } catch (IllegalArgumentException ignored) {
+	//                 return false;
+        // }
+	// oph.decryptCardVector(null);
+        
+        // try {
+        //     // actually the value of nlength parameter here
+        //     // is not important since we are not going to encrypt anything            
+	//     oph = new PHCrypto<{:}>(0,
+        //         (DABigInteger<{:}>)oKey.get(0),
+        //         (DABigInteger<{:}>)oKey.get(1),
+        //         (DABigInteger<{:}>)oKey.get(2), 
+        //         (DABigInteger<{:}>)oKey.get(3));
+            
+        // } catch (IndexOutOfBoundsException ignored) {
+	//                return false;
+        // } catch (ClassCastException ignored){
+	//                 return false;
+        // } catch (IllegalArgumentException ignored) {
+	//                 return false;
+        // }
+	// oph.decryptCardVector(null);
+        
+        // try {
+        //     // actually the value of nlength parameter here
+        //     // is not important since we are not going to encrypt anything            
+	//     oph = new PHCrypto<{:}>(0,
+        //         (DABigInteger<{:}>)oKey.get(0),
+        //         (DABigInteger<{:}>)oKey.get(1),
+        //         (DABigInteger<{:}>)oKey.get(2), 
+        //         (DABigInteger<{:}>)oKey.get(3));
+            
+        // } catch (IndexOutOfBoundsException ignored) {
+	//                return false;
+        // } catch (ClassCastException ignored){
+	//                 return false;
+        // } catch (IllegalArgumentException ignored) {
+	//                 return false;
+        // }
+	// oph.decryptCardVector(null);
+        
+    }
+  
+}

@@ -1,0 +1,8 @@
+package se.chalmers.parajpmail;
+
+
+public class JPPermissionException extends Exception {
+
+  public JPPermissionException(?policyof(this) String msg){}
+
+}

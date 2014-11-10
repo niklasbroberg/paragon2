@@ -1,0 +1,7 @@
+public class ReturnLabeledWithReturn {
+  public int f() {
+    boolean b = true;
+stmt: return 1;
+  }
+}
+

@@ -1,0 +1,119 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ * Adapted in paragon
+ */
+package mp;
+
+import mp.*;
+ 
+public class Digest<policy p>
+implements DataFieldAttribute<p> 
+{
+  public ?p int getType() {
+    return DataFieldAttribute.Digest;
+  }
+
+	private final ?p byte[]<p> digest;
+	
+	public Digest(?p byte[]<p> dg) 
+	{
+		this.digest = dg;
+	}
+	
+	/* (non-Javadoc)
+	 * @see poker.DataFieldAttribute#toByteArray()
+	 */
+     public ?p byte[]<p> toByteArray() 
+     {
+		return this.digest;
+	}
+
+	/* (non-Javadoc)
+	 * @see poker.DataFieldAttribute#byteLength()
+	 */
+     public ?p int byteLength() {
+        if (digest != null) return digest.length;
+        else return 0;
+	}
+
+    
+    public ?p int hashCode() {
+        int hashCode = 1;
+        int i = 0;
+        byte []<p> digest = this.digest;
+        if (digest == null) return 0;
+        while (i < digest.length) {
+            try {
+                hashCode = 31*hashCode + digest[i];
+            }
+            catch (IndexOutOfBoundsException e) {}
+        }
+        return hashCode;
+    }
+    
+    public ?p String toString() {
+       String s = "[";
+       int i = 0;
+       byte []<p> digest = this.digest;
+       if (digest == null) return "";
+       while (i < digest.length) {
+           s += Integer.toString(i);
+           if ( i < (digest.length - 1))
+               s+= ",";
+       }
+       s += "]";
+       return s;
+    }
+    
+    
+
+    
+    public ?(p * policyof(that)) boolean equals (?p Digest<p> that) {
+        try {
+            
+            byte[]<p> thisdigest = this.digest;
+            if (that != null) {
+            byte[]<p> thatdigest = that.digest;
+            if (thisdigest != null) 
+              if (thatdigest != null) {
+            
+            
+            if (thisdigest.length != thatdigest.length)
+                return false;
+            
+            int t = thisdigest.length;
+            for (int i = 0; i < t; i++)
+                if (thisdigest[i] != thatdigest[i])
+                    return false;
+            }}
+            return false;
+        } catch (ClassCastException impossible) {
+        } catch (ArrayIndexOutOfBoundsException impossible){
+        }
+        return true;
+    }
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

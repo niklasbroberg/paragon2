@@ -1,0 +1,57 @@
+Easiest when working with openssl is to make a default 'demoCA':
+
+Using openssl.cnf to cooperate with keystore (utf8 vs printablestring)
+
+Creating a CA:
+
+  Install:
+    sudo apt-get install openssl
+  Make directories
+    mkdir demoCA
+    mkdir demoCA/private
+    mkdir demoCA/newcerts
+  Create Private Key:
+    openssl genrsa -des3 -out demoCA/private/cakey.pem 4096
+    (enter pass phrase: paralox)
+  Create Public Key:
+    openssl req -config openssl.cnf -new -x509 -days 365 -key demoCA/private/cakey.pem > demoCA/cacert.pem
+  Empty index file:
+    touch demoCA/index.txt
+  Initial serial number:
+    echo "00" > demoCA/serial
+    
+   
+Creating keystore / keypair for users:
+
+  Make dir for user
+    mkdir bart
+  Create a new keystore (alias = jpmailprincipal name), use same pwd for key
+    keytool -genkey -keyalg RSA -keystore bart/bart.keystore \
+    -storepass apples -alias bart \
+    -dname "CN=Bart van Delft, OU=CSE, O=Chalmers, L=Goteborg, ST=VG, C=SE"        
+  Add the CA certificate
+    keytool -import -keystore bart/bart.keystore -storepass apples \
+    -alias paragonCACert -file demoCA/cacert.pem 
+  Create Public Key 
+    keytool -certreq -keystore bart/bart.keystore -storepass apples \
+    -alias bart -file bart/CSR.pem
+  Sign Public Key (note: using pkix as string_mask)
+    openssl ca -config openssl.cnf -in bart/CSR.pem -out bart/cert.pem 
+  And convert to DER for reasons unknown:
+    openssl x509 -outform der -in bart/cert.pem -out bart/cert.der
+   
+// Example Niklas:
+ keytool -genkey -keyalg RSA -keystore niklas/niklas.keystore \
+    -storepass bananas -alias niklas \
+    -dname "CN=Niklas Broberg, OU=CSE, O=Chalmers, L=Goteborg, ST=VG, C=SE"
+ keytool -import -keystore niklas/niklas.keystore -storepass bananas \
+    -alias paragonCACert -file demoCA/cacert.pem 
+ keytool -certreq -keystore niklas/niklas.keystore -storepass bananas \
+    -alias niklas -file niklas/CSR.pem
+ openssl ca -config openssl.cnf -in niklas/CSR.pem -out niklas/cert.pem 
+ openssl x509 -outform der -in niklas/cert.pem -out niklas/cert.der
+
+// mutual import
+ keytool -import -keystore bart/bart.keystore -storepass apples -alias niklas -file niklas/cert.der
+ keytool -import -keystore niklas/niklas.keystore -storepass bananas -alias bart -file bart/cert.der
+   

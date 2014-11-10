@@ -1,0 +1,11 @@
+package se.chalmers.parajpmail.runtime;
+
+public class UnixUserID {
+
+	public UnixUserID(?policyof(this) String id) 
+	throws !policyof(id) NullPointerException{
+	}
+
+	public ?policyof(this) String getId() ;
+	
+}

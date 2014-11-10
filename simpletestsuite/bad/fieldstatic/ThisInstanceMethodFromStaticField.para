@@ -1,0 +1,4 @@
+public class ThisInstanceMethodFromStaticField {
+  private static int stat = this.f();
+  private int f() { return 1; }
+}

@@ -1,0 +1,4 @@
+public class MethodParams {
+  public void f(Object o, int o) {
+  }
+}

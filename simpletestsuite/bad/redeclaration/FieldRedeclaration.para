@@ -1,0 +1,4 @@
+public class FieldRedeclaration {
+  private int x;
+  private int x;
+}

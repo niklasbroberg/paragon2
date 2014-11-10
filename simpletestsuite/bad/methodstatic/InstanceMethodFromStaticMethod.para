@@ -1,0 +1,7 @@
+public class InstanceMethodFromStaticMethod {
+  public void inst() { }
+
+  public static void stat() {
+    inst();
+  }
+}

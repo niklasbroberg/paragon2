@@ -1,0 +1,50 @@
+/*
+ * @(#)KeyPairGenerator.java	1.52 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+ 
+package java.security;
+
+//import java.security.spec.AlgorithmParameterSpec;
+
+
+public abstract class KeyPairGenerator /*extends KeyPairGeneratorSpi */{
+
+	private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    public native String {this} getAlgorithm();
+
+    public native static KeyPairGenerator{algorithm} getInstance(String algorithm)
+    throws (NoSuchAlgorithmException {algorithm}) ;
+
+/*    public native static KeyPairGenerator getInstance(String algorithm,
+					       String provider) 
+	throws (NoSuchAlgorithmException{algorithm}, NoSuchProviderException{provider});
+*/
+/*
+    public native static KeyPairGenerator getInstance(String algorithm,
+					       Provider provider) 
+	throws (NoSuchAlgorithmException{algorithm}) ;
+*/
+//    public native final Provider {this} getProvider() ;
+
+    public native void initialize(int keysize);
+
+    public native void initialize(int keysize, SecureRandom random) ;
+
+//    public native void initialize(AlgorithmParameterSpec params)
+//	throws InvalidAlgorithmParameterException {
+//	    initialize(params, new SecureRandom());
+//   }
+
+//    public void initialize(AlgorithmParameterSpec params,
+//			   SecureRandom random)
+//	throws InvalidAlgorithmParameterException ;
+  
+    public native final KeyPair{this} genKeyPair() ;
+
+    public native KeyPair{this} generateKeyPair() ;
+
+}

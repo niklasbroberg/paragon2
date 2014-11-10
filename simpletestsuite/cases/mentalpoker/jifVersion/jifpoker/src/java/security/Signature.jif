@@ -1,0 +1,122 @@
+/*
+ * @(#)Signature.java	1.91 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+  
+ /* Note that some of the methods are commented -> this is simply becaues they are not used
+ */  
+
+package java.security;
+
+//import java.security.spec.AlgorithmParameterSpec;
+import java.util.*;
+import java.io.*;
+//import java.security.cert.Certificate;
+//import java.security.cert.X509Certificate;
+
+public abstract class Signature /*extends SignatureSpi */{
+	private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+
+    public native static Signature{algorithm} getInstance(String algorithm) 
+    throws (NoSuchAlgorithmException{algorithm});
+
+//    public static native Signature{algorithm;provider} getInstance(String algorithm, String provider) 
+//	throws (NoSuchAlgorithmException{algorithm}, NoSuchProviderException{provider});
+
+    
+//    public static native Signature{algorithm;provider} getInstance(String algorithm, Provider provider) 
+//	throws (NoSuchAlgorithmException{algorithm})
+
+//    public final native Provider getProvider();
+
+    public final native void initVerify(PublicKey{this} publicKey) 
+	throws (InvalidKeyException {publicKey});
+
+  
+//  public final void initVerify(Certificate certificate)
+//	throws InvalidKeyException { }
+
+    public final native void initSign(PrivateKey{this} privateKey) 
+	throws (InvalidKeyException {privateKey});
+
+
+//    public final void native initSign(PrivateKey privateKey, SecureRandom random) 
+//	throws {InvalidKeyException(privateKey)} ;
+
+    public final native byte{this}[]{this} sign() 
+	throws (SignatureException{this} );
+
+    public final native int{this; outbuf; offset; len} sign(byte[] outbuf, int offset, int len)
+	throws (SignatureException {this; outbuf; offset; len} );
+
+    public final native boolean{this; signature} verify(byte[] signature) 
+		throws (SignatureException{this; signature});
+
+    public final native boolean{this; signature; offset; length} 
+		verify(byte[] signature, int offset, int length) 
+		throws (SignatureException {this; signature}) ;
+
+    public final native void update(byte b) throws (SignatureException {this; b});
+
+    public final native void update(byte[] data) throws (SignatureException {this;data});
+
+    public final native void update(byte[] data, int off, int len) 
+	throws (SignatureException {this;data;off;len});
+
+    public final native String{this} getAlgorithm();
+
+    public native String{this} toString();
+
+
+//    public final native void setParameter(String param, Object value) 
+//	throws (InvalidParameterException{this;param;value});
+
+ //  public final native void setParameter(AlgorithmParameterSpec params)
+//	throws (InvalidAlgorithmParameterException{this;params});
+
+ //   public final native AlgorithmParameters{this} getParameters();
+
+
+//    public final native Object{this} getParameter(String param) 
+//	throws (InvalidParameterException{this;param}) ;
+
+ //   public native Object{this} clone() throws CloneNotSupportedException{this};
+
+    /*
+     * The following class allows providers to extend from SignatureSpi
+     * rather than from Signature. It represents a Signature with an
+     * encapsulated, provider-supplied SPI object (of type SignatureSpi).
+     * If the provider implementation is an instance of SignatureSpi, the
+     * getInstance() methods above return an instance of this class, with
+     * the SPI object encapsulated.
+     *
+     * Note: All SPI methods from the original Signature class have been
+     * moved up the hierarchy into a new class (SignatureSpi), which has
+     * been interposed in the hierarchy between the API (Signature)
+     * and its original parent (Object).
+     */
+/*
+    static class Delegate extends Signature {
+
+	// The provider implementation (delegate)
+	private SignatureSpi sigSpi;
+
+	// constructor
+	public Delegate(SignatureSpi sigSpi, String algorithm) {
+	    super(algorithm);
+	    this.sigSpi = sigSpi;
+	}
+*/
+//	public native Object{this} clone() throws CloneNotSupportedException {this};
+
+}
+    
+	    
+
+
+
+	    
+	    
+	

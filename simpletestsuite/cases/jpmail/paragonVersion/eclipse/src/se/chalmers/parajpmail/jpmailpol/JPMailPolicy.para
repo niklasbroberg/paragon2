@@ -1,0 +1,109 @@
+package se.chalmers.parajpmail.jpmailpol;
+
+import se.chalmers.parajpmail.ParsingException;
+
+import se.chalmers.parajpmail.runtime.JPMailRuntime;
+import se.chalmers.parajpmail.runtime.JPMailUserID;
+import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+import se.chalmers.parajpmail.runtime.UnixUserID;
+import se.chalmers.parajpmail.runtime.Debug;
+
+
+public class JPMailPolicy {
+
+  // i.e. 'to' may perform actions in name of 'from'
+  public ?GlobalPol.publScreen transitive reflexive lock DelegatesTo (from, to);
+
+  // Symmetric for encrypting the body
+  public ?GlobalPol.publ lock AllowsAESEncryption (jpmailActor);
+  public ?GlobalPol.publ lock AllowsDESEncryption (jpmailActor);
+  
+  // Asymmetric for encrypting the key used by symmetric
+  public ?GlobalPol.publ lock AllowsRSAEncryption (jpmailActor);
+  public ?GlobalPol.publ lock AllowsECCEncryption (jpmailActor);
+
+  public static final String COMMENT = "//";
+  public static final String OSUSER = "OS.";
+  public static final String DELEGATE = "->";
+  public static final String ALLOWS = "allows";
+  
+  // Opens a bunch of locks, but not in signature since which locks
+  // depends on policy file data.
+  public static !GlobalPol.publScreen void apply(?GlobalPol.publScreen String pol) 
+  throws !GlobalPol.publScreen ?GlobalPol.publScreen ParsingException { //TODO ISSUE 123
+  
+    // parsing policy...
+    String[]<GlobalPol.publScreen> lines = pol.split("\n");
+    for (int i = 0; i < lines.length; i++) {
+      try {
+        
+        String line = lines[i];
+        
+        // Comments
+        
+        if (line.startsWith(COMMENT))
+          continue;
+        
+        if (line.contains(COMMENT))
+          line = line.substring(line.indexOf(COMMENT));
+        
+        // Delegations
+        
+        if (line.contains(DELEGATE)) {
+          String[]<GlobalPol.publScreen> ids = line.split(DELEGATE);
+          String from = ids[0].trim();
+          String to = ids[1].trim(); 
+          if (from.startsWith(OSUSER))
+            throw new ParsingException("OS users cannot delegate");
+          final actor afrom = JPMailRuntime.getActorOf(new JPMailUserID(from));          
+          if (to.startsWith(OSUSER)) {
+            to = to.substring(OSUSER.length());            
+            //Debug.println("OS Delegating from " + from + " to " + to); 
+            final actor ato = SimpleUnixRuntime.getActorOf(new UnixUserID(to));
+            open DelegatesTo(afrom, ato);
+          }
+          else {
+            final actor ato = JPMailRuntime.getActorOf(new JPMailUserID(to));
+            //Debug.println("Normal delegating from " + from + " to " + to);
+            open DelegatesTo(afrom, ato);
+          }
+        } 
+        
+        // Allowed declassifiers
+        
+        else if (line.contains(ALLOWS)) {
+          String[]<GlobalPol.publScreen> ids = line.split(ALLOWS);
+          String from = ids[0].trim();
+          String declass = ids[1].trim();
+          if (from.startsWith(OSUSER))
+            throw new ParsingException("OS users cannot allow declassification");
+          final actor afrom = JPMailRuntime.getActorOf(new JPMailUserID(from));
+          // switch not supported yet.
+          if (declass.equals("AESEncrypt")) {
+            open AllowsAESEncryption(afrom);
+          }
+          else if (declass.equals("DESEncrypt")) {
+            open AllowsDESEncryption(afrom);
+          }
+          else if (declass.equals("RSAEncrypt")) {
+            open AllowsRSAEncryption(afrom);
+          }
+          else if (declass.equals("ECCEncrypt")) {
+            open AllowsECCEncryption(afrom);
+          }
+          else {
+            throw new ParsingException("Unknown declassifier: " + declass);
+          }          
+        }
+        
+        
+      } catch (StringIndexOutOfBoundsException e) { // catch all exceptions not working? TODO
+        throw new ParsingException("Parse error in line " + i + ": " + lines[i] + 
+          "(" + e.getMessage() + ")");
+      } catch (NullPointerException e) {
+        throw new ParsingException("Got nullpointer exception in parsing line " + i);
+      }
+    }
+  }
+
+}

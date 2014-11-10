@@ -1,0 +1,8 @@
+public class OpeningLock
+{
+  public static final lock A;
+  public static final lock B(java.lang.Object);
+  public static final policy p = {java.lang.Object x: OpeningLock.A};
+  public static final ?OpeningLock.p int foo()
+  ;
+}

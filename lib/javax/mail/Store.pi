@@ -1,0 +1,20 @@
+package javax.mail;
+
+public native class Store {
+
+  public !policyof(this) void
+  connect(String host, String user, String password)
+     throws !(policyof(host)*policyof(user)*policyof(password))
+            ?(policyof(host)*policyof(user)*policyof(password)) AuthenticationFailedException,
+            !(policyof(host)*policyof(user)*policyof(password))
+            ?(policyof(host)*policyof(user)*policyof(password)) MessagingException,
+            !(policyof(host)*policyof(user)*policyof(password))
+            ?(policyof(host)*policyof(user)*policyof(password)) IllegalStateException;
+
+  public abstract ?(policyof(this)*policyof(name)) Folder getFolder(String name)
+      throws !(policyof(this)*policyof(name)) ?(policyof(this)*policyof(name)) MessagingException,
+             !policyof(this) ?policyof(this) IllegalStateException;
+             
+  public !policyof(this) void _close()
+           throws !policyof(this) ?policyof(this) MessagingException;
+}

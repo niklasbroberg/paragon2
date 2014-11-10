@@ -1,0 +1,31 @@
+/**
+ * Paragon Interface file modelling a channel
+ *
+ * Takes two type parameters: a policy on the data that is received on this
+ * channel, and an actor to whom data can be send over this channel. Data sent
+ * automatically gets the policy that it can flow only to that actor.
+ **/
+public native class Channel <policy p, actor a>
+{
+    /**
+     * Constructor
+     **/
+    public Channel (int id) {  }
+
+    /**
+     * Get a bid from the channel
+     * @throws NoBidExc If the bidder decides not to place a bid
+     * @return          The bid received on this channel
+     **/
+    public ?p int get() throws !{'x:} NoBidExc;
+
+    /**
+     * Send an integer to the actor (bidder) of this channel
+     **/
+    public void put(?{a:} int data);
+
+    /**
+     * Send a string of data to the actor (bidder) of this channel
+     **/
+    public void put(?{a:} java.lang.String data) ;
+}

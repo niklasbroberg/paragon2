@@ -1,0 +1,74 @@
+/*******************************************************************************
+
+Paragon Handbook "Flawless" code samples
+
+These samples are provided with the tutorial handbook Flawless on programming
+with information flow controls in the paragon programming language.
+  This documentation, and more information can be found on the paragon website:
+  
+                     http://www.cse.chalmers.se/~paragon
+                     
+The methods in this sample are commented out and can be commented in one by one
+to get aware of the different policy violations. (This is done since the current
+version of the paragon compiler only returns the first error).
+
+*******************************************************************************/
+
+public class MyVeryFirstParagon {
+
+  // Information can flow to no one (no actor is specified in the head of the 
+  // clause)
+  public static final policy top = { : } ;
+  
+  // Information can flow to everybody (the variable in the head of the clause
+  // is unbounded)
+  public static final policy bottom = { 'x : } ;
+  
+  // This information flow is fine. The data that was accessible in lowData 
+  // could be read by anyone. After the assignment this data can also be
+  // accessed via highData, that can be read by no one. Therefore, no additional
+  // actors are able to read the information in lowData after this assignment.
+  public void assignUp() {
+  
+    ?top int highData = 0;
+    ?bottom int lowData = 0;
+    
+    highData = lowData;
+    
+  }
+  
+  // This information flow is not fine. The data in the highData variable could
+  // be read by no one. After assignment the data is also accessible via the
+  // variable lowData, which can be read by everybody. Hence more actors can 
+  // read the data before than after the assignment which makes the flow of
+  // information illegal.
+  /*
+  public void assignDown() {
+  
+    ?top int highData = 0;
+    ?bottom int lowData = 0;
+    
+    lowData = highData;
+    
+  }
+  */
+ 
+  // Here we combine data with two different policies. The resulting data should
+  // be readable only by those actors that could already access the information
+  // in each of these variables. Therefore we take the least upper bound, or 
+  // join, between the policies on highData and lowData and make that the policy
+  // on the total expression. In this case that is the policy top and the flow
+  // is illegal (but note that the LUB of policies is not necessarily equal to
+  // one of the policies involved).
+  /*
+  public void combineData() {
+  
+    ?top int highData = 0;
+    ?bottom int lowData = 0;
+    
+    lowData = highData + lowData;
+    
+  }
+  */
+
+}

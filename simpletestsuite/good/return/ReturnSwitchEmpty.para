@@ -1,0 +1,9 @@
+public class ReturnSwitchEmpty {
+  public int f() {
+    int i = 0;
+    switch (i) {
+    }
+    return 1;
+  }
+}
+

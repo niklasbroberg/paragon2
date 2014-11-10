@@ -1,0 +1,20 @@
+package mp;
+
+public class GameState {
+
+    public readonly lock GameEnded;
+    public readonly lock GameRunning;
+
+    +GameEnded
+    -GameRunning
+    public static void endGame() {
+        open GameEnded;
+        close GameRunning;
+    }
+
+    +GameRunning
+    public static void startGame() {
+        open GameRunning;
+    }
+
+}

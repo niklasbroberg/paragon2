@@ -1,0 +1,9 @@
+public class InstanceMethodStaticMethodFromStaticField {
+  private static int x = inst().stat();
+
+  private InstanceMethodStaticMethodFromStaticField inst() {
+    return new InstanceMethodStaticMethodFromStaticField();
+  }
+
+  public static int stat() { return 1; }
+}

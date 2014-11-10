@@ -1,0 +1,41 @@
+/*
+ * @(#)Random.java	1.39 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+package java.util;
+
+public
+class Random /*implements java.io.Serializable*/ {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+	
+	/** use serialVersionUID from JDK 1.1 for interoperability */	
+    static final long serialVersionUID = 3905348978240129619L;
+
+    public Random() {}
+
+    public Random(long{this} seed) {
+
+    }
+
+    synchronized public native void setSeed(long{this} seed);
+
+    public native void nextBytes(byte{this}[]{this} bytes);
+
+    public native int{this} nextInt();
+
+    public native int{this;n} nextInt(int n);
+
+    public native long{this} nextLong();
+
+    public native boolean{this} nextBoolean();
+
+    public native float{this} nextFloat();
+
+    public native double{this} nextDouble();
+
+    synchronized public native double{this} nextGaussian();
+
+}     

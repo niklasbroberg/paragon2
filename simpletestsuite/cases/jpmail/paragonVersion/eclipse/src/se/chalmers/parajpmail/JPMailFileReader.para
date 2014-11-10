@@ -1,0 +1,41 @@
+package se.chalmers.parajpmail;
+
+import java.io.FileNotFoundException;
+
+import java.nio.file.NoSuchFileException;
+
+import se.chalmers.parajpmail.runtime.JPMailRuntime;
+import se.chalmers.parajpmail.runtime.SimpleUnixRuntime;
+
+
+public class JPMailFileReader {
+  // DISCUSS difference between owner-approach and flowto-appraoch becomes very clear here
+  // Jif can derive labels from OS-permissions, we cannot know yet where info may flow to.
+
+  // Relabel file data to desired policy (i.e. asserting policy here)
+  // Extra jpmail feature: specify the expected permissions
+  @deprecated
+  public static ?filePol <policy filePol>
+  String readFile(?filePol String file, ?filePol String expectedPermissions) 
+  throws !policyof(file) ?policyof(file) FileNotFoundException,
+          !filePol JPPermissionException {
+  
+    ?filePol String permissions;
+    try { 
+      permissions = JPMailRuntime.getFilePermissions(file);
+    } catch (?filePol NoSuchFileException e) {
+      // TODO compiler ISSUE ?
+      ?policyof(file) FileNotFoundException res = new FileNotFoundException(file);
+      throw res;
+    }
+  	
+    if (!permissions.equals(expectedPermissions)) {
+      // TODO compiler ISSUE ?
+      //throw new JPPermissionException("The permissions (" + permissions +
+      //   ") are not as expected (" + expectedPermissions + ") for file " + file);
+    }
+    return SimpleUnixRuntime.readFile(file);
+    
+  }
+
+}

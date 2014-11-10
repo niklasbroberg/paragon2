@@ -1,0 +1,6 @@
+public class LocalVarRedeclarationDifferentTypes {
+  public void f() {
+    int x;
+    double x;
+  }
+}

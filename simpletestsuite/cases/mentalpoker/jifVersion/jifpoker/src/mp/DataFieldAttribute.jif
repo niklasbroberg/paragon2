@@ -1,0 +1,11 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+public interface DataFieldAttribute[ label L] extends JifObject[L]{
+	public byte{L}[]{L} toByteArray{L}():{L};
+	public int {L} byteLength();
+}
+

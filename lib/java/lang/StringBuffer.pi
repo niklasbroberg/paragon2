@@ -1,0 +1,27 @@
+package java.lang;
+
+// Paragonized
+
+/**
+ * The Jif signature for java.lang.StringBuffer. 
+ *
+ */
+public final native class StringBuffer<policy p> extends Object /*implements Serializable, CharSequence*/
+{
+
+    public StringBuffer() {}
+    public StringBuffer(String str) {}
+
+	// TODO check if this new parametrized policy makes sense -- copied
+	// from jif, but shouldn't it be p*policyof(c) ??
+    public native ?(p*policyof(c)) StringBuffer<p> append(char c);
+    public native ?(p*policyof(str)) StringBuffer<p> append(String str);
+    public native ?(p*policyof(i)) StringBuffer<p> append(int i);
+    /*
+    public native char{L;index} charAt(int index) throws (IndexOutOfBoundsException{this;index});
+    public native StringBuffer[L]{start;end} delete{L}(int start, int end);
+    public native StringBuffer[L]{index;L} deleteCharAt(int index) throws (IndexOutOfBoundsException{this;index});
+    public native int{this} length();
+    public native String{L;this} toString();
+*/
+}

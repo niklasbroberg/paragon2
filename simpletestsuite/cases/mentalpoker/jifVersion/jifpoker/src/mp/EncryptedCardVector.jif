@@ -1,0 +1,112 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+
+/**
+ * Representation of a single encrypted card we have a
+ * value vector, and assume that this vector consists of a BigIntPair
+ */
+public class EncryptedCardVector[label L]
+implements DataFieldAttribute[L] {
+
+	private PHIntVector[L]{L} value;
+
+	public EncryptedCardVector(PHIntVector[L]{L}  v):{L} 
+    throws IllegalArgumentException{
+        if (v == null) 
+            throw new IllegalArgumentException();  
+		this.value = v;
+	}
+
+	public PHIntVector[L]{L} getValueVector() {
+		return this.value;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see poker.DataFieldAttribute#toByteArray()
+	 */
+     public byte{L}[]{L} toByteArray{L}() {
+        PHIntVector[L] value = this.value;        
+        return value == null ? null: value.toByteArray();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see poker.DataFieldAttribute#byteLength()
+	 */
+     public int{L} byteLength() {
+        PHIntVector[L] value = this.value;        
+        return value == null ? 0: value.byteLength();
+	}
+	
+	public EncryptedCardVector[L] multMatrix{L}(PHEPermutationMatrix[L]{L} pi):{L}
+    throws (IllegalArgumentException, MPException) {
+        
+            if (pi == null)
+                throw new IllegalArgumentException();
+            
+        try {    
+            int t = this.value.size();
+            PHIntVector[L] w = new PHIntVector[L]();       
+            w.ensureCapacity(t);
+            
+            for (int i = 0; i < t; i++) {
+                PHIntVector[L] rowi = (PHIntVector[L])pi.getMatrix().get(i);
+                PHInteger[L] coli = (PHInteger[L])this.value.get(i);
+                
+                if (i == 0)
+                    for (int j = 0; j < t; j++) {
+                        PHInteger[L] p_ij = (PHInteger[L])rowi.get(j);
+                        w.add(p_ij.mult(coli));
+                    }
+                else 
+                    for (int j = 0; j < t; j++) {
+                        PHInteger[L] p_ij = (PHInteger[L])rowi.get(j);
+                        PHInteger[L] w_j = (PHInteger[L]) w.get(j);
+                        w.set(j, w_j.add(p_ij.mult(coli)));
+                    }			
+            }
+            return new EncryptedCardVector[L](w);
+        } catch (NullPointerException ignored) { throw new MPException("NPE");
+        } catch (IndexOutOfBoundsException ignored) { throw new MPException("IOB");
+        } catch (ClassCastException ignored) { throw new MPException("CCE");
+        }
+//        throw new MPException();
+	}
+	
+	
+	public String{L} toString() {
+        PHIntVector[L] value = this.value;        
+        return value == null ? "": value.toString();
+	}
+
+    public boolean{L;o} equals (IDComparable[L] o) {
+        if (o == null)
+            return false;
+        if (!(o instanceof EncryptedCardVector[L]))
+            return false;
+        
+        try {
+            EncryptedCardVector [L] that = (EncryptedCardVector[L]) o;
+            PHIntVector[L] thisvalue = this.value;
+            PHIntVector[L] thatvalue = that.value;
+            if (thisvalue == null || thatvalue == null)
+                return false;
+            return thisvalue.equals(thatvalue);
+        } catch (ClassCastException e) {
+        }
+        return false;
+    }
+    
+    
+    public int{L} hashCode() {
+        PHIntVector[L] value = this.value;        
+        return value == null ? 0: value.hashCode();
+    }
+}

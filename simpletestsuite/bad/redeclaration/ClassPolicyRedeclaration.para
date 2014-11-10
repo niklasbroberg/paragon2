@@ -1,0 +1,4 @@
+public class ClassPolicyRedeclaration {
+  public static final policy p = {Object o:};
+  public static final policy p = {Object o:};
+}

@@ -1,0 +1,7 @@
+public class Circles {
+
+  public final Object alice = new Object();
+  public final policy p = { alice : };
+  public final ?p String aliceString;
+
+}

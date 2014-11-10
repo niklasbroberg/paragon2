@@ -1,0 +1,9 @@
+package java.util;
+
+public native class StringTokenizer {
+
+  public StringTokenizer(?policyof(this) String text, ?policyof(this) String token) { }
+  public ?policyof(this) String nextToken()
+    throws !policyof(this) NoSuchElementException;
+
+}

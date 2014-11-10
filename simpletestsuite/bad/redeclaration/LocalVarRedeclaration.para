@@ -1,0 +1,6 @@
+public class LocalVarRedeclaration {
+  public void f() {
+    int x;
+    int x;
+  }
+}

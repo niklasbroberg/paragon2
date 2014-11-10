@@ -1,0 +1,9 @@
+public class ReturnIfThenElse {
+  public int f() {
+    boolean b = true;
+    if (b)
+      return 1;
+    else
+      ;
+  }
+}

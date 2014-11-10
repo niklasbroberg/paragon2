@@ -1,0 +1,28 @@
+public class RunsFor {
+   
+   lock ActsFor(Object,Object) 
+    { (Object x, Object y, Object z)
+	    ActsFor(x,y) : ActsFor(x,z), ActsFor(z,y) 
+	    };
+    lock RunsFor(Object) { 
+	(Object x, Object y) RunsFor(x) : RunsFor(y), ActsFor(y, x)};
+   
+    public static final Object alice = new Object();
+    public static final Object bob = new Object();
+    public static final Object charlie = new Object();
+   
+   void foo() {
+   
+     ?{alice : } int a;
+     ?{Object x : RunsFor(x) } int b;
+     
+     open RunsFor(charlie);
+     
+     open ActsFor(charlie, bob);
+     open ActsFor(bob, alice);
+     
+     a = b;
+   
+   }
+   
+}

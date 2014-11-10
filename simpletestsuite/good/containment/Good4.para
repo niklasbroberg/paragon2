@@ -1,0 +1,23 @@
+public class Good4 {
+
+    public static final Object Alice = new Object();
+    
+    public static final lock Declassified;
+    
+    public static final policy secret = { Object y : Declassified };
+    
+    public static final policy pub =  { Object x : };
+    
+    public static final ?pub int pubData;
+    
+    public static final ?secret int aliceData;
+    
+    !pub -Declassified public static void bar() {
+    
+        open Declassified;
+        pubData = aliceData;
+        close Declassified;
+    
+    }
+
+}

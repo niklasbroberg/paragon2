@@ -1,0 +1,107 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+
+public class DataField[label L]
+implements JifObject[L] {
+	private int{L} timestamp;
+	private String{L} info;
+	private DataFieldAttribute[L]{L} attrib;
+	private String{L} playerName;
+	
+	public DataField (
+            String {L} playerName,
+			int {L} ts, 
+			String {L}inf, 
+			DataFieldAttribute[L]{L} attr) {
+		this.playerName = playerName;
+		this.timestamp 	= ts;
+		this.info 		= inf;
+		this.attrib 	= attr;
+	}
+
+	
+	public byte{L}[]{L} toByteArray {L}():{L} {
+		// concatenate timestamp with info with attributes
+		try {	
+                byte{L}[] a = Integer.toString(this.timestamp).getBytes();
+				byte{L}[] b = info.getBytes();
+				byte{L}[] c = attrib.toByteArray();
+				
+				int n = a.length + b.length + c.length;
+				byte{L}[] r = new byte[n];
+				int i = 0 ;
+				for (int j = 0; j < a.length; j++, i++)
+					r[i] = a[j];
+				for (int j = 0; j < b.length; j++, i++) 
+					r[i] = b[j];
+				for (int j = 0; j < c.length; j++, i++) 
+					r[i] = c[j];
+				return r;
+		} catch (NullPointerException ignored) {
+		} catch (ArrayIndexOutOfBoundsException ignored) {
+		} 
+		return null;
+	}
+	/**
+	 * @return Returns the attrib.
+	 */
+     public DataFieldAttribute[L]{L} getAttrib() {
+		return attrib;
+	}
+	/**
+	 * @return Returns the info.
+	 */
+	public String{L} getInfo() {
+		return info;
+	}
+	/**
+	 * @return Returns the playerName.
+	 */
+	public String{L} getPlayerName() {
+		return playerName;
+	}
+	/**
+	 * @return Returns the timestamp.
+	 */
+     public int{L} getTimestamp() {
+		return timestamp;
+	}
+    
+    public String{} toString() {
+        return "mp.DataField";
+    }
+    
+    public boolean{o;L} equals(IDComparable[L] o) {
+        if (o == null)
+            return false;
+        if (!(o instanceof DataField[L]))
+            return false;
+        try {
+            DataField[L] that = (DataField[L])o;
+            return ((this.timestamp == that.timestamp) &&
+                (this.info.equals(that.info)) && 
+                (this.playerName.equals(that.playerName)) &&
+                (this.attrib.equals(that.attrib)) );
+        } catch (ClassCastException impossible) {
+        } catch (NullPointerException ignored) {
+        }
+        return false;
+    }
+    
+    public int{L} hashCode() {
+        try {
+            int h = this.timestamp;
+            h += this.info == null? 0 : 31*h*this.info.hashCode();
+            h += this.playerName == null ? 0: 31*h*playerName.hashCode();
+            h += h*this.attrib.hashCode();
+            return h;
+        } catch (NullPointerException ignored) {
+        }
+        return 0;
+    }
+}
+

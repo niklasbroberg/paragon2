@@ -1,0 +1,313 @@
+/* Jif poker - an implementation of mental poker protocol in Jif
+ * (C) 2005 Aslan Askarov
+ *
+ */
+package mp;
+
+import java.security.*;
+import jif.util.ArrayList;
+/**
+ * 
+ * Privacy Homomorphism Encryption & Decryption
+ * Based on [J.Domingo i Ferrer - A new privacy homomorphism and applications, 
+ * 1996]
+ */
+
+
+public class PHCrypto[label L] {
+	private final DABigInteger[L]{L} p;
+	private final DABigInteger[L]{L} q;
+	private int{L} nlength ;
+	private final DABigInteger[L]{L} m;
+ 
+	public final int BITLENGTH = 128;
+	public DABigInteger[L]{L} rp;
+	public DABigInteger[L]{L} rq;
+	
+	
+	
+	public PHCrypto{L}(int {L} n):{L}
+    throws (NoSuchAlgorithmException, MPException ){
+		DABigInteger[L] a = DABigInteger[L].ZERO(), 
+				   b = DABigInteger[L].ZERO();		
+		try {
+			do { 
+			a = DABigInteger[L].probablePrime(BITLENGTH, 
+					SecureRandom.getInstance("SHA1PRNG"));
+			} while (a.compareTo(DABigInteger[L].ZERO()) == 0);
+			
+			do {
+				b = DABigInteger[L].probablePrime(BITLENGTH,
+						SecureRandom.getInstance("SHA1PRNG"));
+			} while ((b.compareTo(DABigInteger[L].ZERO()) == 0) 
+					|| (b.compareTo(a) == 0));
+                                    
+            this.nlength = n;		
+            this.p = a;
+            this.q = b;
+            this.m = p.multiply(q);
+            generateR();
+        } catch (NullPointerException e) {
+            throw new MPException("NPE");
+		} catch (ArithmeticException e) {
+            throw new MPException("AE");
+        } catch (IllegalArgumentException e) {
+            throw new MPException("IAE");
+        }
+        
+		
+	}
+	
+	
+	public BigIntVector[L]{L} getSecretKey{L}(){ 
+        BigIntVector[L] v = new BigIntVector[L]();
+        v.ensureCapacity(4);
+        v.add(p);
+        v.add(q);
+        v.add(rp);
+        v.add(rq);
+		return v;
+	}
+	
+	public DABigInteger[L]{L} getPublicParam() {
+		return this.m;
+	}
+	
+	public PHCrypto{L}(int{L} n, BigIntVector[L]{L} keyVector) :{L}
+	throws IllegalArgumentException {
+		if (keyVector == null) 
+			throw new IllegalArgumentException("PHCrypto: keyVector is null");
+		if (keyVector.size() != 4) {
+			throw new IllegalArgumentException("PHCrypto: keyVector invalid size");
+		}
+		
+		
+		DABigInteger[L] p = null;
+		DABigInteger[L] q = null;
+		try {
+			// to avoid NPE
+			p = (DABigInteger[L]) keyVector.get(0); 
+			q = (DABigInteger[L]) keyVector.get(1);
+			this.rp = (DABigInteger[L]) keyVector.get(2);
+			this.rq = (DABigInteger[L]) keyVector.get(3);
+			this.nlength = n;		
+		} catch (IndexOutOfBoundsException ignored) {
+		} catch (ClassCastException ex) {
+			throw new IllegalArgumentException("PHCrypto: CCE");
+		}
+		if (p == null || q == null || rp == null || rq == null)
+			throw new IllegalArgumentException("PHCrypto: null value");
+		this.m = p.multiply(q);
+		this.p = p;
+		this.q = q;
+	}
+	
+	public PHCrypto{L}(
+        int{L} n, 
+        DABigInteger[L]{L} p, 
+        DABigInteger[L]{L} q, 
+        DABigInteger[L]{L} rp, 
+        DABigInteger[L]{L} rq):{L}
+    throws IllegalArgumentException{
+        if (p == null ||
+            q == null ||
+            rp == null ||
+            rq == null)
+            throw new IllegalArgumentException("PHCrypto: null value");
+           
+		this.p = p;		
+		this.q = q;		
+		this.nlength = n;		
+		this.rp = rp; 	
+		this.rq = rq;
+		this.m = p.multiply(q);	
+	}
+	
+	public void generateR{L}() :{L} 
+    throws  (NoSuchAlgorithmException ){
+		try {
+			do {
+				this.rp = new DABigInteger[L](
+						p.bitLength(),
+						SecureRandom.getInstance("SHA1PRNG"));
+			} while ((rp.compareTo(p)>= 0 ) || 
+					 (rp.compareTo(DABigInteger[L].ZERO()) <= 0));
+			
+			do {
+				this.rq = new DABigInteger[L](
+						q.bitLength(),
+						SecureRandom.getInstance("SHA1PRNG"));
+					
+			} while ((rq.compareTo(q) >= 0 ) || 
+					 (rq.compareTo(DABigInteger[L].ZERO()) <= 0));
+			
+			
+			
+		} catch (NullPointerException ignored ) {
+		} catch (IllegalArgumentException ignored) {
+        }
+	}
+	
+	
+	public PHInteger[L] encrypt{L}(DABigInteger[L]{L} a, int {L} n):{L}
+    throws (IllegalArgumentException, MPException) {
+        if (a == null)
+            throw new IllegalArgumentException();
+        
+        
+		try {
+        
+            ArrayList[L] v = new ArrayList[L]();
+            v.ensureCapacity(n);
+            
+            if (a.compareTo(this.m) >= 0) {
+                throw new IllegalArgumentException
+                    ("argument out of clear text space: " + a.toString() 
+                    + ">=" + this.m.toString());
+            }
+
+            
+			DABigInteger[L] ss  = DABigInteger[L].ZERO();
+			DABigInteger[L] ai  = DABigInteger[L].ZERO();
+			
+			DABigInteger[L] rpi = this.rp;
+			DABigInteger[L] rqi = this.rq;
+			
+			for (int i = 0; i<n; i++) {				
+				if ( i < n - 1) {
+					do {
+					 ai = new DABigInteger[L](m.bitLength()-1,
+						SecureRandom.getInstance("SHA1PRNG"));
+					} while ((ai.compareTo(m) >= 0 ) || 
+							(ai.compareTo(DABigInteger[L].ZERO()) <= 0));
+					ss = ss.add(ai).mod(m);					
+				}
+				else 
+					ai = a.subtract(ss).mod(m);
+				
+//				//System.out.println(a.toString() + 
+//						"::" + Integer.toString(i) + 
+//						"::" + ai.toString());
+//				
+				BigIntPair[L] pair = new BigIntPair[L](
+						ai.multiply(rpi).mod(p),
+						ai.multiply(rqi).mod(q));
+			
+				rpi = rpi.multiply(rp).mod(p);
+				rqi = rqi.multiply(rq).mod(q);
+				
+				v.add(pair);		
+			}
+            return new PHInteger[L](v);	
+		} catch (NullPointerException e) {
+		} catch (ArithmeticException e) {
+        } catch (NoSuchAlgorithmException e) {
+        }
+        throw new MPException();
+		
+	}
+	
+	public PHInteger[L] encrypt{L}(DABigInteger[L]{L} a) :{L}
+    throws (IllegalArgumentException, MPException){   
+        if (a == null)
+            throw new IllegalArgumentException();
+        PHInteger[L] retval = encrypt(a, nlength);
+        return retval;
+  
+	}
+	
+	public EncryptedCardVector[L] encryptCardVector{L}(CardVector[L]{L}w, int
+    {L} n) : {L}
+    throws IllegalArgumentException, MPException {
+        try {
+            PHIntVector[L] ew = new PHIntVector[L]();
+            ew.ensureCapacity(w.getValueVector().size());
+            for (int i = 0; i < w.getValueVector().size(); i++) {
+                DABigInteger[L] x = 
+                    (DABigInteger[L])w.getValueVector().get(i);
+                PHInteger[L] ex = encrypt(x, n);
+                ew.add(i, ex);			
+            }
+            return new EncryptedCardVector[L] (ew);
+        } catch (NullPointerException e) {
+        } catch (IndexOutOfBoundsException e) {
+        } catch (ClassCastException e) {
+        }
+        return null;
+	}
+	
+	public EncryptedCardVector[L] encryptCardVector{L}(CardVector[L]{L} w):{L} 
+    throws IllegalArgumentException, MPException  {
+		return encryptCardVector(w, this.nlength);
+	}
+	
+	public DABigInteger[L] decrypt{L}(PHInteger[L]{L} encr):{L}
+    throws IllegalArgumentException, MPException{
+        try {
+            ArrayList[L] encrypted = encr.getValueVector();
+            
+            DABigInteger[L] x = DABigInteger[L].ZERO();
+            DABigInteger[L] y = DABigInteger[L].ZERO();
+            int n = encrypted.size();
+    
+            DABigInteger[L] rpi = this.rp;
+            DABigInteger[L] rqi = this.rq;
+            
+            for (int i = 0; i < n ; i++) {
+                BigIntPair[L] pair = (BigIntPair[L]) encrypted.get(i);
+                DABigInteger[L] a = pair.getX();
+                DABigInteger[L] b = pair.getY();
+                
+                // calculate rpi and rqi inverses
+    
+                DABigInteger[L] rpii = rpi.modInverse(p);
+                DABigInteger[L] rqii = rqi.modInverse(q);
+                //
+    
+                rpi = rpi.multiply(rp).mod(p);
+                rqi = rqi.multiply(rq).mod(q);
+                //
+                
+                x = x.add(a.multiply(rpii));
+                y = y.add(b.multiply(rqii));						
+            }
+            
+            DABigInteger[L] d = new DABigInteger[L](CRT.crt2(x.getValue(),
+                y.getValue(),
+                p.getValue(),
+                q.getValue())).mod(m);
+            return d;
+        } catch (NullPointerException e) {
+        } catch (IndexOutOfBoundsException e) {
+        } catch (ClassCastException e) {
+        } catch (ArithmeticException e) {
+        }
+        throw new MPException("decryption of PHInteger failed...");
+	}
+	
+	public CardVector[L] decryptCardVector{L}(EncryptedCardVector[L] {L} ew):{L}
+    throws IllegalArgumentException, MPException {
+        try {
+            BigIntVector[L] w = new BigIntVector[L]();
+            w.ensureCapacity(ew.getValueVector().size());
+            for (int i = 0; i < ew.getValueVector().size(); i++) {
+                PHInteger[L] ew_i = (PHInteger[L])ew.getValueVector().get(i);
+                DABigInteger[L] wi = this.decrypt(ew_i);
+                w.add(wi);
+            }
+            return new CardVector[L](w);
+        } catch (NullPointerException e) {
+        } catch (IndexOutOfBoundsException e) {
+        } catch (ClassCastException e) {
+        }
+        throw new MPException("decryption of card vector failed...");
+	}
+	
+	public DABigInteger[L]{L} getM() {
+		return this.m;
+	}
+	
+	
+	
+}
+

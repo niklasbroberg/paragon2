@@ -1,0 +1,4 @@
+In the context of class BasicArrayPolicies:
+In the context of method foo:
+In the context of lock state []:
+Cannot assign result of expression myArray[0] with policy { alice#0 :} to location j with policy { java.lang.Object x :}

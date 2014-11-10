@@ -1,0 +1,11 @@
+public class Good1
+{
+  public static final java.lang.Object Alice = new java.lang.Object();
+  public static final lock Declassified;
+  public static final policy alice = {Alice:};
+  public static final policy pub = {java.lang.Object x:};
+  public static final ?Good1.pub int pubData;
+  public static final ?Good1.alice int aliceData;
+  !Good1.alice public static void foo()
+  ;
+}

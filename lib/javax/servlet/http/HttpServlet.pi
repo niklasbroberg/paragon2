@@ -1,0 +1,4 @@
+package javax.servlet.http;
+
+public abstract native class HttpServlet {
+}

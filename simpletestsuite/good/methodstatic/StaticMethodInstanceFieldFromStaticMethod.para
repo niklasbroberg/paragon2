@@ -1,0 +1,11 @@
+public class StaticMethodInstanceFieldFromStaticMethod {
+  private static void stat() {
+    int y = stat1().x;
+  }
+
+  public int x = 1;
+
+  private static StaticMethodInstanceFieldFromStaticMethod stat1() {
+    return new StaticMethodInstanceFieldFromStaticMethod();
+  }
+}

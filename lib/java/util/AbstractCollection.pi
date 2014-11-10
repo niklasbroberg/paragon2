@@ -1,0 +1,43 @@
+package java.util;
+
+/**
+ * Base implementation for Collection.
+ */
+public abstract native class AbstractCollection<policy p> implements Collection<p> {
+    /**
+     * Sole constructor.  (For invocation by subclass constructors, typically
+     * implicit.)
+     */
+    protected AbstractCollection() {
+    }
+
+    public abstract ?policyof(this) Iterator<p> iterator();
+    public abstract ?p int size();
+
+    public final ?p boolean isEmpty();
+
+    
+    public ?(p*policyof(o)) boolean contains(Object o) ;
+
+    public !p ?p boolean add(?p Object o) 
+      throws !p ClassCastException, 
+             !p IllegalArgumentException;
+  
+    public !p ?p boolean remove(?p Object o) ;
+    
+    public ?(p*policyof(c)) boolean containsAll(Collection<p> c) 
+      throws !p NullPointerException;
+
+    public !p ?p boolean addAll(?p Collection<p> c) 
+      throws !p ClassCastException,
+             !p IllegalArgumentException;
+
+    public !p ?p boolean removeAll(?p Collection<p> c);
+
+    public !p ?p boolean retainAll(?p Collection<p> c);
+
+    public !p void clear();
+
+    public ?p !p Object[]<p> toArray();
+    
+}

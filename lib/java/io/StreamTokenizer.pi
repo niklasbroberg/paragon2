@@ -1,0 +1,41 @@
+package java.io;
+
+public native class StreamTokenizer<policy p> extends Object { 
+    
+    
+    public static final ?{'x:} int TT_EOF = -1;
+    public static final ?{'x:} int TT_EOL = '\n';
+    public static final ?{'x:} int TT_NUMBER = -2;
+    public static final ?{'x:} int TT_WORD = -3;
+    
+    public ?p String sval;
+    public StreamTokenizer(?p InputStreamReader<p> is) {}
+    public StreamTokenizer(?p Reader<p> r) {}
+
+    public ?p native int countTokens() 
+      throws !p IOException;
+    public ?p !p native int nextToken() 
+      throws !policyof(this) IOException;
+    public native void ordinaryChars(?p int low, ?p int hi);
+    public native void wordChars(?p int low, ?p int hi);
+
+/*    public void commentChar(int ch)
+    public void eolIsSignificant(boolean flag)
+    public int lineno()
+    public void lowerCaseMode(boolean flag)
+    private boolean isWhitespace(int ch)
+    private boolean isAlphabetic(int ch)
+    private boolean isNumeric(int ch)
+    private boolean isQuote(int ch)
+    private boolean isComment(int ch)
+    private void resetChar(int ch)
+    public void ordinaryChar(int ch)
+    public void parseNumbers()
+    public void pushBack()
+    public void quoteChar(int ch)
+    public void resetSyntax()
+    public void slashSlashComments(boolean flag)
+    public void slashStarComments(boolean flag)
+    public String toString()
+    public void whitespaceChars(int low, int hi)
+*/}

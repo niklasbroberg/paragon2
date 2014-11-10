@@ -1,0 +1,9 @@
+class PolicyOfThis
+{
+  final ?policyof(this) int x = 0;
+  int y = 1;
+  ?policyof(this) int foo()
+  ;
+  ?policyof(this) int bar()
+  ;
+}

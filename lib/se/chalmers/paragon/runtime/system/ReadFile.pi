@@ -1,0 +1,11 @@
+package se.chalmers.paragon.runtime.system;
+
+public native class ReadFile {
+
+  public final policy filePolicy;
+  
+  public ?filePolicy String getContent();
+  
+  public static ?policyof(filename) ReadFile OpenReadFile(String filename);
+
+}

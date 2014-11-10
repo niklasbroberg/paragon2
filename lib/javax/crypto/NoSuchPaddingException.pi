@@ -1,0 +1,4 @@
+package javax.crypto;
+
+public native class  NoSuchPaddingException extends java.lang.Exception {
+}

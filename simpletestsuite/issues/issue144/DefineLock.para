@@ -1,0 +1,4 @@
+public class DefineLock
+{
+  public symmetric lock MyLock(Object,Object);
+}

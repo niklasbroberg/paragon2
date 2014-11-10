@@ -1,0 +1,11 @@
+class PolicyOfContainment
+{
+  ?{:} int t = 0;
+  ?{java.lang.Object x:} int b = 1;
+  ?policyof(x) int foo(int x)
+  ;
+  void bar()
+  ;
+  ?(policyof(x) * policyof(y)) int baz(int x, int y)
+  ;
+}

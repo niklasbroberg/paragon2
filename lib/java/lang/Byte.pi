@@ -1,0 +1,7 @@
+
+package java.lang;
+
+public final native class Byte
+{
+
+}

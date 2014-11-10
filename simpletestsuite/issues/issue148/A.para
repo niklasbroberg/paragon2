@@ -1,0 +1,6 @@
+public class A {
+  public lock ALock(A);
+  public void foo(A a) {
+    open ALock(a);
+  }
+}

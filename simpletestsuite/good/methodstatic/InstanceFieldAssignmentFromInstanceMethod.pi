@@ -1,0 +1,6 @@
+public class InstanceFieldAssignmentFromInstanceMethod
+{
+  private int x;
+  private !{java.lang.Object o:} void inst()
+  ;
+}

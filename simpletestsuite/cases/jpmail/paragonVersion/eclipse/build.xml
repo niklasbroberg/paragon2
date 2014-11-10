@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="paraJPmail" default="usage" basedir=".">
+  <description>Builds paraJPmail.</description>
+  <property name="build.dir" value="./" />
+  <property name="src.dir" location="${build.dir}/src" />
+  <property name="bin.dir" location="${build.dir}/bin" />
+  <property name="lib.dir" location="${build.dir}/lib" />
+
+  <!-- Path to find standard .pi files -->
+  <path id="pipath.base">
+    <pathelement location="/home/bart/Documents/paragon/lib" />
+  </path>
+
+  <path id="javac-classpath">
+    <fileset dir="${lib.dir}">
+      <include name="*.jar" />
+    </fileset>
+    <pathelement location="/home/bart/Documents/paragon/lib" />
+  </path>
+
+  <target name="usage">
+    <echo message="Available targets are:" />
+    <echo message="clean            - Cleans up." />
+    <echo message="jpmail           - Compiles JPMail (=parac+javac)." />
+    <echo message="parac            - Compiles Paragon files only." />
+    <echo message="javac            - Compiles generated Java files only." />
+  </target>
+
+  <target name="clean" description="Remove .java, .pi and .class files">
+    <delete includeEmptyDirs="true" failonerror="false">
+      <fileset dir="${src.dir}">
+        <include name="**/*.java" />
+        <include name="**/*.pi" />
+        <exclude name="**/runtime/*.pi" />
+        <exclude name="**/runtime/*.java" />
+      </fileset>
+      <fileset dir="${bin.dir}" />
+    </delete>
+  </target>
+
+  <target name="parac">
+    <exec executable="parac">
+      <arg value="-p" />
+      <arg value="${pipath.base}:${src.dir}" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/ParaJPMailException.para" />
+    	<arg value="${src.dir}/se/chalmers/parajpmail/CryptedMail.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/MyAuthenticator.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/SMTPMail.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/IMAP.para" /> <!-- // _open _close issue -->
+      <arg value="${src.dir}/se/chalmers/parajpmail/ParsingException.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/jpmailpol/GlobalPol.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/jpmailpol/JPMailPolicy.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/cryptmessage/CryptUtil.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/cryptmessage/AESEncryption.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/cryptmessage/DESEncryption.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/cryptmessage/MailBody.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/cryptmessage/RSAEncryption.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/cryptmessage/ECCEncryption.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/cryptmessage/ASymPol.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/UserSettings.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/Util.para" />
+      <arg value="${src.dir}/se/chalmers/parajpmail/SendMail.para" />
+    	<arg value="${src.dir}/se/chalmers/parajpmail/CloseMail.para" />
+    	<arg value="${src.dir}/se/chalmers/parajpmail/About.para" />
+    	<arg value="${src.dir}/se/chalmers/parajpmail/ReadMail.para" />
+    </exec>
+    <!--
+    <exec executable="patch">
+      <arg value="${src.dir}/se/chalmers/parajpmail/cryptmessage/AESEncryption.java" />
+      <arg value="${build.dir}/tmppatch/AES" />
+    </exec>
+    <exec executable="patch">
+      <arg value="${src.dir}/se/chalmers/parajpmail/cryptmessage/DESEncryption.java" />
+      <arg value="${build.dir}/tmppatch/DES" />
+    </exec>
+    <exec executable="patch">
+      <arg value="${src.dir}/se/chalmers/parajpmail/IMAP.java" />
+      <arg value="${build.dir}/tmppatch/IMAP" />
+    </exec>
+    <exec executable="patch">
+      <arg value="${src.dir}/se/chalmers/parajpmail/IMAP.java" />
+      <arg value="${build.dir}/tmppatch/IMAP2" />
+    </exec>
+    <exec executable="patch">
+      <arg value="${src.dir}/se/chalmers/parajpmail/ReadMail.java" />
+      <arg value="${build.dir}/tmppatch/ReadMail" />
+    </exec>
+    <exec executable="patch">
+      <arg value="${src.dir}/se/chalmers/parajpmail/ReadMail.java" />
+      <arg value="${build.dir}/tmppatch/ReadMail2" />
+    </exec>
+    -->
+  </target>
+
+
+  <target name="javac">
+    <mkdir dir="${bin.dir}" />
+    <javac srcdir="${src.dir}" destdir="${bin.dir}" debug="true" includeAntRuntime="false">
+      <classpath refid="javac-classpath" />
+      <include name="**/*.java" />
+    </javac>
+  </target>
+
+  <target name="sendmail">
+    <java classname="se.chalmers.parajpmail.SendMail" dir="${bin.dir}">
+      <classpath>
+        <pathelement path="javac-classpath" />
+        <pathelement path="${bin.dir}" />
+      </classpath>
+    </java>
+  </target>
+
+  <target name="jpmail" depends="parac, javac">
+  </target>
+  <!--
+    <target name="compile-war" depends="compile-war-lib">
+      <mkdir dir="WEB-INF/classes"/>
+      <javac srcdir="${servlets.src.dir}" destdir="WEB-INF/classes" debug="true" includeAntRuntime="false">
+          <classpath refid="classpath.base"/>
+          <classpath refid="classpath.lib" />
+          <include name="**/*.java"/>
+      </javac>
+    </target>
+
+    <target name="war" depends="compile-war">
+       <war destfile="teachmeparagon.war" webxml="WEB-INF/web.xml">
+          <fileset dir="./">
+             <include name="**/*.jsp"/>
+             <include name="**/*.css"/>
+             <include name="**/*.png"/>
+             <include name="index.html"/>
+             <include name="WEB-INF/**/*.class"/>
+             <exclude name="**/.svn/**"/>
+             <exclude name="test/**"/>
+             <exclude name="src/**"/>
+          </fileset>
+       </war>
+    </target>
+
+    <target name="war-deploy" depends="war" description="Deploy application as a WAR file">
+       <copy todir="${deploy.dir}" preservelastmodified="true">
+          <fileset dir=".">
+             <include name="*.war"/>
+          </fileset>
+       </copy>
+    </target>
+
+    <target name="all" depends="war" />
+-->
+</project>

@@ -1,0 +1,12 @@
+public class C {
+
+    // would work if this one is static
+    public final policy cpol = {Object x:};
+    
+    // It is this occurrence of cpol that causes the error.
+    public ?cpol int y;
+    
+    public C () { }
+    
+}
+

@@ -1,0 +1,33 @@
+/*
+ * @(#)KeyPairGenerator.java	1.52 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+ 
+package java.security;
+
+import java.lang.String;
+
+// pfft
+import java.security.*;
+
+//import java.security.spec.AlgorithmParameterSpec;
+// TODO - just a direct translation, should check if especially all the
+// this-policies are correct.
+
+public abstract class KeyPairGenerator /*extends KeyPairGeneratorSpi */{
+
+    public 
+    ?policyof(algorithm)
+    !policyof(algorithm) 
+    // TODO fix self refs
+    static java.security.KeyPairGenerator getInstance(String algorithm)
+    throws !policyof(algorithm) NoSuchAlgorithmException ;
+
+    public void initialize(?policyof(this) int keysize, 
+                           ?policyof(this) SecureRandom<policyof(this)> random) ;
+
+    public ?pubP <policy pubP, policy privP>
+    KeyPair<pubP,privP>  generateKeyPair() ;
+}

@@ -1,0 +1,7 @@
+public class InstanceMethodFromInstanceMethod {
+  public void inst1() { }
+
+  public void inst2() {
+    inst1();
+  }
+}

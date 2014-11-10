@@ -1,0 +1,28 @@
+Simple Test Suite for Paragon
+
+Heavily 'inspired by' the compiler construction course Test Suite.
+
+-----------
+  Usage
+-----------
+
+To install, run:
+  
+  ghc -main-is Test --make Test.hs
+
+On Unix, the following commands are available as well:
+
+  make
+  make clean
+
+To run all the tests in the 'good' and 'bad' folder, run:
+
+  ./Test  
+  
+-----------
+  Creating new tests
+-----------
+
+To create new tests, just add the .para files in the right sub-folder. Note that
+the 'bad' ones should also have a corresponding .exp file that prints the 
+expected output.

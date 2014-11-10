@@ -1,0 +1,3 @@
+public class StaticClassMethodFromStaticField {
+  private static int x = Integer.parseInt("1");
+}

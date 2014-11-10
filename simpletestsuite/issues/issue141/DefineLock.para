@@ -1,0 +1,4 @@
+public class DefineLock
+{
+  public lock MyLock(a, b) {MyLock('x,'y): MyLock('y,'x)};
+}

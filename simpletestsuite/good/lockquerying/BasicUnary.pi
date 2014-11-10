@@ -1,0 +1,9 @@
+public class BasicUnary
+{
+  public static final java.lang.Object a = new java.lang.Object();
+  public static final ?{java.lang.Object x:} lock myLock(java.lang.Object);
+  public static final policy p = {java.lang.Object x: BasicUnary.myLock(a)};
+  public static final policy bot = {java.lang.Object x:};
+  public static void foo()
+  ;
+}

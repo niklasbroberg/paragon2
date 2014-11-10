@@ -1,0 +1,6 @@
+public class StringReturn {
+
+  public String foo() {
+    return true ? "" : "";
+  }
+}

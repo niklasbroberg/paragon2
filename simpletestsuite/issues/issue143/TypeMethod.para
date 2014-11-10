@@ -1,0 +1,9 @@
+public class TypeMethod {
+
+    public lock Flow(Object, Object);
+
+    public static typemethod policy pol(Object a) {
+        return {Object x : Flow(a, x)};
+    }
+
+}

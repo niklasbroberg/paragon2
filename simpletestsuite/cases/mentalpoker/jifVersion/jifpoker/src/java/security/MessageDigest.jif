@@ -1,0 +1,53 @@
+/*
+ * @(#)MessageDigest.java	1.74 03/01/23
+ *
+ * Copyright 2003 Sun Microsystems, Inc. All rights reserved.
+ * SUN PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
+ */
+
+package java.security;
+
+// import java.util.*;
+// import java.lang.*;
+// import java.io.IOException;
+// import java.io.ByteArrayOutputStream;
+// import java.io.PrintStream;
+// import java.io.InputStream;
+// import java.io.ByteArrayInputStream;
+
+public abstract class MessageDigest /*extends MessageDigestSpi */ {
+    private static int __JIF_SIG_OF_JAVA_CLASS$20030619 = 0;
+    public native static MessageDigest getInstance(String algorithm) 
+    throws (NoSuchAlgorithmException {algorithm});
+
+    public native void update(byte input);
+
+    public native void update(byte{this}[]{this} input, int {this}offset, int {this}len)
+    throws (IllegalArgumentException{this});
+
+    public native void update(byte{this}[]{this} input);
+    
+    public native byte{this}[]{this} digest();
+
+    public native int{this} digest(byte{this}[]{this} buf, int {this} offset, int{this} len) 
+    throws (DigestException{this}, IllegalArgumentException{this});
+
+    public native byte{this}[]{this} digest(byte{this}[]{this} input);
+
+    public native String{this} toString() ;
+
+
+    public native static boolean{digesta; digestb} isEqual(byte[] digesta
+            , byte[] digestb);
+
+    public native void reset() ;
+
+
+    public native final String{this} getAlgorithm();
+
+
+    public native final int{this} getDigestLength();
+    
+
+}
+

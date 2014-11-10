@@ -1,0 +1,5 @@
+public class InstanceArrayAccessFromInstanceField
+{
+  private int[] a = new int[1];
+  private int x = a[0];
+}

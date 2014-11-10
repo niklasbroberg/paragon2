@@ -1,0 +1,11 @@
+public class ActorInPolicyPanic {
+
+    public static Object act = new Object();
+ 
+    // parac: Panic! Language.Java.Paragon.TypeCheck.Monad.lookupVar caused the impossible, and the world i
+    // s now about to end in 3.. 2.. 1.. 
+    // Please report as a bug at: http://code.google.com/p/paragon-java/issues/entry
+    // Extra information: Not a var or field: Ident () "act"
+    
+    public static ?{act:} int actData = 3;
+}

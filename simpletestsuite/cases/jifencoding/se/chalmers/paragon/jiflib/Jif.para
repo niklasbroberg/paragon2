@@ -1,0 +1,14 @@
+public class Jif {
+
+    public /* tagging */ lock C(a);
+    public /* tagging */ lock I(i);
+
+    public /* ~C('a) ~I('i) */ lock Principal(a,i);
+
+
+    public reflexive transitive lock ActsFor(actsForA, a); // TODO: interact w Principal
+    public lock RunsFor(x) { //'
+			RunsFor('x) : RunsFor('y), ActsFor('y,'x)
+			    };
+    
+}

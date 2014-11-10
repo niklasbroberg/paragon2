@@ -1,0 +1,126 @@
+package se.chalmers.paragon.bidsystem;
+
+import annotations.ArgumentPolicy;
+import annotations.ExceptionPolicy;
+import annotations.ExpectsOpen;
+import annotations.OpensLock;
+import annotations.ReadPolicy;
+import annotations.WritePolicy;
+import se.chalmers.paragon.Actor;
+import se.chalmers.paragon.Atom;
+import se.chalmers.paragon.ConcreteActor;
+import se.chalmers.paragon.Lock;
+import se.chalmers.paragon.Policy;
+
+public class ParagonBidSystem {
+
+	final Lock AuctionClosed = Lock.newLock("AuctionClosed", 0);
+	final Lock HasBid = Lock.newLock("HasBid", 1);
+	final Lock Winner = Lock.newLock("Winner", 1);
+
+	final Policy allBidders = Policy.newPolicy(
+			"allBidders",
+			Policy.newPClause(Actor.newActorVariable(0),
+					Atom.newAtom(AuctionClosed),
+					Atom.newAtom(HasBid, Actor.newActorVariable(0))));
+
+	Bidder[] bidders;
+
+	ParagonBidSystem(int nbidders) {
+		generateBidders(nbidders);
+		collectBids();
+		Bidder winner = determineWinner();
+		if (winner != null) {
+			Winner.open(winner.id);
+			reportResult(winner.bid);
+			sendSpoils(winner);
+		}
+	}
+
+	void sendSpoils(Bidder winner) {
+		winner.chan.put("                               o==)_\\ \n"
+				+ "                                 ',====_ \n"
+				+ "      _-~_                         \\ \\  \\_____ \n"
+				+ " \\ _-~_-~_),-._____..______         \\ \\  `\\  || \n"
+				+ "  ~_-~_-~\\_|_______||______|         \\ \\   `\\|| \n"
+				+ "  (_-~\\,-'_--~~~~___~~~\\    \\        |  |    `\\_ \n"
+				+ "  ())=/ /~      (_~_)   | _ /        / /        `-_ \n"
+				+ "     / (           __  / ==/        / /            \\ \n"
+				+ "    (___\\_________===_/___/________/_/___==O=====O==O \n"
+				+ "   _//|  ( () )/ |~`-----------------'  |  ( ()')  | \n"
+				+ "  '-'  \\_ `--' _/                        \\_ `--' _/ \n"
+				+ "         `----'        The Spoils          `----'");
+	}
+
+	void generateBidders(int nbidders) {
+		bidders = new Bidder[nbidders];
+		for (int id = 0; id < nbidders; id++)
+			bidders[id] = new Bidder(id + 1);
+	}
+
+	!bottom
+	void collectBids() {
+		for (Bidder b : bidders) {
+			try {
+				b.getBid();
+			} catch (NoBidExc e) {
+
+			}
+		}
+	}
+
+	+AuctionClosed 
+	?allBidders
+	Bidder determineWinner() {
+		Bidder winner = null;
+		for (Bidder b : bidders) {
+			if (HasBid.isOpen(b.id)) {
+				if (winner == null || b.bid > winner.bid) {
+					winner = b;
+				}
+			}
+		}
+		AuctionClosed.open();
+		return winner;
+	}
+
+	!bottom
+	~AuctionClosed
+	void reportResult(?allBidders int winBid) {
+		for (Bidder b : bidders) {
+			if (HasBid.isOpen(b.id)) {
+				b.chan.put(winBid);
+			}
+		}
+	}
+
+	class Bidder {
+		final ConcreteActor id = Actor.freshActor("bidder");
+		final Channel chan = new Channel(id);
+		final Policy bidpol = Policy.newPolicy(
+				"bidpol",
+				Policy.newPClause(id),
+				Policy.newPClause(Actor.newActorVariable(0),
+						Atom.newAtom(AuctionClosed),
+						Atom.newAtom(HasBid, Actor.newActorVariable(0)),
+						Atom.newAtom(Winner, id)));
+		?bidpol
+		int bid;
+
+		Bidder(int bid) {
+			this.bid = bid;
+		}
+
+		+HasBid(id)
+		!bidpol
+		void getBid() throws !bidpol NoBidExc {
+			bid = chan.get();
+			HasBid.open(id);
+		}
+	}
+
+	public static void main(String[] arg) {
+		new ParagonBidSystem(3);
+	}
+
+}

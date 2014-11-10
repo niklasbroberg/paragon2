@@ -1,0 +1,8 @@
+public class BasicArrayPolicies
+{
+  public static final java.lang.Object alice = new java.lang.Object();
+  public static final policy apol = {alice:};
+  public ?BasicArrayPolicies.apol int[]<BasicArrayPolicies.apol> myArray;
+  public void foo()
+  ;
+}

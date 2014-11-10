@@ -1,0 +1,9 @@
+class Launder {
+
+  final ?policyof(this) int x = 0;
+
+  int y = 1;
+
+  !{Object x:} void foo() { y = x; }
+
+}

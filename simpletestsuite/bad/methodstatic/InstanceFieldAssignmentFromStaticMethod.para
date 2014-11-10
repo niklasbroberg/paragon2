@@ -1,0 +1,7 @@
+public class InstanceFieldAssignmentFromStaticMethod {
+  private int x;
+
+  private static !{Object o:} void stat() {
+    x = 0;
+  }
+}

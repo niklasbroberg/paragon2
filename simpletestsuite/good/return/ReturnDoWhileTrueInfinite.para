@@ -1,0 +1,6 @@
+public class ReturnDoWhileTrueInfinite {
+  public int f() {
+    do {
+    } while (true);
+  }
+}

@@ -1,0 +1,13 @@
+public class C {
+
+    // Allowed
+    public final int i = 4;
+    public final int j = i + 3;
+    
+    
+    // Not allowed:
+    public final Object myActor = new Object();
+    public final policy myPolicy = { myActor : };
+    
+}
+
