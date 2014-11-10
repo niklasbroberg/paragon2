@@ -33,7 +33,7 @@ Flag base4
 Library
   Build-Tools:          alex >= 2.3
   Build-Depends:        array >= 0.1, pretty >= 1.0, cpphs >= 1.3, parsec >= 2.1 && < 3, containers, transformers,
-                        uniplate == 1.6.1, template-haskell == 2.7.0.0, directory, filepath, bytestring,
+                        uniplate == 1.6.1, template-haskell >= 2.7 && < 3, directory, filepath, bytestring,
                         flowlocks-framework
 -- Package used for debug printout. Remove for production build:
                         , haskell-src-exts
@@ -124,7 +124,7 @@ Executable parac
 
   Build-Tools:          alex >= 2.3
   Build-Depends:        array >= 0.1, pretty >= 1.0, cpphs >= 1.3, parsec >= 2.1 && < 3, containers, transformers, 
-                        uniplate == 1.6.1, directory, filepath, template-haskell == 2.7.0.0, bytestring,
+                        uniplate == 1.6.1, directory, filepath, template-haskell >= 2.7 && < 3, bytestring,
                         flowlocks-framework
 -- Package used for debug printout. Remove for production build:
                         , haskell-src-exts

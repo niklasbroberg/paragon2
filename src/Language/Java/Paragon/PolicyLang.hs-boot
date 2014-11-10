@@ -49,6 +49,7 @@ instance Data ActorPolicyBounds
 instance Typeable ActorPolicyBounds
 instance Pretty ActorPolicyBounds
 
+{-
 instance HasSubTyping m =>
     PartialOrder m ActorPolicyBounds
 
@@ -57,5 +58,5 @@ instance HasSubTyping m =>
 
 instance HasSubTyping m =>
     Lattice m ActorPolicyBounds
-
+-}
 

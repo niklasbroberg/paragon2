@@ -109,7 +109,7 @@ issueTracker :: String
 issueTracker = "http://code.google.com/p/paragon-java/issues/entry"
 
 versionString :: String
-versionString = "0.1.31"
+versionString = "0.2.0"
 
 -- | Module paths for use in error reports
 libraryBase, typeCheckerBase :: String

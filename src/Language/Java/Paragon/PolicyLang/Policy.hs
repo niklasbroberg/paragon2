@@ -117,7 +117,7 @@ instance HasSubTyping m =>
 
 instance HasSubTyping m =>
           JoinSemiLattice m ActorSetRep where
-    top = NoActor
+    topM = return NoActor
 
     NoActor `lub` _ = return NoActor
     _ `lub` NoActor = return NoActor
@@ -147,7 +147,7 @@ instance HasSubTyping m =>
 
 instance HasSubTyping m =>
           Lattice m ActorSetRep where
-    bottom = TypedActor (TcClsRefT objectT) $ B.pack "x"
+    bottomM = return $ TypedActor (TcClsRefT objectT) $ B.pack "x"
 
     NoActor `glb` a = return a
     a `glb` NoActor = return a

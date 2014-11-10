@@ -139,7 +139,7 @@ instance HasSubTyping m =>
   PolicyBounds lb1 ub1 `lub` PolicyBounds lb2 ub2 =
       PolicyBounds <$> lb1 `lub` lb2 <*> ub1 `lub` ub2
 
-  top = KnownPolicy $ VarPolicy $ ConcretePolicy $ Policy []
+  topM = return $ KnownPolicy $ VarPolicy $ ConcretePolicy $ Policy []
 
 instance HasSubTyping m =>
     Lattice m ActorPolicyBounds where
@@ -151,8 +151,8 @@ instance HasSubTyping m =>
   PolicyBounds lb1 ub1 `glb` PolicyBounds lb2 ub2 =
       PolicyBounds <$> lb1 `glb` lb2 <*> ub1 `glb` ub2
 
-  bottom = KnownPolicy $ VarPolicy $ ConcretePolicy $ 
-           Policy [Clause (TypedActor (TcClsRefT objectT) $ B.pack "x") [] []]
+  bottomM = return $ KnownPolicy $ VarPolicy $ ConcretePolicy $ 
+                     Policy [Clause (TypedActor (TcClsRefT objectT) $ B.pack "x") [] []]
 
 
 instance Pretty ActorPolicyBounds where

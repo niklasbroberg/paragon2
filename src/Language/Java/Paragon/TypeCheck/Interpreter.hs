@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveFunctor, ScopedTypeVariables #-}
+{-# LANGUAGE DeriveFunctor, ScopedTypeVariables, Rank2Types #-}
 module Language.Java.Paragon.TypeCheck.Interpreter where
 
 import Language.Java.Paragon.Interaction
