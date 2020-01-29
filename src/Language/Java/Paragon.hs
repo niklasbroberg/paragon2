@@ -164,23 +164,23 @@ compile flags filePath = do
   
    where withDefaultErrCtxt = withErrCtxt EmptyContext
          compilationStages pDirs fc = do
-   	   -- Converting to abstract syntax tree
-	   ast <- liftEitherMB . convertParseToErr $ parser compilationUnit fc
+           -- Converting to abstract syntax tree
+           ast <- liftEitherMB . convertParseToErr $ parser compilationUnit fc
            raiseErrors
-	   detailPrint "Parsing complete!"
-	   -- Name resolution
-	   ast1 <- resolveNames pDirs ast
+           detailPrint "Parsing complete!"
+           -- Name resolution
+           ast1 <- resolveNames pDirs ast
            raiseErrors
-	   detailPrint "Name resolution complete!"
+           detailPrint "Name resolution complete!"
            
-	   debugPrint $ prettyPrint ast1
-	   -- Type check
-	   ast2 <- typeCheck pDirs (takeBaseName filePath) ast1
+           debugPrint $ prettyPrint ast1
+           -- Type check
+           ast2 <- typeCheck pDirs (takeBaseName filePath) ast1
            raiseErrors
-	   detailPrint "Type checking complete!"
-	   -- Generate .java and .pi files
-	   liftIO $ genFiles flags filePath  ast2
-	   detailPrint "File generation complete!"
+           detailPrint "Type checking complete!"
+           -- Generate .java and .pi files
+           liftIO $ genFiles flags filePath  ast2
+           detailPrint "File generation complete!"
 
 convertParseToErr :: Either ParseError a -> Either Error a
 convertParseToErr (Left x)  = Left $ 

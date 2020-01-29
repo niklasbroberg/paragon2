@@ -128,10 +128,10 @@ addFlowPredicate = map (\(TcClause actor body) ->
     where 
         flow    = Name defaultPos LName Nothing (Ident defaultPos (B.pack ">>Flow<<"))
 
-isActorLock :: Name SourcePos		
+isActorLock :: Name SourcePos           
 isActorLock = Name defaultPos LName Nothing (Ident defaultPos (B.pack ">>IsActor<<"))
 
-		
+                
 -- adds the IsActor(X) lock for each variable X in the head of the rule
 makeSafe :: [TcClause TcAtom] -> [TcClause TcAtom]
 makeSafe = map makeSafe' 
@@ -183,11 +183,10 @@ atomToLock (TcAtom lname actors) = TcLock lname (map conv actors)
 
 -- Preventing compiler warnings ;-)
 ltrans :: ((Name SourcePos, [ActorId]) -> a) ->  
-          TcLock -> 
-		  a
+          TcLock -> a
 ltrans f (TcLock n a) = f (n,a)
 ltrans _ (TcLockVar _) = error "Unexpected TcLockVar in containment check!"
-	  
+          
 -- Returns True iff the provided set of rules with the given database can derive
 -- the desired lock.
 canDerive :: [TcClause TcAtom] ->
@@ -199,16 +198,16 @@ canDerive rules inpdb db target =
     (target `elem` db) || 
         let extendedDB = nub (oneStepDerive ++ db) in
             if length extendedDB == length db 
-				then 
-				{- trace ("Containment failed on database " ++ 
-					       prettyPrint (filter (ltrans (\(n,_) ->  n /= isActorLock )) 
-						                        inpdb)
-					      ++ "\nWith desired lock: "++ prettyPrint target
-					      ++ "\nWith rules: " ++ prettyPrint rules
-					      ++ "\nWith db: " ++ prettyPrint db  )-}
-					False 
-				else 
-					canDerive rules inpdb extendedDB target
+                                then 
+                                {- trace ("Containment failed on database " ++ 
+                                               prettyPrint (filter (ltrans (\(n,_) ->  n /= isActorLock )) 
+                                                                        inpdb)
+                                              ++ "\nWith desired lock: "++ prettyPrint target
+                                              ++ "\nWith rules: " ++ prettyPrint rules
+                                              ++ "\nWith db: " ++ prettyPrint db  )-}
+                                        False 
+                                else 
+                                        canDerive rules inpdb extendedDB target
     where oneStepDerive = foldl (\x y -> x ++ deriveAll y db) [] rules
 
 -- Returns the list of all heads this rule can derive from the provided

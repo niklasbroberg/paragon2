@@ -37,7 +37,7 @@ fromLeft =  either id (error "fromLeft: Right")
 --
 
 runCommandChan :: String -- ^ command
-	      -> IO (Pipe,Pipe,Pipe,ProcessHandle) -- ^ stdin, stdout, stderr, process
+              -> IO (Pipe,Pipe,Pipe,ProcessHandle) -- ^ stdin, stdout, stderr, process
 runCommandChan c = 
     do
     inC  <- newChan
@@ -50,8 +50,8 @@ runCommandChan c =
     return (inC,outC,errC,p)
 
 runCommandStr :: String -- ^ command
-	      -> String -- ^ stdin data
-	      -> IO (String,String,ProcessHandle) -- ^ stdout, stderr, process
+              -> String -- ^ stdin data
+              -> IO (String,String,ProcessHandle) -- ^ stdout, stderr, process
 runCommandStr c inStr = 
     do
     (inC,outC,errC,p) <- runCommandChan c
@@ -61,8 +61,8 @@ runCommandStr c inStr =
     return (out,err,p)
 
 runCommandStrWait :: String -- ^ command
-		  -> String -- ^ stdin data
-		  -> IO (String,String,ExitCode) -- ^ stdout, stderr, process exit status
+                  -> String -- ^ stdin data
+                  -> IO (String,String,ExitCode) -- ^ stdout, stderr, process exit status
 runCommandStrWait c inStr =
     do
     (out,err,p) <- runCommandStr c inStr
