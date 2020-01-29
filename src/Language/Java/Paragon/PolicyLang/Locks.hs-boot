@@ -16,5 +16,5 @@ instance Eq LockSpec
 instance Ord LockSpec
 instance Show LockSpec
 instance Data LockSpec
-instance Typeable LockSpec
+--instance Typeable LockSpec
 instance Pretty LockSpec

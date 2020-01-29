@@ -41,6 +41,8 @@ import Data.Data
 import Data.Generics (Data(..),Typeable(..))
 #endif
 
+import Prelude hiding ((<>))
+
 --flowAtomString :: String
 --flowAtomString = "$FLOW$"
 

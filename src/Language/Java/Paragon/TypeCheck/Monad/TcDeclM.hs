@@ -63,6 +63,8 @@ import qualified Data.ByteString.Char8 as B
 import Data.List (partition, unzip4)
 import Data.Maybe (catMaybes)
 
+import qualified Control.Monad.Fail as Fail
+
 tcDeclMModule :: String
 tcDeclMModule = typeCheckerBase ++ ".Monad.TcDeclM"
 
@@ -1205,6 +1207,9 @@ newtype TcDeclM a = TcDeclM (TypeMap -> TypeMap -> TcClassType -> PiReader (a, T
 runTcDeclM :: TcClassType -> TcDeclM a -> PiReader a
 runTcDeclM ty (TcDeclM f) = fst <$> f emptyTM emptyTM ty
 
+instance Fail.MonadFail TcDeclM where
+  fail = liftPR . fail
+
 instance Monad TcDeclM  where
   return = liftPR . return
 
@@ -1213,7 +1218,7 @@ instance Monad TcDeclM  where
                        let TcDeclM g = k a
                        g ctm gtm' ty
 
-  fail = liftPR . fail
+  fail = Fail.fail
 
 instance Functor TcDeclM  where
   fmap = liftM

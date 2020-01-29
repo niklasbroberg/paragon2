@@ -11,14 +11,16 @@ import Data.Data
 import Data.Generics (Data(..),Typeable(..))
 #endif
 
+import qualified Control.Monad.Fail as Fail
+
 data TcRefType
 
 instance Eq TcRefType
 instance Ord TcRefType
 instance Show TcRefType
 instance Data TcRefType
-instance Typeable TcRefType
+-- instance Typeable TcRefType
 instance Pretty TcRefType
 
-class (Functor m, Applicative m, Monad m) => HasSubTyping m where
+class (Functor m, Applicative m, Monad m, Fail.MonadFail m) => HasSubTyping m where
   subTypeOf :: TcRefType -> TcRefType -> m Bool

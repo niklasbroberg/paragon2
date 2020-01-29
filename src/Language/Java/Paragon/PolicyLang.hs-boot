@@ -46,7 +46,7 @@ data ActorPolicyBounds
 instance Eq ActorPolicyBounds
 instance Show ActorPolicyBounds
 instance Data ActorPolicyBounds
-instance Typeable ActorPolicyBounds
+--instance Typeable ActorPolicyBounds
 instance Pretty ActorPolicyBounds
 
 {-

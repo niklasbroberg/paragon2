@@ -22,6 +22,8 @@ import Control.Monad (forM_, ap)
 import Data.Maybe (fromJust)
 import Data.List (nub, delete)
 
+import qualified Control.Monad.Fail as Fail
+
 interpretModule :: String
 interpretModule = typeCheckerBase ++ ".Interpreter"
 
@@ -56,6 +58,9 @@ instance Show (InterpretM a) where
   show (SubTypeOf rt1 rt2 _f) = "SubTypeOf (" ++ show rt1 ++ ") (" ++ show rt2 ++ ") ..."
   -- Break, Continued
   -- Loop?
+
+instance Fail.MonadFail InterpretM where
+  fail = error
 
 instance Monad InterpretM where
   return = ReturnM

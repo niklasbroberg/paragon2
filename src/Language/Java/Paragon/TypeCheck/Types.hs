@@ -28,6 +28,9 @@ import Data.Data
 import Data.Generics (Data(..),Typeable(..))
 #endif
 
+import Prelude hiding ((<>))
+import qualified Control.Monad.Fail as Fail
+
 typesModule :: String
 typesModule = typeCheckerBase ++ ".Types"
 
@@ -418,7 +421,7 @@ binaryNumPromote t1 t2 = do
 binaryNumPromote_ :: TcStateType -> TcStateType -> TcStateType
 binaryNumPromote_ t1 t2 = stateType . TcPrimT . fromJust $ binaryNumPromote t1 t2
 
-class (Functor m, Applicative m, Monad m) => HasSubTyping m where
+class (Functor m, Applicative m, Monad m, Fail.MonadFail m) => HasSubTyping m where
   subTypeOf :: TcRefType -> TcRefType -> m Bool
 
 

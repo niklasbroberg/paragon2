@@ -15,6 +15,8 @@ import Data.Data
 import Data.Generics (Data(..),Typeable(..))
 #endif
 
+import Prelude hiding ((<>))
+
 
 data NullAnnot = NotNull | MaybeNull
                  deriving (Eq, Show, Data, Typeable)

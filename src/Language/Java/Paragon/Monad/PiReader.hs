@@ -27,9 +27,10 @@ import System.Directory (doesFileExist,doesDirectoryExist,getDirectoryContents)
 import qualified Data.ByteString.Char8 as B
 import Data.Char (toLower)
 
-import Control.Monad (liftM, filterM)
+import Control.Monad (liftM, filterM, ap)
 import Control.Applicative
 import Control.Arrow (second)
+import qualified Control.Monad.Fail as Fail
 
 piReaderModule :: String
 piReaderModule = libraryBase ++ ".Monad.PiReader"
@@ -45,6 +46,13 @@ newtype PiReader a = PiReader ( PiPath -> BaseM a )
 runPiReader :: PiPath -> PiReader a -> BaseM a
 runPiReader pp (PiReader f) = f pp
 
+instance Applicative PiReader where
+  (<*>) = ap
+  pure = return
+
+instance Fail.MonadFail PiReader where
+  fail = liftBase . fail
+
 instance Monad (PiReader) where
   return x = PiReader $ \_ -> return x
 
@@ -52,8 +60,8 @@ instance Monad (PiReader) where
                           a <- f pp
                           let PiReader g = k a
                            in g pp
+  fail = Fail.fail
 
-  fail = liftBase . fail
 
 instance Functor (PiReader) where
   fmap = liftM

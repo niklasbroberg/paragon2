@@ -57,6 +57,8 @@ import Data.Data
 import Data.Generics (Data(..),Typeable(..))
 #endif
 
+import Prelude hiding ((<>))
+
 type ActorPolicy 
     = MetaPolicy 
         MetaVarRep 

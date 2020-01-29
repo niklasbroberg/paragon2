@@ -16,7 +16,7 @@ instance Eq TypedActorIdSpec
 instance Ord TypedActorIdSpec
 instance Show TypedActorIdSpec
 instance Data TypedActorIdSpec
-instance Typeable TypedActorIdSpec
+--instance Typeable TypedActorIdSpec
 
 instance ActorId TypedActorIdSpec 
 instance Pretty TypedActorIdSpec 

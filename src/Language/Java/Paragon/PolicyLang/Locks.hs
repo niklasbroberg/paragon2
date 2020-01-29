@@ -20,6 +20,8 @@ import Data.Data
 #else
 import Data.Generics (Data(..),Typeable(..))
 #endif
+
+import Prelude hiding ((<>))
 {-
 type LockMods = ([TcLock], [TcLock])
 

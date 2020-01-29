@@ -52,6 +52,9 @@ import qualified Data.Map as Map
 import Data.List (union)
 import qualified Data.ByteString.Char8 as B
 
+
+import qualified Control.Monad.Fail as Fail
+
 tcCodeMModule :: String
 tcCodeMModule = typeCheckerBase ++ ".Monad.TcCodeM"
 
@@ -173,6 +176,9 @@ runTcCodeM env state (TcCodeM f) = do
   (a,_,cs) <- f env (Just state)
   return (a, cs)
 
+instance Fail.MonadFail TcCodeM where
+  fail err = TcCodeM $ \_ _ -> fail err
+
 instance Monad TcCodeM where
   return x = TcCodeM $ \_ s -> return (x, s, [])
 
@@ -182,7 +188,7 @@ instance Monad TcCodeM where
                       (b, s2, cs2) <- g e s1
                       return (b, s2, cs1 ++ cs2)
 
-  fail err = TcCodeM $ \_ _ -> fail err
+  fail = Fail.fail
 
 instance Functor TcCodeM where
   fmap = liftM

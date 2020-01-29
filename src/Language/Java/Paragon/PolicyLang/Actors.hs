@@ -22,6 +22,8 @@ import Data.Data
 import Data.Generics (Data(..),Typeable(..))
 #endif
 
+import Prelude hiding ((<>))
+
 -- | The actor identity representation in the Paragon dialect 
 --   of Paralocks is slightly more complex than basic Paralocks, 
 --   allowing slightly better precision for instance actors,

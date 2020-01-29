@@ -15,6 +15,8 @@ import Language.Java.Paragon.Syntax
 
 import qualified Data.ByteString.Char8 as B
 
+import Prelude hiding ((<>))
+
 prettyPrint :: Pretty a => a -> String
 prettyPrint = show . pretty
 
