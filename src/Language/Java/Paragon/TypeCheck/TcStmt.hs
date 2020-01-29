@@ -47,15 +47,15 @@ tcStmt (StmtBlock _ b) = StmtBlock Nothing <$> tcBlock b
 -- Rule IF
 tcStmt (IfThenElse _ c s1 s2) = do
   (tyC, pC, c') <- tcExp c
-  --check (tyC `elem` [booleanT, clsTypeToType . fromJust . box $ BooleanT ()]) 
+  --check (tyC `elem` [booleanT, clsTypeToType . fromJust . box $ BooleanT ()])
   check (isBoolConvertible tyC)
              $  toUndef $ "if-statement requires a condition of type compatible with boolean\n"
                ++ "Found type: " ++ prettyPrint tyC
   extendBranchPC pC ("branch dependent on condition " ++ prettyPrint c) $ do
-    (s1', s2') <- (isNotNullChecked c >> 
-                   (maybeM (mLocks tyC) 
-                    (\ls -> applyLockMods $ PL.openAll $ 
-                     map PL.skolemizeLock ls)) >> tcStmt s1) 
+    (s1', s2') <- (isNotNullChecked c >>
+                   (maybeM (mLocks tyC)
+                    (\ls -> applyLockMods $ PL.openAll $
+                     map PL.skolemizeLock ls)) >> tcStmt s1)
                   ||| (isNullChecked c >> tcStmt s2)
     return $ IfThenElse Nothing c' s1' s2'
 
@@ -71,11 +71,11 @@ tcStmt (While _ c sBody) = do
   check (isBoolConvertible tyC) $  toUndef $ "Cannot convert type to boolean"
   extendBranchPC pC ("loop over condition " ++ prettyPrint c) $
     addBranchPC breakE $
-    addBranchPC continueE $ 
-     do maybeM (mLocks tyC) 
+    addBranchPC continueE $
+     do maybeM (mLocks tyC)
          (\ls -> applyLockMods $ PL.openAll $ map PL.skolemizeLock ls)
         -- First iteration of body
-        sBody' <- (isNotNullChecked c >> tcStmt sBody) 
+        sBody' <- (isNotNullChecked c >> tcStmt sBody)
 
         -- Approximate state to the possible ones
         -- at the start of the loop
@@ -88,10 +88,10 @@ tcStmt (While _ c sBody) = do
         -- Second iteration of condition
         _ <- tcExp c -- This is only to get the (potentially) more difficult constraints
         maybeM (mLocks tyC) (\ls -> applyLockMods ([],ls))
-        
+
         -- Second iteration of body
         _ <- tcStmt sBody -- Again for the sake of the constraints, and outgoing state
--}        
+-}
         -- Fix outgoing state
         sBreak <- getExnState ExnBreak   -- Sb = Ss'[exns](break)[state]
         maybeM sBreak mergeWithState     -- S' = Se' <> Sb
@@ -103,19 +103,19 @@ tcStmt (BasicFor _ mForInit mTest mUp body) = do
   (mForInit', forf) <- withInits mForInit $ do
     !s <- getState
     (tyC, pC, mTest') <- case mTest of
-                           Nothing -> PL.bottomM >>= \bt -> 
+                           Nothing -> PL.bottomM >>= \bt ->
                                         return (stateType booleanT, bt, Nothing)
                            Just test -> do
                               (ty, p, test') <- tcExp test
                               return (ty, p, Just test')
-    check (isBoolConvertible tyC) $  toUndef $ 
+    check (isBoolConvertible tyC) $  toUndef $
               "Test in basic for loop must have a bool-convertible type. \n" ++
               "Found type: " ++ prettyPrint tyC
-    maybe id (\test -> extendBranchPC pC 
+    maybe id (\test -> extendBranchPC pC
                        ("for loop dependent on condition " ++ prettyPrint test)) mTest $
       addBranchPC breakE $
       addBranchPC continueE $ do
-        maybeM (mLocks tyC) 
+        maybeM (mLocks tyC)
          (\ls -> applyLockMods $ PL.openAll $ map PL.skolemizeLock ls)
         -- First iteration of body
         body' <- tcStmt body
@@ -135,17 +135,17 @@ tcStmt (BasicFor _ mForInit mTest mUp body) = do
         -- Second iteration of condition
         _ <- maybe (return undefined) tcExp mTest -- This is only to get the (potentially) more difficult constraints
         maybeM (mLocks tyC) (\ls -> applyLockMods ([],ls))
-        
+
         -- Second iteration of body
         _ <- tcStmt body -- Again for the sake of the constraints, and outgoing state
-        _ <- maybe (return undefined) (mapM tcExp) mUp        
+        _ <- maybe (return undefined) (mapM tcExp) mUp
 -}
         -- Fix outgoing state
         sBreak <- getExnState ExnBreak   -- Sb = Ss'[exns](break)[state]
         maybeM sBreak mergeWithState     -- S' = Se' <> Sb
         deactivateExn ExnBreak           -- S'' = S'[exns /= break]
         return $ \mForInit' -> BasicFor Nothing mForInit' mTest' mUp' body'
-  return $ forf mForInit'  
+  return $ forf mForInit'
 
 -- Rule BREAK
 tcStmt (Break _ Nothing) = do
@@ -163,7 +163,7 @@ tcStmt (Continue _ Nothing) = do
 tcStmt (Return _ Nothing) = do
   (tyR, _pR) <- getReturn
   check (tyR == voidT) $ toUndef $ "Encountered unexpected empty return statement"
-{-  check (pR == top)   $ "Internal error: tcStmt: " 
+{-  check (pR == top)   $ "Internal error: tcStmt: "
                           ++ "void return with non-top return policy should never happen: " ++ show pR
 -}
   pc <- getCurrentPC returnE
@@ -182,13 +182,13 @@ tcStmt (Return _ (Just e)) = do
       mapM_ (\(p,q) -> do
                constraint PL.emptyLockSet p q $ toUndef $ "Cannot unify policy type parameters at method call"
                constraint PL.emptyLockSet q p $ toUndef $  "Cannot unify policy type parameters at method call") ps
-  
+
       -- Check pE <=[L] pR
       constraintLS pE pR $ toUndef $
                "Returned value has too restrictive policy:\n" ++
                "Return expression: " ++ prettyPrint e ++ "\n" ++
                "  with policy: " ++ prettyPrint pE ++ "\n" ++
-               "Declared policy bound: " ++ prettyPrint pR               
+               "Declared policy bound: " ++ prettyPrint pR
       -- Check E[branchPC](return) <= pR
       bpcs <- getBranchPC returnE
       constraintPC bpcs pR $ \p src -> toUndef $
@@ -213,13 +213,13 @@ tcStmt (Throw _ eX) = do
   -- Check E[branchPC](X) <= E[exns](X)[write]
   bpc <- getBranchPC (exnE tyX)
   constraintPC bpc wX $ \p src -> toUndef $
-      "Exception with write effect " ++ prettyPrint wX ++ 
+      "Exception with write effect " ++ prettyPrint wX ++
       " may not be thrown in " ++ src ++
       " with write effect bound " ++ prettyPrint p
   -- Check exnPC(S) <= E[exns](X)[write]
   epc <- getExnPC
   constraintPC epc wX $ \p src -> toUndef $
-      "Exception with write effect " ++ prettyPrint wX ++ 
+      "Exception with write effect " ++ prettyPrint wX ++
       " may not be thrown in " ++ src ++
       " with write effect bound " ++ prettyPrint p
   -- Check pX <=[L] E[exns](X)[read]
@@ -246,17 +246,17 @@ tcStmt (Try _ block [catch] Nothing) = do
   addBranchPC (exnE tyP) $          -- E' = E[branchPC{tyP +-> bottom},
     registerExn tyP pR pW $ do      --        exns{tyP +-> (pR, \pi)}]
       block' <- tcBlock block
-      extendVarEnv (unIdent i) (VSig tyP pR True False (isFinal ms) False) $ do --Last bool uncertain 
+      extendVarEnv (unIdent i) (VSig tyP pR True False (isFinal ms) False) $ do --Last bool uncertain
                                          -- E* = E[vars{x +-> (tyP, pR)}]
         msX <- getExnState (ExnType tyP)
         debugPrint $ "msX: " ++ show (fmap (const ()) msX)
         maybeM msX $ mergeWithState  -- S* = St <> St[exns](X)[state]
         cBlock' <- tcBlock cBlock
         deactivateExn (ExnType tyP)
-        let catch' = Catch Nothing (FormalParam Nothing (map notAppl ms) 
+        let catch' = Catch Nothing (FormalParam Nothing (map notAppl ms)
                                     tT False (VarId Nothing (notAppl i))) cBlock'
         return $ Try Nothing block' [catch'] Nothing
- 
+
 -- Rule TRYFINALLY
 tcStmt (Try _ block [] (Just finBlock)) = do
   sS <- getState     -- Must store starting state for later
@@ -286,11 +286,11 @@ tcStmt (Try sp blk catches mFinally) = do
 -- TODO change the list of actor names to a list of expressions (parser, AST, here)
 tcStmt os@(Open _ (Lock sp n@(Name _ nt mPre i) as)) = do
   unless (nt == LName) $
-         panic (tcStmtModule ++ ".tcStmt:Open") 
+         panic (tcStmtModule ++ ".tcStmt:Open")
                    $ "Unexpected name: " ++ show n
   LSig pL lTys _ <- lookupLock mPre i
   -- (_,pL) <- lookupVar n
-  check (length as == length lTys) $ 
+  check (length as == length lTys) $
             mkError (LArityMismatch (prettyPrint n) (length lTys) (length as)) sp
   -- Check pI <=[L] pL
   psAs <- map snd <$> mapM lookupActorName as
@@ -327,12 +327,12 @@ tcStmt os@(Open _ (Lock sp n@(Name _ nt mPre i) as)) = do
 -- Rule CLOSE
 tcStmt cs@(Close _ (Lock _ n@(Name _ nt mPre i) as)) = do
   unless (nt == LName) $
-         panic (tcStmtModule ++ ".tcStmt:Close") 
+         panic (tcStmtModule ++ ".tcStmt:Close")
                    $ "Unexpected name: " ++ show n
   LSig pL lTys _ <- lookupLock mPre i
 --  (_,pL) <- lookupVar n
 --  LTI arL pL <- lookupLock n
-  check (length as == length lTys) $  toUndef $ 
+  check (length as == length lTys) $  toUndef $
             "Lock " ++ prettyPrint n ++ " expects " ++ show (length lTys)
                     ++ " arguments but has been given " ++ show (length as)
   -- Check pI <=[L] pL
@@ -370,12 +370,12 @@ tcStmt cs@(Close _ (Lock _ n@(Name _ nt mPre i) as)) = do
 -- Rule OPENIN
 tcStmt (OpenBlock _ l@(Lock _ n@(Name _ nt mPre i) as) block) = do
   unless (nt == LName) $
-         panic (tcStmtModule ++ ".tcStmt:OpenBlock") 
+         panic (tcStmtModule ++ ".tcStmt:OpenBlock")
                    $ "Unexpected name: " ++ show n
   LSig pL lTys _ <- lookupLock mPre i
   -- (_,pL) <- lookupVar n
   --debugTc $ "pL: " ++ prettyPrint n ++ ": " ++ show pL
-  check (length as == length lTys) $  toUndef $ 
+  check (length as == length lTys) $  toUndef $
             "Lock " ++ prettyPrint n ++ " expects " ++ show (length lTys)
                     ++ " arguments but has been given " ++ show (length as)
   -- Check pI <=[L] pL
@@ -398,7 +398,7 @@ tcStmt (OpenBlock _ l@(Lock _ n@(Name _ nt mPre i) as) block) = do
             $ zip lTys tysArgs
   extendLockEnv [PL.ConcreteLock $ PL.Lock n aids] $
     OpenBlock Nothing (notAppl l) <$> tcBlock block
-    
+
 
 tcStmt s = fail $ "Unsupported statement: " ++ prettyPrint s
 
@@ -438,13 +438,13 @@ tcBlockStmts (BlockStmt _ stmt : bss) = do
 -- Rule LOCALVARINIT/LOCALVARDECL
 tcBlockStmts (LocalVars _ ms t vds : bss) = do
   let rPolExps = [ e | Reads _ e <- ms ]
-  check (length rPolExps <= 1) $ toUndef $ 
+  check (length rPolExps <= 1) $ toUndef $
               "At most one read modifier allowed per variable"
 --  mapM_ tcPolicyMod rPolExps
   pV  <- localVarPol ms vds
   (tyV, tT) <- tcSrcType genMeta t
 --  debugTc $ "Array type pre: " ++ prettyPrint t
-  (vds', bss') <- tcLocalVars pV tyV (isFinal ms) vds [] $ 
+  (vds', bss') <- tcLocalVars pV tyV (isFinal ms) vds [] $
                     tcBlockStmts bss
   return (LocalVars Nothing (map notAppl ms) tT vds' : bss')
 
@@ -458,7 +458,7 @@ tcPolicyMod polExp = do
   return polExp'
 -}
 
-tcLocalVars ::  PL.ActorPolicy -> TcType -> Bool -> [VarDecl SourcePos] 
+tcLocalVars ::  PL.ActorPolicy -> TcType -> Bool -> [VarDecl SourcePos]
             -> [VarDecl T] -> TcCodeM a -> TcCodeM ([VarDecl T], a)
 tcLocalVars _ _ _ [] acc cont = cont >>= \a -> return (reverse acc, a)
 
@@ -469,7 +469,7 @@ tcLocalVars pV tyV fin (vd@(VarDecl _ (VarId _ i) Nothing):vds) acc cont = do
   _styV <- registerStateType i tyV True Nothing
   extendVarEnv (unIdent i) (VSig tyV pV False False fin False) $ do
   addBranchPC (varE (mkSimpleName EName i)) $ do
-    tcLocalVars pV tyV fin vds (notAppl vd : acc) cont    
+    tcLocalVars pV tyV fin vds (notAppl vd : acc) cont
 
 -- Rule LOCALVARINIT (Exp)
 tcLocalVars pV tyV fin (vd0@(VarDecl _sp (VarId _ i) (Just (InitExp spE e))):vds) acc cont = do
@@ -477,7 +477,7 @@ tcLocalVars pV tyV fin (vd0@(VarDecl _sp (VarId _ i) (Just (InitExp spE e))):vds
   (tyE, pE, e') <- tcExp e
   mps <- tyV =<: tyE
   case mps of
-    Nothing -> fail $ "Type mismatch: " ++ prettyPrint (unStateType tyE) ++ 
+    Nothing -> fail $ "Type mismatch: " ++ prettyPrint (unStateType tyE) ++
                                    " <=> " ++ prettyPrint tyV
     Just ps -> do
       mapM_ (\(p,q) -> do
@@ -511,16 +511,16 @@ tcLocalVars pV tyV fin (VarDecl _ (VarId _ i) (Just (InitArray _ arr)):vds) acc 
                         ++ " of non-array type " ++ prettyPrint tyV
                         ++ " given literal array initializer"
 
-tcLocalVars _ _ _ (vd:_) _ _ = 
+tcLocalVars _ _ _ (vd:_) _ _ =
     fail $ "Deprecated array syntax not supported: " ++ prettyPrint vd
 
 
 localVarPol :: [Modifier SourcePos] -> [VarDecl SourcePos] -> TcCodeM PL.ActorPolicy
-localVarPol ms vds = 
+localVarPol ms vds =
     case [ p | Reads _ p <- ms ] of
       [] -> newMetaPolVar . getVarId . head $ vds     -- TODO a TcVarPolicy for each variable, or a shared one ?
             where getVarId (VarDecl _ (VarId _ i) _) = i
-                  getVarId (VarDecl _ (VarDeclArray sp vdi) _) = getVarId $ VarDecl sp vdi Nothing 
+                  getVarId (VarDecl _ (VarDeclArray sp vdi) _) = getVarId $ VarDecl sp vdi Nothing
       [p] -> do
         debugPrint $ "Found read policy: " ++ prettyPrint p ++ " - evaluating"
         PL.VarPolicy <$> evalPolicy p
@@ -533,7 +533,7 @@ localVarPol ms vds =
 
 tcEci :: TypeCheck TcCodeM ExplConstrInv
 tcEci eci = do
-  (tyT, nwtas, as, con) <- 
+  (tyT, nwtas, as, con) <-
       case eci of
         ThisInvoke  _ nwtas as -> (,nwtas,as,ThisInvoke)  <$> getThisType
         SuperInvoke _ nwtas as -> (,nwtas,as,SuperInvoke) <$> getSuperType

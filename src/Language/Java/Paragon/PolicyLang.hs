@@ -10,16 +10,16 @@
 -- Stability   :  transient
 -- Portability :  portable
 --
--- This module provides a concrete instantiation of the 
+-- This module provides a concrete instantiation of the
 -- Flow Locks Framework, in the form of the Paragon dialect
 -- of the Paralocks language. The differences from the presentation
--- in Broberg & Sands, 
+-- in Broberg & Sands,
 -- "Paralocks - Role-Based Information Flow Control and Beyond",
 -- are a) the precision is improved for instance actor fields, and
 -- b) the Paragon dialect can represent actor/lock type parameters.
 --
 -----------------------------------------------------------------------------
-module Language.Java.Paragon.PolicyLang 
+module Language.Java.Paragon.PolicyLang
     (
      module Language.Java.Paragon.PolicyLang.Actors,
      module Language.Java.Paragon.PolicyLang.Locks,
@@ -59,11 +59,11 @@ import Data.Generics (Data(..),Typeable(..))
 
 import Prelude hiding ((<>))
 
-type ActorPolicy 
-    = MetaPolicy 
-        MetaVarRep 
-        PolicyVarRep 
-        (Name SourcePos) 
+type ActorPolicy
+    = MetaPolicy
+        MetaVarRep
+        PolicyVarRep
+        (Name SourcePos)
         ActorSetRep
 
 type PrgPolicy
@@ -113,7 +113,7 @@ type TcAtom = Atom (Name SourcePos)
 
 type GlobalPol = GlobalPolicy (Name SourcePos) ActorSetRep
 
-type TcConstraint = 
+type TcConstraint =
     Constraint MetaVarRep PolicyVarRep (Name SourcePos) ActorSetRep TypedActorIdSpec
 
 type ConstraintWMsg = (TcConstraint, Error)
@@ -134,7 +134,7 @@ instance HasSubTyping m =>
 instance HasSubTyping m =>
     JoinSemiLattice m ActorPolicyBounds where
   KnownPolicy p1 `lub` KnownPolicy p2 = KnownPolicy <$> p1 `lub` p2
-  KnownPolicy p1 `lub` PolicyBounds lb ub = 
+  KnownPolicy p1 `lub` PolicyBounds lb ub =
       PolicyBounds <$> p1 `lub` lb <*> p1 `lub` ub
   PolicyBounds lb ub `lub` KnownPolicy p1 =
       PolicyBounds <$> lb `lub` p1 <*> ub `lub` p1
@@ -146,14 +146,14 @@ instance HasSubTyping m =>
 instance HasSubTyping m =>
     Lattice m ActorPolicyBounds where
   KnownPolicy p1 `glb` KnownPolicy p2 = KnownPolicy <$> p1 `glb` p2
-  KnownPolicy p1 `glb` PolicyBounds lb ub = 
+  KnownPolicy p1 `glb` PolicyBounds lb ub =
       PolicyBounds <$> p1 `glb` lb <*> p1 `glb` ub
   PolicyBounds lb ub `glb` KnownPolicy p1 =
       PolicyBounds <$> lb `glb` p1 <*> ub `glb` p1
   PolicyBounds lb1 ub1 `glb` PolicyBounds lb2 ub2 =
       PolicyBounds <$> lb1 `glb` lb2 <*> ub1 `glb` ub2
 
-  bottomM = return $ KnownPolicy $ VarPolicy $ ConcretePolicy $ 
+  bottomM = return $ KnownPolicy $ VarPolicy $ ConcretePolicy $
                      Policy [Clause (TypedActor (TcClsRefT objectT) $ B.pack "x") [] []]
 
 

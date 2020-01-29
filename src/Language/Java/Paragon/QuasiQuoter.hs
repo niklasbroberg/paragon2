@@ -1,7 +1,7 @@
 {-# LANGUAGE QuasiQuotes, TemplateHaskell #-}
 module Language.Java.Paragon.QuasiQuoter where
 
---import Language.Haskell.TH.Syntax 
+--import Language.Haskell.TH.Syntax
 
 --import qualified Language.Haskell.TH as TH
 import Language.Haskell.TH.Quote
@@ -33,25 +33,25 @@ fromRight _ = panic (quasiQuoterModule ++ ".fromRight") ""
 
 
 parserQQ :: (Lift a,Show a) => GenParser (L Token) () a -> QuasiQuoter
-parserQQ f = QuasiQuoter{ 
-               quoteExp  = lift . fromRight . parser f, 
+parserQQ f = QuasiQuoter{
+               quoteExp  = lift . fromRight . parser f,
                quotePat  = return .fromRight . parsePat .show . fromRight . parser f,
                quoteType = panic (quasiQuoterModule ++ ".parserQQ: quoteType") "",
                quoteDec  = panic (quasiQuoterModule ++ ".parserQQ: quoteDec" ) ""
-             }       
+             }
 
 nameQQ, expQQ, typeQQ, stmtQQ, lhsQQ :: QuasiQuoter
 nameQQ = parserQQ name
 expQQ  = parserQQ exp
-typeQQ = parserQQ ttype          
+typeQQ = parserQQ ttype
 stmtQQ = parserQQ stmt
 lhsQQ  = parserQQ lhs
 
 impDeclQQ,
-  varDeclQQ, methodBodyQQ, memberDeclQQ, fieldDeclQQ, methodDeclQQ, 
+  varDeclQQ, methodBodyQQ, memberDeclQQ, fieldDeclQQ, methodDeclQQ,
   modifiersQQ, formalParamQQ, blockStmtQQ, classDeclQQ, lockPropQQ :: QuasiQuoter
 varDeclQQ    = parserQQ varDecl
-methodBodyQQ = parserQQ methodBody 
+methodBodyQQ = parserQQ methodBody
 memberDeclQQ = parserQQ memberDecl
 fieldDeclQQ  = parserQQ fieldDecl
 methodDeclQQ = parserQQ methodDecl

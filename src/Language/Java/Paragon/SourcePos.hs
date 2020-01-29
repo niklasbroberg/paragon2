@@ -28,7 +28,7 @@ realEqSourcePos (SourcePos p1 l1 c1)
                 (SourcePos p2 l2 c2) = p1 == p2 && l1 == l2 && c1 == c2
 
 instance Show SourcePos where
-  show (SourcePos p l c) = p ++ " (line " ++ (show l) ++ ", column " ++ 
+  show (SourcePos p l c) = p ++ " (line " ++ (show l) ++ ", column " ++
                            (show c) ++ ")"
 
 -- On purpose no type def, would have been:

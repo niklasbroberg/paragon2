@@ -8,22 +8,22 @@ import Language.Java.Paragon.SourcePos
 contextTxt :: ContextInfo -> String
 contextTxt (ClassContext s) =
   "In the context of class " ++ s ++ ":\\n"
-contextTxt (MethodContext s) =  
+contextTxt (MethodContext s) =
   "In the context of method " ++ s ++ ":\\n"
-contextTxt (LockStateContext s) =  
+contextTxt (LockStateContext s) =
   "In the context of lock state " ++ s ++ ":\\n"
-contextTxt (LockSignatureContext s) =  
+contextTxt (LockSignatureContext s) =
   "When checking the signature of lock " ++ s ++ ":\\n"
-contextTxt (ConstructorBodyContext s) =  
+contextTxt (ConstructorBodyContext s) =
   "When checking the body of constructor " ++ s ++ ":\\n"
 contextTxt EmptyContext = ""
-contextTxt (FallbackContext s) = 
+contextTxt (FallbackContext s) =
   "In fallback context " ++ s ++ ":\\n"
 
 -- | Prints error information for all errors found in this file
 errorEclipse :: (String, [Error]) -> IO ()
 errorEclipse (_, []) = return ()
-errorEclipse (_, err) = 
+errorEclipse (_, err) =
   mapM_ (\(Error info pos context) -> do
     putStr   $ dispSourcePos pos
     putStrLn $ errorTxt' info
@@ -34,36 +34,36 @@ errorEclipse (_, err) =
 -- pointing to the column in the specified sourcepos (unless the position is
 -- the default, in which case only the name of the file is shown).
 dispSourcePos :: SourcePos -> String
-dispSourcePos pos = 
+dispSourcePos pos =
   if (realEqSourcePos pos defaultPos)
     then "1:1:1:"
     else (show $ sourceLine pos)         ++ ":" ++
          (show $ (sourceColumn pos) - 1) ++ ":" ++
-         (show $ (sourceColumn pos) - 1) ++ ":" 
- 
+         (show $ (sourceColumn pos) - 1) ++ ":"
+
 -- | Convert an error to a human readable string
 errorTxt' :: ErrorInfo -> String
 -- NameResolution
 errorTxt' (UnresolvedName typ name) =
   "Unresolved name: " ++ typ ++ " " ++ name ++ " not in scope"
-  
+
 errorTxt' (AmbiguousName nt ident pre1 pre2) =
   "Ambiguous " ++ nt ++ " " ++ ident ++
     "\\nCould refer to either of:" ++
     "\\n    " ++ pre1 ++
     "\\n    " ++ pre2
-  
+
 errorTxt' (IllegalDeref typ name) =
   "Cannot dereference " ++ typ ++ ": " ++ name
-  
+
 errorTxt' (EInPackage expr expType pkg) =
   "Package " ++ pkg ++ " cannot have " ++ expType ++ " " ++ expr ++
                    " as a direct member."
-  
+
 -- TcDeclM
 errorTxt' (FileClassMismatchFetchType fname cname) =
   "Filename " ++ fname ++ " does not match expected class name " ++ cname
-  
+
 -- TcExp
 errorTxt' (LArityMismatch lname expr got) =
   "Lock " ++ lname ++ " expects " ++ (show expr) ++ " arguments, but has been "
@@ -75,7 +75,7 @@ errorTxt' (FieldLRTObject field obj opol fpol) =
   "object when updating.\\n" ++
   "Object policy: " ++ opol ++ "\\n" ++
   "Field policy: " ++ fpol
-  
+
 errorTxt' (ArrayLRTIndex arr arrP ind indP) =
   "When assigning into an array, the policy on the index expression may be no "
   ++ "more restrictive than the policy of the array itself\\n" ++
@@ -91,14 +91,14 @@ errorTxt' (ExprLRTArray expr arrP expP) =
  "Array policy: " ++ arrP ++ "\\n" ++
  "Element policy: " ++ expP
 
-errorTxt' (NoSuchField oref otype field) = 
+errorTxt' (NoSuchField oref otype field) =
   "Object " ++ oref ++ " of type " ++ otype ++ " does not have a field named "
   ++ field
 
 errorTxt' (PolViolatedAss frEx frPo toEx toPo) =
   "Cannot assign result of expression " ++ frEx ++ " with policy " ++ frPo ++
   " to location " ++ toEx ++ " with policy " ++ toPo
- 
+
 errorTxt' (NonIntIndex ty) =
   "Non-integral expression of type " ++ ty ++ " used as array index expression"
 
@@ -164,9 +164,9 @@ errorTxt' (ArrayInitExpPol expr exprP polB) =
 
 errorTxt' (ParsingError p) =
   "Parsing error: " ++ p
-  
+
 errorTxt' (FallbackError e) = e
-  
+
 -- Others
-errorTxt' e = 
+errorTxt' e =
   "Extra error: Show instance for this error not available:\\n" ++ show e

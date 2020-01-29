@@ -33,7 +33,7 @@ compileClassDecl :: ClassDecl -> TcCont r ClassDecl
 compileClassDecl (ClassDecl ms i tps mSuper impls cbody) =
   let ms' = removeParagonMods ms -- No lockstate mods allowed here
       (tps', tpMembers, tpPars, tpAsss) = splitTypeParams tps
-  in ClassDecl ms' i tps' mSuper impls <$> 
+  in ClassDecl ms' i tps' mSuper impls <$>
        compileClassBody cbody tpMembers tpPars tpAsss
 
 -- Paragon type parameters need to be replaced by runtime counterparts.
@@ -46,13 +46,13 @@ compileClassDecl (ClassDecl ms i tps mSuper impls cbody) =
 --        at the beginning of every constructor of the class
 splitTypeParams :: [TypeParam] -> ([TypeParam],[MemberDecl],[FormalParam],[BlockStmt])
 splitTypeParams = go ([],[],[],[]) -- error "compileTypeParams undefined"
-    where 
+    where
       go (ttps,fds,fps,as) [] = (reverse ttps, reverse fds, reverse fps, reverse as)
-      go (ttps,fds,fps,as) (tp:tps) = 
+      go (ttps,fds,fps,as) (tp:tps) =
           case tp of
             TypeParam{}      -> go (tp:ttps,fds,fps,as) tps -- Retain
             LockStateParam{} -> go (   ttps,fds,fps,as) tps -- Ignore
-            _ -> let (i,ty) = 
+            _ -> let (i,ty) =
                          case tp of
                            ActorParam  i -> (i,[typeQQ| se.chalmers.paragon.ConcreteActor |])
                            PolicyParam i -> (i,[typeQQ| se.chalmers.paragon.Policy        |])
@@ -60,7 +60,7 @@ splitTypeParams = go ([],[],[],[]) -- error "compileTypeParams undefined"
                      fp = [formalParamQQ| final #T#ty #i         |]
                      a  =   [blockStmtQQ| this.#i = #i;         |]
                  in go (ttps,fd:fds,fp:fps,a:as) tps
-                                
+
 compileClassBody :: ClassBody -> [MemberDecl] -> [FormalParam] -> [BlockStmt] -> TcCont r ClassBody
 compileClassBody (ClassBody ds) tpMembers tpPars tpAsss = do
   ds' <- concat <$> mapM (compileDecl tpPars tpAsss) ds
@@ -80,10 +80,10 @@ compileSimpleMemberDecl :: [FormalParam] -> [BlockStmt] -> MemberDecl -> TcCont 
 compileSimpleMemberDecl tpPars tpAsss md =
     case md of
       -- Actors
-      FieldDecl ms [typeQQ| actor |] varDecls -> 
+      FieldDecl ms [typeQQ| actor |] varDecls ->
           FieldDecl (removeParagonMods ms) [typeQQ| se.chalmers.paragon.ConcreteActor |] <$>
             mapM actorVarDecl varDecls
-                where actorVarDecl (VarDecl (VarId i@(Ident rawI)) Nothing) 
+                where actorVarDecl (VarDecl (VarId i@(Ident rawI)) Nothing)
                           = return -- [varDeclQQ| $$i = Actor.newConcreteActor($s$rawI) |]
                                    $ vDecl i $ call ["Actor","newConcreteActor"]
                                                     [Lit $ String rawI]
@@ -92,12 +92,12 @@ compileSimpleMemberDecl tpPars tpAsss md =
       FieldDecl ms [typeQQ| policy |] varDecls ->
           FieldDecl (removeParagonMods ms) [typeQQ| se.chalmers.paragon.Policy |] <$>
             mapM policyVarDecl varDecls
-                 where policyVarDecl (VarDecl (VarId i@(Ident rawI)) 
+                 where policyVarDecl (VarDecl (VarId i@(Ident rawI))
                           (Just (InitExp (PolicyExp (PolicyLit cs)))))
                            = return $ vDecl i $ call ["Policy","newPolicy"]
                                                      (Lit (String rawI) : map clauseToExp cs)
                        policyVarDecl vd = compileVarDecl vd
-          
+
       _ -> error $ show md
 
 compileVarDecl :: VarDecl -> TcCont r VarDecl
@@ -157,13 +157,13 @@ compilePolicyExp (PolicyLit cs) = return $
          (Lit (String "") : map clauseToExp cs)
 compilePolicyExp (PolicyTypeVar i) = return $ ExpName (Name [i])
 -- PolicyOf may only appear in modifiers, which will have been removed.
-compilePolicyExp (PolicyOf (Ident rawI)) 
+compilePolicyExp (PolicyOf (Ident rawI))
     = fail $ "compilePolicyExp: Unexpected expression policyof(" ++ rawI ++ ")"
 
 -- Clauses and components
 
 clauseToExp :: Clause Actor -> Exp
-clauseToExp (Clause h body) = 
+clauseToExp (Clause h body) =
     let vs = nub [ a | Var a <- universeBi h ++ universeBi body ] `zip` [0..] -- Substs
         exps = actorToExp vs h : map (atomToExp vs) body
      in call ["Policy","newPClause"] exps
@@ -171,20 +171,20 @@ clauseToExp (Clause h body) =
 headToExp, atomToExp :: [(Ident,Int)] -> Atom -> Exp
 headToExp vs (Atom _ acts) =
     call ["ActorList","newActorList"] (map (actorToExp vs) acts)
-atomToExp vs (Atom n acts) = 
+atomToExp vs (Atom n acts) =
     call ["Atom","newAtom"] (ExpName n: map (actorToExp vs) acts)
 
 actorToExp :: [(Ident,Int)] -> Actor -> Exp
 actorToExp vs (Actor (ActorName n)) = ExpName n
 actorToExp vs (Actor (ActorTypeVar tv)) = ExpName (Name [tv])
-actorToExp vs (Var i) = 
+actorToExp vs (Var i) =
     let k = fromIntegral $ fromJust (lookup i vs)
      in call ["Actor", "newActorVariable"] [Lit $ Int k]
 
 
 -- Locks
 
--- Compile a lock declaration into a (static) Lock declaration 
+-- Compile a lock declaration into a (static) Lock declaration
 -- plus (static) initialization of its lock properties.
 -- Precondition: md is a LockDecl
 compileLockDecl :: MemberDecl -> TcCont r [Decl]
@@ -194,15 +194,15 @@ compileLockDecl md =
               let -- Properties defined in modifiers
                   lmExps = map (lockModToExp i) $ filter isLockMod ms
                   -- Properties defined explicitly
-                  lpExps = maybe [] 
-                             (map (lockPropToExp i) . (\(LockProperties cs) -> cs)) 
+                  lpExps = maybe []
+                             (map (lockPropToExp i) . (\(LockProperties cs) -> cs))
                              mLProps
-                  lockE = call ["Lock","newLock"] 
+                  lockE = call ["Lock","newLock"]
                                [Lit $ String rawI, Lit $ Int (fromIntegral $ length pars)]
                   lockD = FieldDecl (Static:Final:removeParagonMods ms)
                             [typeQQ| se.chalmers.paragon.Lock |]
                             [vDecl i lockE]
-              return $ MemberDecl lockD : 
+              return $ MemberDecl lockD :
                         lockExpsToInit i (lmExps ++ lpExps) -- map (uncurry $ lockRhsToMd i)
                                   -- ((lmExps ++ lpExps) `zip` [0..])
       _ -> fail $ "Internal error: compileLockDecl: " ++ show md
@@ -213,7 +213,7 @@ lockExpsToInit :: Ident -> [Exp] -> [Decl]
 lockExpsToInit _ [] = []
 lockExpsToInit i es = [InitDecl True . Block $
                         map (BlockStmt . ExpStmt) es]
-                        
+
 lockPropToExp :: Ident -> Clause Atom -> Exp
 lockPropToExp i@(Ident rawI) (Clause h body) =
     let vs = nub [ a | Var a <- universeBi (h:body) ] `zip` [0..] -- Substs
@@ -222,7 +222,7 @@ lockPropToExp i@(Ident rawI) (Clause h body) =
     in call [rawI,"addClause"] exps
 
 lockModToExp :: Ident -> Modifier -> Exp
-lockModToExp (Ident rawI) m = 
+lockModToExp (Ident rawI) m =
     let mname = map toLower (show m)
      in call [rawI,mname] []
 
@@ -233,7 +233,7 @@ isLockMod m = case m of
   Reflexive -> True
   Transitive -> True
   Symmetric -> True
-  _ -> False               
+  _ -> False
 
 isParagonMod :: Modifier -> Bool
 isParagonMod m = case m of
@@ -248,7 +248,7 @@ isParagonMod m = case m of
   _ -> False
 
 removeParagonMods :: [Modifier] -> [Modifier]
-removeParagonMods = filter (not . isParagonMod) 
+removeParagonMods = filter (not . isParagonMod)
 
 
 call :: [String] -> [Exp] -> Exp

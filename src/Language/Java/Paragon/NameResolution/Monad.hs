@@ -1,9 +1,9 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 -- | This module defines the monad used in the name resolution stage of the
 -- compilation process.
--- It is defined on top of the PiReader monad and adds 
-module Language.Java.Paragon.NameResolution.Monad 
-    ( 
+-- It is defined on top of the PiReader monad and adds
+module Language.Java.Paragon.NameResolution.Monad
+    (
 
      module Language.Java.Paragon.Monad.PiReader,
 
@@ -14,9 +14,9 @@ module Language.Java.Paragon.NameResolution.Monad
      getExpansion, withExpansion, extendExpansion,
 
      mkPExpansion, mkTExpansion, mkEExpansion, mkMExpansion, mkLExpansion,
-                                                             
+
      mkPExpansionWithPrefix, mkTExpansionWithPrefix, mkEExpansionWithPrefix, mkMExpansionWithPrefix, mkLExpansionWithPrefix,
-                                                             
+
      expansionUnion, unionsWithKey
 
     ) where
@@ -88,13 +88,13 @@ extendExpansion e1 nra = do
 
 type Map = Map.Map
 
-type Expansion = 
+type Expansion =
     Map (B.ByteString,                   NameType)   -- NameType may be (partially) unresolved
-        (Either String (Maybe (Name SourcePos), NameType))  -- NameType is now fully resolved    
+        (Either String (Maybe (Name SourcePos), NameType))  -- NameType is now fully resolved
 -- Note that the source pos does not play any role in the expansion but is only there for type correctness
 
 -- |Expand package / type / expression / method / lock
-mkPExpansion, mkTExpansion, mkEExpansion, mkMExpansion, mkLExpansion :: 
+mkPExpansion, mkTExpansion, mkEExpansion, mkMExpansion, mkLExpansion ::
     B.ByteString -> Expansion
 
 mkPExpansion = mkPExpansionWithPrefix Nothing
@@ -102,7 +102,7 @@ mkPExpansion = mkPExpansionWithPrefix Nothing
 mkTExpansion = mkTExpansionWithPrefix Nothing
 
 mkEExpansion = mkEExpansionWithPrefix Nothing
-               
+
 mkMExpansion = mkMExpansionWithPrefix Nothing
 
 mkLExpansion = mkLExpansionWithPrefix Nothing
@@ -118,7 +118,7 @@ dropData (AntiQName _ s) = AntiQName () s
 dropDataId (Ident _ s) = Ident () s
 dropDataId (AntiQIdent _ s) = AntiQIdent () s-}
 
-mkPExpansionWithPrefix, mkTExpansionWithPrefix, mkEExpansionWithPrefix, mkMExpansionWithPrefix, mkLExpansionWithPrefix :: 
+mkPExpansionWithPrefix, mkTExpansionWithPrefix, mkEExpansionWithPrefix, mkMExpansionWithPrefix, mkLExpansionWithPrefix ::
     Maybe (Name SourcePos) -> B.ByteString -> Expansion
 
 mkPExpansionWithPrefix n i = --n' i = let n = fmap dropData n' in
@@ -128,12 +128,12 @@ mkPExpansionWithPrefix n i = --n' i = let n = fmap dropData n' in
 
 -- |Construct an expansion that classifies the given identifier as TName
 -- in a lookup of TName or more general NameTypes
-mkTExpansionWithPrefix n i = --n' i = let n = fmap dropData n' in 
+mkTExpansionWithPrefix n i = --n' i = let n = fmap dropData n' in
   Map.fromList $ [((i, TName   ), return (n, TName)),
                   ((i, POrTName), return (n, TName)),
                   ((i, AmbName ), return (n, TName))]
 
-mkEExpansionWithPrefix n i = -- n' i = let n = fmap dropData n' in 
+mkEExpansionWithPrefix n i = -- n' i = let n = fmap dropData n' in
   Map.fromList $ [((i, EName   ), return (n, EName)),
                   ((i, EOrLName), return (n, EName)),
                   ((i, AmbName ), return (n, EName))]
@@ -143,7 +143,7 @@ mkMExpansionWithPrefix n i = --n' i = let n = fmap dropData n' in
                   ((i, MOrLName), return (n, MName)),
                   ((i, AmbName ), return (n, MName))]
 
-mkLExpansionWithPrefix n i = --n' i = let n = fmap dropData n' in 
+mkLExpansionWithPrefix n i = --n' i = let n = fmap dropData n' in
   Map.fromList $ [((i, LName   ), return (n, LName)),
                   ((i, MOrLName), return (n, LName)),
                   ((i, EOrLName), return (n, LName)),

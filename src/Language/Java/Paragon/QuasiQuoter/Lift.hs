@@ -16,7 +16,7 @@ import Data.Data
 
 
 instance Lift Double where
-  lift d = let s = show d 
+  lift d = let s = show d
                cs = lift s
            in  [|(read $cs)::Double|]
 
@@ -29,7 +29,7 @@ antiQ = const Nothing
         `extQ` (antiCaseType  :: Type  () -> Maybe (TH.Q TH.Exp))
         `extQ` (antiCaseName  :: Name  () -> Maybe (TH.Q TH.Exp))
         `extQ` (antiCaseIdent :: Ident () -> Maybe (TH.Q TH.Exp))
-        
+
 
 -- Idents
 instance (Data a, Lift a) => Lift (Ident a) where
@@ -63,14 +63,14 @@ antiCaseExp :: Exp a -> Maybe (TH.Q TH.Exp)
 antiCaseExp (AntiQExp _ s) = Just $ TH.varE $ TH.mkName s
 antiCaseExp _ = Nothing
 
-{-               
+{-
 deriveLiftAll :: [TH.Name] -> TH.Q [TH.Dec]
 deriveLiftAll ns = do
   is <- mapM (addDataCx <=< TH.reify) ns
   deriveLiftMany' is
 
 addDataCx :: TH.Info -> TH.Q TH.Info
-addDataCx i = 
+addDataCx i =
     case i of
       TH.TyConI (TH.DataD dcx n vsk cons _) -> do
           dp <- dataPred $ head vsk
@@ -83,7 +83,7 @@ addDataCx i =
 -}
 
 $(deriveLiftAll [''Literal,''ClassType,''TypeArgument,
-       ''ClassBody,''ArrayInit,''MethodInvocation,''Op,       
+       ''ClassBody,''ArrayInit,''MethodInvocation,''Op,
        ''AssignOp,''PolicyExp,''Lhs,''RefType,
        ''ArrayIndex,''FieldAccess,''NonWildTypeArgument,
        ''WildcardBound,''Decl,''VarInit,

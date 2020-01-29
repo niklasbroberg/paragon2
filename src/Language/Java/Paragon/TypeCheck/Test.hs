@@ -47,7 +47,7 @@ testTypes :: TypeMap
 testTypes = TypeMap {
               this = clsType (Ident "This"),
               fields = Map.empty,
-              methods = Map.fromList 
+              methods = Map.fromList
                          [((nam "foo", [intT]), fooInfo)],
               constrs = Map.fromList
                          [((TcClassT [(Ident "Foo", [])], []), cInfo1),

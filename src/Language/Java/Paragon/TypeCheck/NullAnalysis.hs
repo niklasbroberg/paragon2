@@ -25,7 +25,7 @@ data NullModif = Free | Committed | Unclassified
                  deriving (Eq, Show, Data, Typeable)
 
 type NullType = (NullAnnot, NullModif)
-    
+
 
 instance Ord NullAnnot where
     MaybeNull <= NotNull = False
@@ -37,7 +37,7 @@ instance Ord NullModif where
 
 instance Pretty NullAnnot where
     pretty = text . show
-                         
+
 instance Pretty NullModif where
     pretty = text . show
 

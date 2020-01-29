@@ -9,7 +9,7 @@ import Data.Either
 type Pipe = Chan (Either Char ())
 
 pipeGetContents :: Pipe -> IO String
-pipeGetContents p = 
+pipeGetContents p =
     do
     s <- getChanContents p
     return $ map fromLeft $ takeWhile isLeft s
@@ -38,7 +38,7 @@ fromLeft =  either id (error "fromLeft: Right")
 
 runCommandChan :: String -- ^ command
               -> IO (Pipe,Pipe,Pipe,ProcessHandle) -- ^ stdin, stdout, stderr, process
-runCommandChan c = 
+runCommandChan c =
     do
     inC  <- newChan
     outC <- newChan
@@ -52,10 +52,10 @@ runCommandChan c =
 runCommandStr :: String -- ^ command
               -> String -- ^ stdin data
               -> IO (String,String,ProcessHandle) -- ^ stdout, stderr, process
-runCommandStr c inStr = 
+runCommandStr c inStr =
     do
     (inC,outC,errC,p) <- runCommandChan c
-    forkIO (pipeWrite inC inStr >> pipeClose inC) 
+    forkIO (pipeWrite inC inStr >> pipeClose inC)
     out <- pipeGetContents outC
     err <- pipeGetContents errC
     return (out,err,p)

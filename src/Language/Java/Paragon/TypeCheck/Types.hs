@@ -1,6 +1,6 @@
-{-# LANGUAGE CPP, DeriveDataTypeable, TupleSections, 
-             PatternGuards, ViewPatterns, 
-             MultiParamTypeClasses, 
+{-# LANGUAGE CPP, DeriveDataTypeable, TupleSections,
+             PatternGuards, ViewPatterns,
+             MultiParamTypeClasses,
              FlexibleInstances, UndecidableInstances #-}
 module Language.Java.Paragon.TypeCheck.Types where
 
@@ -13,7 +13,7 @@ import Language.Java.Paragon.SourcePos
 --import Language.Java.Paragon.TypeCheck.Policy
 --import Language.Java.Paragon.TypeCheck.Locks
 --import Language.Java.Paragon.TypeCheck.Actors
-import {-# SOURCE #-} Language.Java.Paragon.PolicyLang 
+import {-# SOURCE #-} Language.Java.Paragon.PolicyLang
 --    (ActorPolicy, ActorPolicyBounds, TypedActorIdSpec, TcLock)
 import Language.Java.Paragon.TypeCheck.NullAnalysis
 
@@ -88,18 +88,18 @@ data TcTypeArg
 -- Map efficient, so we don't much care about the
 -- exact details of it.
 instance Ord TcTypeArg where
-  compare (TcActualType      rt1)  (TcActualType rt2)      
+  compare (TcActualType      rt1)  (TcActualType rt2)
       = compare rt1 rt2
-  compare (TcActualPolicy    p1)   (TcActualPolicy p2)     
-      | leq p1 p2 
+  compare (TcActualPolicy    p1)   (TcActualPolicy p2)
+      | leq p1 p2
         && leq p2 p1 = EQ
       | leq p1 p2 = LT
       | leq p2 p1 = GT
-      | otherwise = 
-  compare (TcActualActor     aid1) (TcActualActor aid2)    
+      | otherwise =
+  compare (TcActualActor     aid1) (TcActualActor aid2)
       = compare aid1 aid2
-  compare (TcActualLockState ls1)  (TcActualLockState ls2) 
-      | all (`elem` ls2) ls1 
+  compare (TcActualLockState ls1)  (TcActualLockState ls2)
+      | all (`elem` ls2) ls1
         && all (`elem` ls1) ls2 = EQ
       | all (`elem` ls2) ls1 = LT
       | all (`elem` ls1) ls2 = GT
@@ -117,7 +117,7 @@ instance Ord TcTypeArg where
 ------------------------------------
 -- Constructors
 
-booleanT, byteT, shortT, intT, longT, 
+booleanT, byteT, shortT, intT, longT,
  charT, floatT, doubleT, {-actorT,-} policyT :: TcType
 booleanT = TcPrimT (BooleanT defaultPos)
 byteT    = TcPrimT (ByteT    defaultPos)
@@ -131,7 +131,7 @@ doubleT  = TcPrimT (DoubleT  defaultPos)
 policyT  = TcPrimT (PolicyT  defaultPos)
 
 -- | Takes a regular type and converts it to a type with state.
--- If the type is a null reference it's result will have state 
+-- If the type is a null reference it's result will have state
 -- @(MaybeNull, Committed)@, otherwise it is @(NotNull, Committed)@.
 stateType :: TcType -> TcStateType
 stateType t@(TcRefT TcNullT) = TcType t (MaybeNull, Committed)
@@ -197,7 +197,7 @@ qualClsType is = TcClassT (mkName_ TName PName is) []
 --                  "AntiQName should never appear in an AST being type-checked"
 
 stringT, objectT :: TcClassType
-stringT = qualClsType $ map (Ident defaultPos . B.pack) $ 
+stringT = qualClsType $ map (Ident defaultPos . B.pack) $
   ["java","lang","String"]
 objectT = qualClsType $ map (Ident defaultPos . B.pack) $
   ["java","lang","Object"]
@@ -336,10 +336,10 @@ widenNarrowConvert _           = []
 
 
 box :: PrimType SourcePos -> Maybe (TcClassType)
-box pt = let mkClassType str spos = 
-                 Just $ TcClassT 
-                          (mkName_ TName PName $ 
-                            map (Ident spos . B.pack) 
+box pt = let mkClassType str spos =
+                 Just $ TcClassT
+                          (mkName_ TName PName $
+                            map (Ident spos . B.pack)
                               ["java", "lang", str]) []
          in case pt of
               BooleanT spos -> mkClassType "Boolean" spos
@@ -379,7 +379,7 @@ unIdent (AntiQIdent _ str) = panic (typesModule ++ ".unIdent")
 -}
 
 isNumConvertible :: TcStateType -> Bool
-isNumConvertible sty = 
+isNumConvertible sty =
     unStateType sty `elem` [byteT, shortT, intT, longT, charT, floatT, doubleT] ||
     case unboxType sty of
       Just t | t `elem` (map ($(aOfPrimType t)) [ByteT, ShortT, IntT, LongT, CharT, FloatT, DoubleT]) -> True
@@ -417,7 +417,7 @@ binaryNumPromote t1 t2 = do
     pt1 <- unaryNumPromote t1
     pt2 <- unaryNumPromote t2
     return $ max pt1 pt2
-      
+
 binaryNumPromote_ :: TcStateType -> TcStateType -> TcStateType
 binaryNumPromote_ t1 t2 = stateType . TcPrimT . fromJust $ binaryNumPromote t1 t2
 
@@ -474,7 +474,7 @@ instance Pretty TcTypeArg where
 
 ppTypeParams :: Pretty a => [a] -> Doc
 ppTypeParams [] = empty
-ppTypeParams tps = char '<' 
+ppTypeParams tps = char '<'
     <> hsep (punctuate comma (map pretty tps))
     <> char '>'
 

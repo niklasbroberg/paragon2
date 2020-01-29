@@ -1,6 +1,6 @@
 {-# LANGUAGE PatternGuards #-}
 
-module Language.Java.Paragon.XML 
+module Language.Java.Paragon.XML
   (XMLNode, xmlToNatural)
   where
 
@@ -46,8 +46,8 @@ datanode tag _data = CData tag [] _data
 
 standardNode :: String -> [(String, String)] -> [(String, String)] -> XMLNode
 standardNode string attr pairs =
-  XMLNode string 
-          [XMLAttribute a b |(a,b) <- attr] 
+  XMLNode string
+          [XMLAttribute a b |(a,b) <- attr]
                   [datanode a b |(a,b) <- pairs]
 
 instance Show XMLNode where
@@ -59,7 +59,7 @@ instance Error XMLNode where
   constructError = constructError'
   parseErrorToError perr = XMLNode "error" [] [datanode "parseError" (show perr)]
   noError = XMLNode "ok" [][]
-  
+
 constructError' :: String -> [(String, String)] -> XMLNode
 constructError' string pairs
   | Just context <- stripPrefix "context_" string = standardNode context pairs []
@@ -68,21 +68,21 @@ constructError' string pairs
                                                                          pairs
 
 safeLookup :: Eq a => b -> a -> [(a,b)] -> b
-safeLookup x needle xs = fromMaybe x $ lookup needle xs 
-                
+safeLookup x needle xs = fromMaybe x $ lookup needle xs
+
 errorCodes :: [(String,String)]
 errorCodes = [ ( "constraint_pRHs_pV"                                                                           , "-1000" )
                          ]
 
 xmlToNatural' :: [XMLNode] -> String
 xmlToNatural' nodes = concat (map xmlToNatural nodes)
-                         
+
 xmlToNatural :: XMLNode -> String
 xmlToNatural n@(XMLNode tag attr kids) = let
   f = safeLookup (\(_,_) -> "ERROR: ... could not convert following XML to natural text:\n" ++ (show n)) tag xmlToNaturalTable
   in f (map (\(XMLAttribute a b) -> (a,b)) attr, kids)
 xmlToNatural n = "ERROR: ... could not convert following XML to natural text:\n" ++ (show n)
-                         
+
 xmlToNaturalTable :: [(String, ([(String,String)],[XMLNode]) -> String)]
 xmlToNaturalTable =
   [ ("parac" ,
@@ -93,28 +93,28 @@ xmlToNaturalTable =
     )
   ,
     ("class" ,
-      (\(attr, kids) -> "In the context of the class " ++ 
+      (\(attr, kids) -> "In the context of the class " ++
                             (safeLookup "[unknown class]" "name" attr) ++
                                                 ":\n" ++(xmlToNatural' kids) )
     )
   , ("method",
-      (\(attr, kids) -> "In the context of the method body " ++ 
-                           (safeLookup "[unknown method]" "name" attr) ++ 
+      (\(attr, kids) -> "In the context of the method body " ++
+                           (safeLookup "[unknown method]" "name" attr) ++
                                            ":\n" ++ (xmlToNatural' kids) )
     )
   , ("lockstate",
-      (\(attr, kids) -> "In the context of the lockstate " ++ 
-                           (safeLookup "[unknown lockstate]" "state" attr) ++ 
+      (\(attr, kids) -> "In the context of the lockstate " ++
+                           (safeLookup "[unknown lockstate]" "state" attr) ++
                                            ":\n" ++ (xmlToNatural' kids) )
     )
   , ("locksignature",
-          (\(attr, kids) -> "When checking the signature of lock " ++ 
-                           (safeLookup "[unknown lock]" "lock" attr) ++ 
+          (\(attr, kids) -> "When checking the signature of lock " ++
+                           (safeLookup "[unknown lock]" "lock" attr) ++
                                            ":\n" ++ (xmlToNatural' kids) )
     )
   , ("constructor_body",
           (\(attr, kids) -> "When checking the body of constructur " ++
-                           (safeLookup "[unknown constructor]" "name" attr) ++ 
+                           (safeLookup "[unknown constructor]" "name" attr) ++
                                            ":\n" ++ (xmlToNatural' kids) )
     )
   , ("error",
@@ -127,7 +127,7 @@ naturalError :: String -> [XMLNode] -> String
 naturalError err nodes = let
   f = safeLookup (\_ -> "ERROR: ... could not find translation for " ++ err ++ ". XML:\n" ++ (concat $ map show nodes)) err errorToNaturalTable
   in f nodes
-  
+
 errorToNaturalTable :: [(String, ([XMLNode] -> String))]
 errorToNaturalTable =
   [ ("constraint_pRHs_pV" ,
@@ -144,19 +144,19 @@ errorToNaturalTable =
 
 
 cdataValue :: String -> [XMLNode] -> String
-cdataValue tag nodes = let 
+cdataValue tag nodes = let
   node = find findTag nodes
   in fromMaybe "[not found]" $ fmap (\n -> getVal n) node
-  where 
+  where
     findTag :: XMLNode -> Bool
     findTag (CData _tag _ _) = tag == _tag
     findTag _ = False
     getVal :: XMLNode -> String
     getVal (CData _ _ val) = val
     getVal _ = "[is no CDATA element!]"
-                                                   
-  
-  
+
+
+
 {-
 handleContext :: String -> [(String, String)]  -> XMLNode
 handleContext string pairs
@@ -164,7 +164,7 @@ handleContext string pairs
   | string == "Methodbody" = standardNode "method" [("hideString","1"):pairs] []
   | otherwise = standardNode string [("new",0)] ( [datanode a b |(a,b) <- pairs] ++ [datanode "string" expl] )
 -}
-                                                                                                         
---sample = XMLNode "hello" [XMLAttribute "attr1" "value1", XMLAttribute "attr2" "value2"] 
+
+--sample = XMLNode "hello" [XMLAttribute "attr1" "value1", XMLAttribute "attr2" "value2"]
 --            [ XMLNode "baby1" [XMLAttribute "attr1" "value1", XMLAttribute "attr2" "value2"] [],
 --              XMLNode "baby2" [] [CData "Blablabal"] ]

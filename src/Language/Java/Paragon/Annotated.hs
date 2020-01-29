@@ -58,7 +58,7 @@ doCons (NormalC c vs@((_,VarT n):sts)) =
       amapDef = clause [varP f, conP c (map varP nams)] (normalB rhs) []
   in (annDef, amapDef)
 doCons (RecC c sts) = doCons $ NormalC c [(s, t) | (_, s, t) <- sts]
--- doCons (InfixC sty1 c sty2) = 
+-- doCons (InfixC sty1 c sty2) =
 --  let con = [| conE c |]
 --      left = [| lift $(varE (mkName "x0")) |]
 --      right = [| lift $(varE (mkName "x1")) |]

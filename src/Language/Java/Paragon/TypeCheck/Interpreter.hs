@@ -27,7 +27,7 @@ import qualified Control.Monad.Fail as Fail
 interpretModule :: String
 interpretModule = typeCheckerBase ++ ".Interpreter"
 
-data Value = VLit (Literal SourcePos) 
+data Value = VLit (Literal SourcePos)
            | VPol PL.PrgPolicy
            | VAct PL.TypedActorIdSpec
            | VArr [Value]
@@ -38,7 +38,7 @@ data Value = VLit (Literal SourcePos)
 ----------------------------------------
 -- Monad for evaluating typemethods
 
-data InterpretM a 
+data InterpretM a
     = ReturnM a
     | MethodReturn Value
     | GetVariable (Name  SourcePos) (Value -> InterpretM a)
@@ -54,7 +54,7 @@ instance Show (InterpretM a) where
   show (GetVariable n _f) = "GetVariable (" ++ show n ++ ") ..."
   show (SetVariable i v _k) = "SetVariable (" ++ show i ++ ") (" ++ show v ++ ") ..."
   show (CallMethod n vs _f) = "CallMethod (" ++ show n ++ ") (" ++ show vs ++ ") ..."
-  show (EvalType rt _f) = "EvalType (" ++ show rt ++ ") ..." 
+  show (EvalType rt _f) = "EvalType (" ++ show rt ++ ") ..."
   show (SubTypeOf rt1 rt2 _f) = "SubTypeOf (" ++ show rt1 ++ ") (" ++ show rt2 ++ ") ..."
   -- Break, Continued
   -- Loop?
@@ -83,7 +83,7 @@ instance HasSubTyping InterpretM where
   subTypeOf rt1 rt2 = SubTypeOf rt1 rt2 ReturnM
 
 -- instance Functor InterpretM where
-  
+
 -- Dummy implementation, for now
 --lookupVarC :: Name SourcePos -> TcCodeM Value
 --lookupVarC n = liftTcDeclM $ lookupFieldD n
@@ -103,7 +103,7 @@ interpretTypeMethod lokup mi = do
 
 interpretActorId :: forall m . (EvalPolicyM m) =>
                    (Name SourcePos -> m Value) -> Name SourcePos -> m PL.TypedActorIdSpec
-interpretActorId lokup n@(Name spos _ _ _) = 
+interpretActorId lokup n@(Name spos _ _ _) =
   runInterpretM lokup $ iActorName (ActorName spos n)
 
 interpretActor :: forall m . (EvalPolicyM m) =>
@@ -115,10 +115,10 @@ interpretActor lokup tys act =
 --  runInterpretM lokup $ iAtom atom
 
 
-runInterpretM :: forall m . (EvalPolicyM m) => 
+runInterpretM :: forall m . (EvalPolicyM m) =>
                  (Name SourcePos -> m Value) -> (forall a . InterpretM a -> m a)
 runInterpretM lokup = runReturnIM Map.empty
-  where 
+  where
     runIM :: (VMap -> InterpretM a -> m b) -> VMap -> InterpretM a -> m b
 --    runIM _ (MethodReturn v) = return v
     runIM rec vs (GetVariable (Name _ _ Nothing i) f) |
@@ -128,7 +128,7 @@ runInterpretM lokup = runReturnIM Map.empty
       v <- lokup n
       rec vs (f v)
 
-    runIM rec vs (SetVariable i v m) = 
+    runIM rec vs (SetVariable i v m) =
         rec (Map.insert i v vs) m
 
     runIM rec vs em@(CallMethod n as f) = do
@@ -183,7 +183,7 @@ getReturnedValue im = panic (interpretModule ++ ".getReturnedValue")
 iBlock :: Block SourcePos -> InterpretM ()
 iBlock (Block _ bstmts) = mapM_ iBlockStmt bstmts
 
-iBlockStmt :: BlockStmt SourcePos -> InterpretM () 
+iBlockStmt :: BlockStmt SourcePos -> InterpretM ()
 iBlockStmt (BlockStmt _ stmt) = iStmt stmt
 iBlockStmt (LocalVars _ _ ty vds) = mapM_ (iVarDecl ty) vds
 
@@ -203,8 +203,8 @@ iVarInit :: VarInit SourcePos -> InterpretM Value
 iVarInit (InitExp _ init_) = iExp init_
 iVarInit (InitArray _ (ArrayInit _ vinits)) = VArr <$> mapM iVarInit vinits
 
-iStmt :: Stmt SourcePos -> InterpretM () 
-iStmt s = 
+iStmt :: Stmt SourcePos -> InterpretM ()
+iStmt s =
     case s of
       IfThen _ c stmt -> do
              b <- iBool c
@@ -226,7 +226,7 @@ iStmt s =
              MethodReturn v
       _ -> panic (interpretModule ++ ".iStmt") $
            "Unsupported statement in typemethod"
-             
+
 iBool :: Exp SourcePos -> InterpretM Bool
 iBool e = do
   VLit (Boolean _ b) <- iExp e
@@ -234,7 +234,7 @@ iBool e = do
 
 
 iExp :: Exp SourcePos -> InterpretM Value
-iExp e = 
+iExp e =
     case e of
       Lit _ l -> return $ VLit l
       Paren _ e1 -> iExp e1
@@ -273,8 +273,8 @@ iClauseVarDecl (ClauseVarDecl _ rt i) = do
   rTy <- iRefType rt
   return (i, rTy)
 
-iClauseHead :: [(Ident SourcePos, TcRefType)] 
-            -> ClauseHead SourcePos 
+iClauseHead :: [(Ident SourcePos, TcRefType)]
+            -> ClauseHead SourcePos
             -> InterpretM (Actor SourcePos, PL.TcActor, [(Ident SourcePos, TcRefType)])
 iClauseHead iTys (ClauseDeclHead n (ClauseVarDecl _ rt i)) = do
   rTy <- iRefType rt
@@ -305,7 +305,7 @@ generalizeAtom actMap (Atom _ n as) = PL.Atom n $ map convertActor as
 --iLClause (LClause _ hatom atoms) = TcClause <$> iAtom hatom <*> mapM iAtom atoms
 
 --iActorRep :: [(Actor SourcePos, PL.ActorRep)] -> Actor SourcePos -> InterpretM PL.ActorRep
---iActorRep actMap (Actor _ aname) 
+--iActorRep actMap (Actor _ aname)
 
 
 iActor :: [(Ident SourcePos, TcRefType)] -> Actor SourcePos -> InterpretM PL.TcActor
@@ -373,7 +373,7 @@ import Control.Monad (when)
 import Control.Applicative ((<$>))
 import Control.Arrow (first, second)
 
-data Value = VLit Literal 
+data Value = VLit Literal
            | VPol PolicyCT
            | VAct ActorId
            | VArr [Value]
@@ -419,7 +419,7 @@ scoped ima = do
   a <- ima
   updateState (first PM.shrink)
   return a
-  
+
 
 getVar :: Name -> IM Value
 getVar n = do
@@ -486,16 +486,16 @@ iVarDecl :: VarDecl -> IM ()
 iVarDecl (VarDecl (VarId i) mInit) = do
   case mInit of
     Nothing -> setVar (Name [i]) (error $ "Variable not initialized: " ++ prettyPrint i)
-    Just init -> do 
+    Just init -> do
        v <- iVarInit init
        setVar (Name [i]) v
 
 iVarInit :: VarInit -> IM Value
 iVarInit (InitExp init) = iExp init
 iVarInit (InitArray (ArrayInit vinits)) = VArr <$> mapM iVarInit vinits
-       
-    
-        
+
+
+
 evalArr :: Exp -> IM [Value]
 evalArr e = do
   val <- iExp e
@@ -546,7 +546,7 @@ iField e = case e of
       return (arr!!index, n, index:is)-}
 --    PostIncrement e -> do
 --                    (v, n, is) <- iField e
-                    
+
 
 iExp :: Exp -> IM Value
 iExp e = case e of
@@ -609,7 +609,7 @@ iAssign lhs aOp e = do
   assignOp aOp n is v
 
 assignOp :: AssignOp -> Name -> [Int] -> Value -> IM Value
-assignOp aOp n [] v = 
+assignOp aOp n [] v =
       do oldV <- getVar n
          let newV = case aOp of
                       EqualA -> v
@@ -661,7 +661,7 @@ evalOp op e1 e2 =
           Add  -> case (v1, v2) of
                     (VPol pca, VPol pcb) -> return $ VPol $ pca `meet` pcb
 
-{-                          
+{-
           Rem  -> numericOp rem v1 v2
           Sub  -> numericOp (-) v1 v2
           Div  -> divOp v1 v2 -- need separate handling

@@ -33,19 +33,19 @@ cmd c = do
 getAll g = do
   c <- getCurrentDirectory
   dirs <- getDirectoryContents (c </> g)
-  files <- forM dirs $ \dir -> do 
+  files <- forM dirs $ \dir -> do
     f1 <- getDirectoryContents (c </> g </> dir)
     f2 <- liftM sort (filterM (\x -> return (isSuffixOf ".para" x)) f1)
     mapM (\x -> return $ dir ++ "/" ++ x) f2
   return (foldl (++) [] files)
-  
+
 getAllIssues = do
   pwd <- getCurrentDirectory
   isList <- getDirectoryContents (pwd </> "issues")
   filIssues <- filterM (\x -> return (isPrefixOf "issue" x)) isList
   return $ sort filIssues
-  
-isAsExpected str1 str2 = do 
+
+isAsExpected str1 str2 = do
   if null str2 then do isEmpty str1 else
       if str1 == str2 then do
         putStrLn "ok"
@@ -61,12 +61,12 @@ isAsExpected str1 str2 = do
 isEmpty str = do
   if null str then do
         putStrLn "ok"
-        return 0 
+        return 0
     else do
         putStrLn $ color 1 "Output should be empty but isn't! Output was:"
         putStrLn $ color 3 $ str
         return 1
-        
+
 isNonEmpty str = do
   if null str then do
         putStrLn $ color 1 "Output should be non-empty but was!"
@@ -88,7 +88,7 @@ uglyErrorCheck e = do
   if e == "ExitSuccess" then do return 0 else do
     putStrLn $ color 1 "Error in compilation of parac."
     error "Test aborted."
-    
+
 
 compileParagon = do
   (o,e,c) <- runCommandStrWait ("cabal install ../") ""
@@ -97,35 +97,35 @@ compileParagon = do
 
 
 testParagon runJavaC = do
-  
+
   putStrLn $ color 4 "\nCompiling paragon"
   compileParagon
-  
+
   putStrLn $ color 4 "Testing valid programs"
-  allGood <- getAll "good" 
+  allGood <- getAll "good"
   nfaultsG <- forM allGood $ \program -> do
     putStr $ program ++ "... "
     (out,err,code) <- runCommandStrWait ("parac --oldskool -p ../lib: good/" ++ program) ""
     fault <- isEmpty (err ++ out)
     if (fault == 1)
       then return fault
-      else 
+      else
         if runJavaC
           then do
             (jout,jerr,_) <- runCommandStrWait
               ("javac -classpath '.:../lib' good/" ++ replaceExtension program "java") ""
             isEmpty (jerr ++ jout)
           else return fault
-  
+
   putStrLn $ color 4 "\nTesting invalid programs"
-  allBad <- getAll "bad" 
+  allBad <- getAll "bad"
   nfaultsB <- forM allBad $ \program -> do
     putStr $ program ++ "... "
     (out,err,_) <- runCommandStrWait ("parac --oldskool -p ../lib: bad/" ++ program) ""
     (eout,_,_) <- runCommandStrWait ("cat bad/" ++ (dropLast 4 program) ++ "exp") ""
     fault <- isAsExpected (err ++ out) eout
     return fault
-  
+
   putStrLn $ color 4 "\nTesting issues"
   allIssues <- getAllIssues
   nfaultsI <- forM allIssues $ \issue -> do
@@ -133,8 +133,8 @@ testParagon runJavaC = do
     (clist,_,_) <- runCommandStrWait ("cat issues/" ++ issue ++ "/compile") ""
     (eout,_,_) <- runCommandStrWait ("cat issues/" ++ issue ++ "/expected") ""
     totalOut <- forM (wordsWhen ((==) '\n') clist) $ \file -> do
-      (out,err,_) <- runCommandStrWait 
-                     ("parac --oldskool -p ../lib:issues/" ++ issue ++ 
+      (out,err,_) <- runCommandStrWait
+                     ("parac --oldskool -p ../lib:issues/" ++ issue ++
                       " issues/" ++ issue ++ "/" ++ file) ""
       if runJavaC && null eout && null (err ++ out)
         then do
@@ -152,7 +152,7 @@ testParagon runJavaC = do
          putStr $ (show nfaultsT) ++ " failure and "
        else
          putStr $ (show nfaultsT) ++ " failures and "
-  let 
+  let
     totalI = sum nfaultsI
     in if totalI == 1 then
          putStrLn $ (show totalI) ++ " open issue."

@@ -14,7 +14,7 @@ deriveLiftAll ns = do
   deriveLiftMany' is
 
 addDataCx :: Info -> Q Info
-addDataCx i = 
+addDataCx i =
     case i of
       TyConI (DataD dcx n vsk cons _) -> do
           dp <- dataPred $ head vsk

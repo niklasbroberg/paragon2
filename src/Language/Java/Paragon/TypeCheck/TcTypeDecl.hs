@@ -18,16 +18,16 @@ typeCheckTd (ClassTypeDecl cd) = typeCheckCd cd
 
 typeCheckCd :: ClassDecl -> TcBase ()
 typeCheckCd (ClassDecl ms i tps _super _impls (ClassBody decls)) = do
-  mapM_ typeCheckDecl 
-  
+  mapM_ typeCheckDecl
+
 
 skolemTypeDecl :: TypeDecl -> TcType
 skolemTypeDecl = undefined
 ------------------------------------------
-                             
+
 
 skolemType :: Ident -> [TypeParam] -> (TcType, [(TypeParam,TcTypeArg)])
-skolemType i tps = 
+skolemType i tps =
     let args = map skolemParam tps
     in (clsTypeWArg [(i, args)], zip tps args)
 

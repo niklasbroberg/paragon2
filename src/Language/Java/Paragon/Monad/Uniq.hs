@@ -1,4 +1,4 @@
-module Language.Java.Paragon.Monad.Uniq 
+module Language.Java.Paragon.Monad.Uniq
     ( Uniq, initUniq, getUniq ) where
 
 import Data.IORef

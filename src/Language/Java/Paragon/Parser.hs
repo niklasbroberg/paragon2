@@ -1,9 +1,9 @@
 {-# LANGUAGE CPP, PatternGuards, TupleSections, DeriveDataTypeable #-}
 module Language.Java.Paragon.Parser (
-    parser, 
-    
+    parser,
+
     compilationUnit, packageDecl, importDecl, typeDecl,
-    
+
     classDecl, interfaceDecl,
 
     memberDecl, fieldDecl, methodDecl, constrDecl,
@@ -11,34 +11,34 @@ module Language.Java.Paragon.Parser (
 
 
     methodBody, formalParams, formalParam,
-    
+
     modifier,
-    
+
     varDecls, varDecl, varInit, arrayInit,
-    
+
     block, blockStmt, stmt,
-    
+
     stmtExp, exp, primary, literal, lhs,
-    
+
     ttype, primType, refType, classType, returnType,
 
     typeParams, typeParam,
-    
-    name, ident, 
+
+    name, ident,
     nameRaw, ambName, eName, tName, pName, pOrTName, mOrLName,
     flattenName,
-    
+
     policy, policyExp, clause, actor, atom, lock, lockProperties,
-    
-    
+
+
     empty, list, list1, seplist, seplist1, opt, bopt, lopt,
-    
+
     comma, semiColon, period, colon,
 
     ParseError
-    
+
     -- module Text.ParserCombinators.Parsec.Pos
-    
+
     ) where
 
 import Language.Java.Paragon.Lexer ( L(..), Token(..), lexer)
@@ -51,7 +51,7 @@ import Text.ParserCombinators.Parsec hiding (SourcePos)
 import Language.Java.Paragon.SourcePos -- as ParaPos -- as (SourcePos)
 
 import Prelude hiding ( exp, catch, (>>), (>>=) )
-import qualified Prelude as P ( (>>), (>>=) ) 
+import qualified Prelude as P ( (>>), (>>=) )
 import qualified Data.ByteString.Char8 as B
 import Data.Maybe ( isJust, catMaybes, fromJust )
 import Control.Monad ( ap )
@@ -81,10 +81,10 @@ type P = GenParser (L Token) ()
 (>>=) :: Monad m => m a -> (a -> m b) -> m b
 (>>=) = (P.>>=)
 infixr 2 >>, >>=
--- Note also when reading that <$> is infixl 4 and thus has 
+-- Note also when reading that <$> is infixl 4 and thus has
 -- lower precedence than all the others (>>, >>=, and <|>).
-    
--- | Apply the given (constructor) function to the current position of the    
+
+-- | Apply the given (constructor) function to the current position of the
 -- parser
 setPos :: (SourcePos -> b) -> P b
 setPos x = getPosition >>= \pos -> return $ x (parSecToSourcePos pos)
@@ -116,7 +116,7 @@ packageDecl = do
     n <- nameRaw pName
     semiColon
     return $ PackageDecl pos n
-    
+
 importDecl :: P (ImportDecl SourcePos)
 importDecl = do
     pos <- getParaPosition
@@ -127,20 +127,20 @@ importDecl = do
     semiColon
     return $ mkImportDecl pos st ds n
 
-  where mkImportDecl pos False False n 
+  where mkImportDecl pos False False n
             = SingleTypeImport pos $ flattenRealName tName n
-        mkImportDecl pos False True  n 
+        mkImportDecl pos False True  n
             = TypeImportOnDemand pos $ flattenRealName pOrTName n
-        mkImportDecl pos True  True  n 
+        mkImportDecl pos True  True  n
             = StaticImportOnDemand pos $ flattenRealName tName n
-        mkImportDecl pos True  False n@(Name{}) = 
+        mkImportDecl pos True  False n@(Name{}) =
             let is = flattenName n
             in case reverse is of
                  [] -> panic (parserModule ++ ".importDecl") "Empty name"
-                 (lastI:initN) -> 
-                     SingleStaticImport pos 
+                 (lastI:initN) ->
+                     SingleStaticImport pos
                        (tName $ reverse initN) lastI
-        mkImportDecl _ _ _ _ 
+        mkImportDecl _ _ _ _
             = error $ "Single static import declaration \
                       \requires at least one non-antiquote ident"
 
@@ -148,7 +148,7 @@ importDecl = do
         flattenRealName _ n = n
 
 typeDecl :: P (Maybe (TypeDecl SourcePos))
-typeDecl = Just <$> classOrInterfaceDecl <|> 
+typeDecl = Just <$> classOrInterfaceDecl <|>
             const Nothing <$> semiColon
 
 ----------------------------------------------------------------------------
@@ -189,7 +189,7 @@ normalClassDeclM = do
     mex <- opt extends
     imp <- lopt implements
     bod <- classBody
-    return $ \ms -> 
+    return $ \ms ->
         generalize tps $ ClassDecl pos ms i tps ((fmap head) mex) imp bod
 
 extends :: P [ClassType SourcePos]
@@ -217,7 +217,7 @@ enumBody = braces $ do
     optional comma
     eds <- lopt enumBodyDecls
     return $ EnumBody pos ecs eds
-    
+
 enumConst :: P (EnumConstant SourcePos)
 enumConst = setPos EnumConstant
     <*> ident
@@ -245,26 +245,26 @@ interfaceDeclM = {- trace "interfaceDeclM" $ -} do
     tps <- lopt typeParams
     exs <- lopt extends
     bod <- interfaceBody
-    return $ \ms -> 
+    return $ \ms ->
         generalize tps $ InterfaceDecl pos ms i tps exs bod
 
 interfaceBody :: P (InterfaceBody SourcePos)
 interfaceBody = do pos <- getParaPosition
-                   InterfaceBody pos . catMaybes <$> 
+                   InterfaceBody pos . catMaybes <$>
                       braces (list interfaceBodyDecl)
 
 -- Declarations
 
 classBodyDecl :: P (Decl SourcePos)
-classBodyDecl = 
+classBodyDecl =
     (try $ setPos InitDecl
                 <*> bopt (tok KW_Static)
-                <*> block) <|> 
+                <*> block) <|>
     (do pos <- getParaPosition
         ms  <- list modifier
         dec <- memberDeclM
         return $ MemberDecl pos (dec ms))
-    
+
 -- Not used internally:
 -- | Top-level parser for member declarations
 memberDecl :: P (MemberDecl SourcePos)
@@ -272,18 +272,18 @@ memberDecl = unMod memberDeclM
 
 memberDeclM :: P (Mod (MemberDecl SourcePos))
 memberDeclM = {- trace "memberDeclM" $ -}
-    (try $ do 
+    (try $ do
         pos <- getParaPosition
         cd  <- classDeclM
         return $ \ms -> MemberClassDecl pos (cd ms)) <|>
-    (try $ do 
+    (try $ do
         pos <- getParaPosition
         idecl  <- interfaceDeclM
-        return $ \ms -> MemberInterfaceDecl pos (idecl ms)) <|> 
+        return $ \ms -> MemberInterfaceDecl pos (idecl ms)) <|>
     try (fieldDeclM varDecl) <|>
     lockDeclM <|>        -- Paragon
 --    policyDeclM <|>      -- Paragon
-    try methodDeclM <|> 
+    try methodDeclM <|>
     constrDeclM
 
 -- Not used internally:
@@ -315,11 +315,11 @@ methodDeclM = do
     fps <- formalParams
     thr <- lopt throws
     bod <- methodBody
-    return $ \ms -> 
+    return $ \ms ->
         generalize tps $ MethodDecl pos ms tps rt i fps thr bod
 
 methodBody :: P (MethodBody SourcePos)
-methodBody = setPos MethodBody <*> 
+methodBody = setPos MethodBody <*>
     (const Nothing <$> semiColon <|> Just <$> block)
 
 -- Not used internally:
@@ -335,7 +335,7 @@ constrDeclM = do
     fps <- formalParams
     thr <- lopt throws
     bod <- constrBody
-    return $ \ms -> 
+    return $ \ms ->
         generalize tps $ ConstructorDecl pos ms tps i fps thr bod
 
 -- Not used internally:
@@ -369,7 +369,7 @@ constrBody :: P (ConstructorBody SourcePos)
 constrBody = braces $ do setPos ConstructorBody <*>
                            opt (try explConstrInv) <*>
                            list blockStmt
-    
+
 explConstrInv :: P (ExplConstrInv SourcePos)
 explConstrInv = endSemi $
     (try $ do
@@ -377,13 +377,13 @@ explConstrInv = endSemi $
         tas <- lopt nonWildTypeArgs
         tok KW_This
         as  <- args
-        return $ ThisInvoke pos tas as) <|> 
+        return $ ThisInvoke pos tas as) <|>
     (try $ do
         pos <- getParaPosition
         tas <- lopt nonWildTypeArgs
         tok KW_Super
         as  <- args
-        return $ SuperInvoke pos tas as) <|> 
+        return $ SuperInvoke pos tas as) <|>
     (do pos <- getParaPosition
         pri <- primary
         period
@@ -395,11 +395,11 @@ explConstrInv = endSemi $
 -- TODO: This should be parsed like class bodies, and post-checked.
 --       That would give far better error messages.
 interfaceBodyDecl :: P (Maybe (MemberDecl SourcePos))
-interfaceBodyDecl = semiColon >> return Nothing <|> 
+interfaceBodyDecl = semiColon >> return Nothing <|>
     do ms  <- list modifier
        imd <- interfaceMemberDeclM
        return $ Just (imd ms)
-    
+
 -- Not used internally:
 -- | Top-level parser for interface member declarations
 interfaceMemberDecl :: P (MemberDecl SourcePos)
@@ -412,8 +412,8 @@ interfaceMemberDeclM =
         return $ \ms -> MemberClassDecl pos (cd ms)) <|>
     (do pos <- getParaPosition
         idecl  <- interfaceDeclM
-        return $ \ms -> MemberInterfaceDecl pos (idecl ms)) <|> 
-    try interfaceFieldDeclM <|> 
+        return $ \ms -> MemberInterfaceDecl pos (idecl ms)) <|>
+    try interfaceFieldDeclM <|>
     lockDeclM <|>
     absMethodDeclM
 
@@ -431,7 +431,7 @@ absMethodDeclM = do
     fps <- formalParams
     thr <- lopt throws
     semiColon
-    return $ \ms -> 
+    return $ \ms ->
         generalize tps $ MethodDecl pos ms tps rt i fps thr (MethodBody pos Nothing)
 
 throws :: P [ExceptionSpec SourcePos]
@@ -467,7 +467,7 @@ ellipsis = period >> period >> period
 -- Modifiers
 
 modifier :: P (Modifier SourcePos)
-modifier = 
+modifier =
         tok KW_Public      >> setPos (Public    )
     <|> tok KW_Protected   >> setPos (Protected )
     <|> tok KW_Private     >> setPos (Private   )
@@ -521,8 +521,8 @@ localVarDecl = do
     return (ms, typ, vds)
 
 varInit :: P (VarInit SourcePos)
-varInit = 
-    try (setPos InitArray <*> arrayInit) <|> 
+varInit =
+    try (setPos InitArray <*> arrayInit) <|>
     setPos InitExp <*> exp
 
 arrayInit :: P (ArrayInit SourcePos)
@@ -539,12 +539,12 @@ block :: P (Block SourcePos)
 block = braces $ setPos Block <*> list blockStmt
 
 blockStmt :: P (BlockStmt SourcePos)
-blockStmt = 
+blockStmt =
     (try $ do
         pos <- getParaPosition
         ms  <- list modifier
         cd  <- classDeclM
-        return $ LocalClass pos (cd ms)) <|> 
+        return $ LocalClass pos (cd ms)) <|>
     (try $ do
         pos <- getParaPosition
         (m,t,vds) <- endSemi $ localVarDecl
@@ -567,18 +567,18 @@ blockStmt =
     setPos BlockStmt <*> stmt
 
 stmt :: P (Stmt SourcePos)
-stmt = 
+stmt =
     -- ifThen and ifThenElse, with a common prefix
     (do pos <- getParaPosition
         tok KW_If
         e   <- parens exp
-        (try $ 
+        (try $
             do th <- stmtNSI
                tok KW_Else
                el <- stmt
-               return $ IfThenElse pos e th el) <|> 
+               return $ IfThenElse pos e th el) <|>
            (do th <- stmt
-               return $ IfThen     pos e th)  ) <|> 
+               return $ IfThen     pos e th)  ) <|>
     -- while loops
     (do pos <- getParaPosition
         tok KW_While
@@ -588,14 +588,14 @@ stmt =
     -- basic and enhanced for
     (do pos <- getParaPosition
         tok KW_For
-        f <- parens $ 
+        f <- parens $
             (try $ do
                 fi <- opt forInit
                 semiColon
                 e  <- opt exp
                 semiColon
                 fu <- opt forUp
-                return $ BasicFor pos fi e fu) <|> 
+                return $ BasicFor pos fi e fu) <|>
             (do ms <- list modifier
                 t  <- ttype
                 i  <- ident
@@ -603,7 +603,7 @@ stmt =
                 e  <- exp
                 return $ EnhancedFor pos ms t i e)
         s <- stmt
-        return $ f s) <|> 
+        return $ f s) <|>
     -- labeled statements
     (try $ do
         pos <- getParaPosition
@@ -662,13 +662,13 @@ stmtNSI =
 
 
 stmtNoTrail :: P (Stmt SourcePos)
-stmtNoTrail = 
+stmtNoTrail =
     -- empty statement
     setPos (const.Empty) <*> semiColon <|>
     -- inner block
     setPos StmtBlock <*> block <|>
     -- assertions
-    (endSemi $ do 
+    (endSemi $ do
         pos <- getParaPosition
         tok KW_Assert
         e   <- exp
@@ -681,7 +681,7 @@ stmtNoTrail =
         sb <- switchBlock
         return $ Switch pos e sb) <|>
     -- do-while loops
-    (endSemi $ do 
+    (endSemi $ do
         pos <- getParaPosition
         tok KW_Do
         s <- stmt
@@ -765,10 +765,10 @@ switchStmt :: P (SwitchBlock SourcePos)
 switchStmt = setPos SwitchBlock <*> switchLabel <*> list blockStmt
 
 switchLabel :: P (SwitchLabel SourcePos)
-switchLabel = tok KW_Default >> colon >> setPos Default <|> 
+switchLabel = tok KW_Default >> colon >> setPos Default <|>
     (do pos <- getParaPosition
-        tok KW_Case 
-        e <- exp 
+        tok KW_Case
+        e <- exp
         colon
         return $ SwitchCase pos e)
 
@@ -845,12 +845,12 @@ infixExpSuffix =
     (do pos <- getParaPosition
         op <- infixOp
         e2 <- unaryExp
-        return $ \e1 -> BinOp pos e1 op e2) <|> 
+        return $ \e1 -> BinOp pos e1 op e2) <|>
     (do pos <- getParaPosition
         tok KW_Instanceof
         t  <- refType
         return $ \e1 -> InstanceOf pos e1 t)
-    
+
 unaryExp :: P (Exp SourcePos)
 unaryExp = try preIncDec <|>
     try (do
@@ -866,11 +866,11 @@ postfixExpNES = -- try postIncDec <|>
     setPos ExpName <*> nameRaw eOrLName
 
 postfixExp :: P (Exp SourcePos)
-postfixExp = do 
+postfixExp = do
     pe <- postfixExpNES
     ops <- list postfixOp
     return $ foldl (\a s -> s a) pe ops
-    
+
 
 primary :: P (Exp SourcePos)
 primary = primaryNPS |>> primarySuffix
@@ -882,20 +882,20 @@ primaryNPS = try arrayCreation <|> primaryNoNewArrayNPS
 --primaryNoNewArray = startSuff primaryNoNewArrayNPS primarySuffix
 
 primaryNoNewArrayNPS :: P (Exp SourcePos)
-primaryNoNewArrayNPS = 
+primaryNoNewArrayNPS =
     setPos Lit <*> literal <|>
     setPos (const.This) <*> tok KW_This <|>
-    setPos Paren <*> parens exp <|> 
+    setPos Paren <*> parens exp <|>
     setPos PolicyExp <*> policyExp <|>
     setPos LockExp <*> (tok Op_Query >> lock) <|>
     -- TODO: These two following should probably be merged more
-    (try $ do 
-        rt <- returnType 
+    (try $ do
+        rt <- returnType
         pos <- getParaPosition
         mt <- checkClassLit rt
         period >> tok KW_Class
         return $ ClassLit pos mt) <|>
-    (try $ do 
+    (try $ do
         pos <- getParaPosition
         n <- nameRaw tName
         period >> tok KW_This
@@ -904,8 +904,8 @@ primaryNoNewArrayNPS =
     try (setPos MethodInv <*> methodInvocationNPS) <|>
     try (setPos FieldAccess <*> fieldAccessNPS) <|>
     setPos ArrayAccess <*> arrayAccessNPS <|>
-    setPos AntiQExp <*> 
-      javaToken (\t -> 
+    setPos AntiQExp <*>
+      javaToken (\t ->
           case t of
             AntiQExpTok s -> Just s
             _ -> Nothing)
@@ -914,7 +914,7 @@ checkClassLit :: ReturnType SourcePos -> P (Maybe (Type SourcePos))
 checkClassLit (LockType _) = fail "Lock is not a class type!"
 checkClassLit (VoidType _) = return Nothing
 checkClassLit (Type _ t)    = return $ Just t
-                                           
+
 
 primarySuffix :: P (Exp SourcePos -> Exp SourcePos)
 primarySuffix = try instanceCreationSuffix <|>
@@ -924,7 +924,7 @@ primarySuffix = try instanceCreationSuffix <|>
         (FieldAccess pos .) <$> fieldAccessSuffix)
 
 instanceCreationNPS :: P (Exp SourcePos)
-instanceCreationNPS = 
+instanceCreationNPS =
     do tok KW_New
        pos <- getParaPosition
        tas <- lopt typeArgs
@@ -953,8 +953,8 @@ instanceCreation = {- try instanceCreationNPS <|> -} do
      QualInstanceCreation {} -> return icp
      _ -> fail "instanceCreation"
 
-{- 
-instanceCreation = 
+{-
+instanceCreation =
     (do tok KW_New
         tas <- lopt typeArgs
         ct  <- classType
@@ -967,7 +967,7 @@ instanceCreation =
         i   <- ident
         as  <- args
         mcb <- opt classBody
-        return $ QualInstanceCreation p tas i as mcb) 
+        return $ QualInstanceCreation p tas i as mcb)
 -}
 
 fieldAccessNPS :: P (FieldAccess SourcePos)
@@ -1003,7 +1003,7 @@ fieldAccessExp = setPos FieldAccess <*> fieldAccess
 fieldAccess :: P FieldAccess
 fieldAccess = try fieldAccessNPS <|> do
     p <- primary
-    fs <- fieldAccessSuffix 
+    fs <- fieldAccessSuffix
     return (fs p)
 -}
 
@@ -1021,7 +1021,7 @@ fieldAccess =
     (do p <- primary
         period
         i <- ident
-        return $ PrimaryFieldAccess p i) 
+        return $ PrimaryFieldAccess p i)
 -}
 
 methodInvocationNPS :: P (MethodInvocation SourcePos)
@@ -1132,7 +1132,7 @@ arrayCreation = do
              pos <- getParaPosition
              ds <- list1 $ (brackets empty >> opt (angles argExp))
              ai <- arrayInit
-             return $ \ty -> ArrayCreateInit pos ty ds ai) <|> 
+             return $ \ty -> ArrayCreateInit pos ty ds ai) <|>
          (do pos <- getParaPosition
              des <- list1 $ do
                       e <- brackets exp
@@ -1144,7 +1144,7 @@ arrayCreation = do
 
 literal :: P (Literal SourcePos)
 literal =
-    javaTokenPos $ \t p -> 
+    javaTokenPos $ \t p ->
       let sp = pos2sourcePos p in
       case t of
         IntTok     i -> Just (Int     sp i)
@@ -1161,9 +1161,9 @@ literal =
 
 preIncDecOp, prefixOp, postfixOp :: P (Exp SourcePos -> Exp SourcePos)
 preIncDecOp =
-    (tok Op_PPlus  >> setPos PreIncrement ) <|> 
+    (tok Op_PPlus  >> setPos PreIncrement ) <|>
     (tok Op_MMinus >> setPos PreDecrement )
-prefixOp = 
+prefixOp =
     (tok Op_Bang  >> setPos PreNot      ) <|>
     (tok Op_Tilde >> setPos PreBitCompl ) <|>
     (tok Op_Plus  >> setPos PrePlus     ) <|>
@@ -1210,8 +1210,8 @@ infixOp =
     (tok Op_OOr     >> setPos COr       )
 
 typeArgInfixOp :: P (Op SourcePos)
-typeArgInfixOp = 
-    (tok Op_Star >> setPos Mult ) <|> 
+typeArgInfixOp =
+    (tok Op_Star >> setPos Mult ) <|>
     (tok Op_Plus >> setPos Add  )
 
 
@@ -1219,9 +1219,9 @@ typeArgInfixOp =
 -- Types
 
 ttype :: P (Type SourcePos)
-ttype = try (setPos RefType <*> refType) <|> setPos PrimType <*> primType 
-         <|> setPos AntiQType <*> 
-               javaToken (\t -> 
+ttype = try (setPos RefType <*> refType) <|> setPos PrimType <*> primType
+         <|> setPos AntiQType <*>
+               javaToken (\t ->
                    case t of
                      AntiQTypeTok s -> Just $ s
                      _ -> Nothing)
@@ -1235,11 +1235,11 @@ primType =
     tok KW_Long    >> setPos LongT     <|>
     tok KW_Char    >> setPos CharT     <|>
     tok KW_Float   >> setPos FloatT    <|>
-    tok KW_Double  >> setPos DoubleT   
+    tok KW_Double  >> setPos DoubleT
     -- Paragon
 --     <|> tok KW_P_Actor  >> setPos ActorT
      <|> tok KW_P_Policy >> setPos PolicyT
-    
+
 
 refType :: P (RefType SourcePos)
 refType = checkNoExtraEnd refTypeE
@@ -1247,7 +1247,7 @@ refType = checkNoExtraEnd refTypeE
 refTypeE :: P (RefType SourcePos, Int)
 refTypeE = {- trace "refTypeE" -} (
     (do typ <- setPos ArrayType <*>
-               (setPos PrimType <*> primType) <*> 
+               (setPos PrimType <*> primType) <*>
                list1 arrPols
         return (typ, 0))
     <|>
@@ -1259,7 +1259,7 @@ refTypeE = {- trace "refTypeE" -} (
            mps <- list arrPols
            case mps of
              [] -> return (baseType, e)
-             _  -> do typ <- setPos ArrayType <*> 
+             _  -> do typ <- setPos ArrayType <*>
                              (setPos RefType <*> pure baseType) <*> pure mps
                       return $ (typ, 0)
          else return (baseType, e)
@@ -1273,7 +1273,7 @@ arrPols = do
 --      <|> PolicyExp () <$> policyExp
 
 nonArrayType :: P (Type SourcePos)
-nonArrayType = setPos PrimType <*> primType <|> 
+nonArrayType = setPos PrimType <*> primType <|>
     setPos RefType <*> (setPos ClassRefType <*> classType)
 
 
@@ -1291,7 +1291,7 @@ classTypeE = {- trace "classTypeE" $ -} do
     Nothing       -> return (clt n [] , 0)
 
 returnType :: P (ReturnType SourcePos)
-returnType = tok KW_Void   >> setPos VoidType <|> 
+returnType = tok KW_Void   >> setPos VoidType <|>
              tok KW_P_Lock >> setPos LockType <|>
              setPos Type <*> ttype <?> "returnType"
 
@@ -1305,7 +1305,7 @@ typeParams :: P [TypeParam SourcePos]
 typeParams = angles $ seplist1 typeParam comma
 
 typeParam :: P (TypeParam SourcePos)
-typeParam = 
+typeParam =
   (do tok KW_P_Actor >> setPos ActorParam <*> refType <*> ident) <|>
   (do tok KW_P_Policy >> setPos PolicyParam <*> ident) <|>
   (do tok KW_P_Lock >> arrBrackets >> setPos LockStateParam <*> ident) <|>
@@ -1335,11 +1335,11 @@ typeArgsSuffix = {- trace "typeArgsSuffix" $ -}
       wcArg <- setPos Wildcard <*> opt wildcardBound
       (rest, e) <- typeArgsEnd 0
       return $ (wcArg:rest, e)) <|>
-  
+
   (do lArg <- setPos ActualArg <*> parens (setPos ActualLockState <*> seplist1 lock comma)
       (rest, e) <- typeArgsEnd 0
       return (lArg:rest, e)) <|>
-  
+
   (try $ do (rt, er)  <- refTypeE
             (rest, e) <- typeArgsEnd er
             tArg <- case nameOfRefType rt of
@@ -1347,7 +1347,7 @@ typeArgsSuffix = {- trace "typeArgsSuffix" $ -}
                       _ -> setPos ActualType <*> pure rt
             actArg <- setPos ActualArg <*> pure tArg
             return $ (actArg:rest, e)) <|>
-  
+
   (do eArg <- (setPos ActualArg) <*> ((setPos ActualExp) <*> argExp)
       (rest, e) <- typeArgsEnd 0
       return (eArg:rest, e))
@@ -1372,15 +1372,15 @@ argExp = do
   return $ fe e1
 
 argExp1 :: P (Exp SourcePos)
-argExp1 = (setPos PolicyExp) <*> policyExp 
+argExp1 = (setPos PolicyExp) <*> policyExp
           <|> try methodInvocationExp
           <|> try fieldAccessExp
           <|> setPos ExpName <*> nameRaw eName
-  
--- **************** 
+
+-- ****************
 
 argExpSuffix :: P (Exp SourcePos -> Exp SourcePos)
-argExpSuffix = 
+argExpSuffix =
     (do op <- typeArgInfixOp
         e2 <- argExp
         binop <- setPos BinOp -- TODO: Does this make sense?
@@ -1404,7 +1404,7 @@ nonWildTypeArgs = typeArgs >>= mapM checkNonWild
 -- Names
 
 nameRaw :: ([Ident SourcePos] -> Name SourcePos) -> P (Name SourcePos)
-nameRaw nf = 
+nameRaw nf =
     nf <$> seplist1 ident period <|>
         javaTokenPos (\t p -> case t of
           AntiQNameTok s -> Just $ AntiQName (pos2sourcePos p) s
@@ -1430,7 +1430,7 @@ policyExp =
   try (setPos PolicyLit <*> (braces $ seplist clause semiColon)) <|>
   setPos PolicyLit <*> (braces colon >> return []) <|>
   tok KW_P_Policyof >> parens (setPos PolicyOf <*> ident <|>
-                               (do pol <- setPos PolicyThis 
+                               (do pol <- setPos PolicyThis
                                    const pol <$> tok KW_This))
 
 clause :: P (Clause SourcePos)
@@ -1464,26 +1464,26 @@ lclause = do
     let avdis = map (\(ClauseVarDecl _ _ i) -> i) qs
         as'   = genActorVars avdis as
 
-    case mh of 
+    case mh of
       Just h -> do
               let [h'] = genActorVars avdis [h]
               return $ LClause pos qs h' as'
       Nothing -> return $ ConstraintClause pos qs as'
 
 lclauseHead :: P (Maybe (Atom SourcePos))
-lclauseHead = 
+lclauseHead =
   (tok Op_Minus >> return Nothing) <|>
    (Just <$> atom)
 
 atom :: P (Atom SourcePos)
 atom = do
-    setPos Atom <*> nameRaw lName 
+    setPos Atom <*> nameRaw lName
                 <*> (lopt $ parens $ seplist actor comma)
 
 -- We parse everything as actorNames, and post-process
 -- them into Vars
 actor :: P (Actor SourcePos)
-actor = setPos Actor <*> actorName -- <|> 
+actor = setPos Actor <*> actorName -- <|>
 --        setPos Var <*> actorVar -- (tok Op_Query >> ident)
 
 actorName :: P (ActorName SourcePos)
@@ -1504,7 +1504,7 @@ lockProperties = do braces $ setPos LockProperties
                              <*> optendseplist lclause semiColon
 
 lockExp :: P [Lock SourcePos]
-lockExp = parens (seplist1 lock comma) 
+lockExp = parens (seplist1 lock comma)
       <|> return <$> lock
 
 
@@ -1538,11 +1538,11 @@ seplist p sep = option [] $ seplist1 p sep
 
 seplist1 :: P a -> P sep -> P [a]
 --seplist1 = sepBy1
-seplist1 p sep = 
-    p >>= \a -> 
+seplist1 p sep =
+    p >>= \a ->
         try (do _ <- sep
                 as <- seplist1 p sep
-                return (a:as)) 
+                return (a:as))
         <|> return [a]
 
 optendseplist :: P a -> P sep -> P [a]
@@ -1569,7 +1569,7 @@ javaToken test = token showT posT testT
   where showT (L _ t) = show t
         posT  (L p _) = extractPSPos $ pos2sourcePos p
         testT (L _ t) = test t
-        
+
 javaTokenPos :: (Token -> (Int,Int) -> Maybe a) -> P a
 javaTokenPos test = token showT posT testT
   where showT (L _ t) = show t
@@ -1607,9 +1607,9 @@ period    = tok Period
 checkConstrs :: ClassDecl SourcePos -> P ()
 checkConstrs (ClassDecl _ _ i _ _ _ cb) = do
     let errs = [ ci | ConstructorDecl _ _ _ ci _ _ _ <- universeBi cb, ci /= i ]
-    if null errs then return () 
-     else fail $ "Declaration of class " ++ prettyPrint i 
-                  ++ " cannot contain constructor with name " 
+    if null errs then return ()
+     else fail $ "Declaration of class " ++ prettyPrint i
+                  ++ " cannot contain constructor with name "
                   ++ prettyPrint (head errs)
 checkConstrs _ = panic (parserModule ++ ".checkConstrs")
                  "Checking constructors of Enum decl"
@@ -1643,7 +1643,7 @@ mOrLName = mkName_ MOrLName AmbName
 -----------------------------------------------------
 
 
--- Generalization is only needed for parameters of 
+-- Generalization is only needed for parameters of
 -- kind Type, since these are representated by a
 -- special contructor TypeVariable.
 -- LockStateVar is handled by the parser, NO LONGER
@@ -1654,7 +1654,7 @@ generalize pars = transformBi gen
                   . transformBi genP
                   . transformBi genL
     where gen :: RefType SourcePos -> RefType SourcePos
-          gen (ClassRefType pos (ClassType _ (Name _ TName Nothing i) [])) 
+          gen (ClassRefType pos (ClassType _ (Name _ TName Nothing i) []))
               | i `elem` parIs = TypeVariable pos i
           gen rt = rt
 
@@ -1664,7 +1664,7 @@ generalize pars = transformBi gen
           genA a = a
 
           genP :: Exp SourcePos -> Exp SourcePos
-          genP (ExpName pos (Name _ EName Nothing i)) 
+          genP (ExpName pos (Name _ EName Nothing i))
               | i `elem` polIs = PolicyExp pos (PolicyTypeVar pos i)
           genP e = e
 
@@ -1691,26 +1691,26 @@ genActorVars is = transformBi gen
 -- Resolving precedences
 
 builtInPrecs :: [(Op (), Int)]
-builtInPrecs = 
+builtInPrecs =
     map (,9) [Mult   (), Div    (), Rem     ()           ] ++
     map (,8) [Add    (), Sub    ()                       ] ++
     map (,7) [LShift (), RShift (), RRShift ()           ] ++
     map (,6) [LThan  (), GThan  (), LThanE  (), GThanE ()] ++
     map (,5) [Equal  (), NotEq  ()                       ] ++
-    [(And  (), 4), 
-     (Or   (), 3), 
-     (Xor  (), 2), 
-     (CAnd (), 1), 
+    [(And  (), 4),
+     (Or   (), 3),
+     (Xor  (), 2),
+     (CAnd (), 1),
      (COr  (), 0)]
 
 instanceOfPrec :: Int
 instanceOfPrec = 6 -- same as comparison ops
 
-dropData :: Op a -> Op () 
+dropData :: Op a -> Op ()
 dropData (Mult _) = Mult ()
-dropData (Div _) = Div () 
+dropData (Div _) = Div ()
 dropData (Rem _) = Rem ()
-dropData (Add _) = Add () 
+dropData (Add _) = Add ()
 dropData (Sub _) = Sub ()
 dropData (LShift _) = LShift ()
 dropData (RShift _) = RShift ()
@@ -1733,7 +1733,7 @@ fixPrecs (BinOp pos a op2 z) =
     let e = fixPrecs a -- recursively fix left subtree
         getPrec op = fromJust $ lookup op builtInPrecs
         fixup p1 p2 y pre =
-            if p1 >= p2 
+            if p1 >= p2
              then BinOp pos e op2 z -- already right order
              else pre (fixPrecs $ BinOp pos y op2 z)
     in case e of

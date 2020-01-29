@@ -1,29 +1,29 @@
-{-# LANGUAGE TupleSections, PatternGuards, BangPatterns, 
+{-# LANGUAGE TupleSections, PatternGuards, BangPatterns,
     TypeSynonymInstances, FlexibleInstances, FlexibleContexts #-}
-module Language.Java.Paragon.TypeCheck.Monad 
+module Language.Java.Paragon.TypeCheck.Monad
     (
 {-     check, checkM, ignore, orElse, maybeM,
      withFold, withFoldMap,
 
      getReturn,
-     extendVarEnvList, extendVarEnv, 
+     extendVarEnvList, extendVarEnv,
 
      lookupPrefixName,
      lookupVar, lookupActorName,
 
-     --lookupField, 
+     --lookupField,
      lookupFieldT,
      lookupMethod, lookupMethodT,
-     lookupConstr, 
-     lookupLock, 
+     lookupConstr,
+     lookupLock,
      lookupExn, registerExn, registerExns,
 
      extendLockEnv,
 
-     getBranchPC, getBranchPC_, extendBranchPC, 
+     getBranchPC, getBranchPC_, extendBranchPC,
      addBranchPC, addBranchPCList,
 
-     getActorId, setActorId, 
+     getActorId, setActorId,
      newActorId, newActorIdWith, newUnknownId,
      freshActorId, unknownActorId,
      scrambleActors,
@@ -54,7 +54,7 @@ module Language.Java.Paragon.TypeCheck.Monad
      getReadPolicy, getWritePolicy, getLockPolicy,
      getParamPolicy, getReturnPolicy,
 
-     --fromSrcType, 
+     --fromSrcType,
                        (<:),
 
      evalPolicy, evalPolicyExp,
@@ -62,7 +62,7 @@ module Language.Java.Paragon.TypeCheck.Monad
 -}
      module Language.Java.Paragon.TypeCheck.Monad.TcCodeM,
      module Language.Java.Paragon.TypeCheck.Monad,
-     
+
 {-     debug, debugTc,
 
      solve
@@ -166,7 +166,7 @@ extendVarEnv i vti = withEnv $ \env -> do
 
 lookupActorName :: ActorName SourcePos -> TcCodeM (TcStateType, ActorPolicy)
 lookupActorName (ActorName _ nam@(Name _ nt mPre i))
-    | nt == EName = 
+    | nt == EName =
         do (ty, pol, _, _) <- lookupVar mPre i
            return (ty, pol)
     | otherwise   = panic (monadModule ++ ".lookupActorName")
@@ -211,10 +211,10 @@ findBestMethod tArgs argTys argPs candidates = do
                   let subst = zip pIs argPs
                   pTys' <- mapM (substTypeParPols subst) $
                                 instantiate (zip tps tyArgs) pTys
-                  --debugPrint $ "isApplicable: " 
+                  --debugPrint $ "isApplicable: "
                   --               ++ show (isVA, map prettyPrint pTys', map prettyPrint argTys)
                   ps <- checkTys isVA pTys' argTys
-                  --debugPrint $ "     .... " 
+                  --debugPrint $ "     .... "
                   --               ++ maybe "Nope" (prettyPrint . (map (\(a,b) -> [a,b]))) ps
                   return ps
            else return Nothing
@@ -230,7 +230,7 @@ findBestMethod tArgs argTys argPs candidates = do
 
         checkTys :: Bool -> [TcType] -> [TcType] -> TcCodeM (Maybe APPairs)
         checkTys _ [] [] = return $ Just []
-        checkTys b ps as 
+        checkTys b ps as
             | not b && length ps /= length as = return Nothing
             | b && length ps > length as + 1  = return Nothing
         checkTys True [p] [a] = do
@@ -239,7 +239,7 @@ findBestMethod tArgs argTys argPs candidates = do
             Just _ -> return $ mps
             Nothing -> bottomM >>= \bt -> a `isAssignableTo` arrayType p bt
         checkTys True [p] as = do
-          mpps <- zipWithM isAssignableTo as (repeat p) -- [M [(P,P)]]          
+          mpps <- zipWithM isAssignableTo as (repeat p) -- [M [(P,P)]]
           return $ concat <$> sequence mpps
 
         checkTys b (p:ps) (a:as) = do
@@ -289,12 +289,12 @@ lookupMethod mPre i tArgs argTys argPs = do
   baseTm <- getTypeMap
   (mPreTy, preTm, prePol, _) <-
     case mPre of
-      Nothing -> bottomM >>= \bt -> 
+      Nothing -> bottomM >>= \bt ->
                   return (Nothing, baseTm, bt, Nothing)
       Just pre -> lookupPrefixName pre
   case Map.lookup (unIdent i) $ methods preTm of
     Nothing -> fail $ case mPreTy of
-                       Just preTy -> 
+                       Just preTy ->
                            "Type " ++ prettyPrint preTy ++
                                    " does not have a method named " ++ prettyPrint i
                        Nothing -> "No method named " ++ prettyPrint i ++
@@ -304,7 +304,7 @@ lookupMethod mPre i tArgs argTys argPs = do
       bests <- findBestMethod tArgs argTys argPs (getSigs methodMap)
       case bests of
         [] -> fail $ case mPreTy of
-                       Just preTy -> 
+                       Just preTy ->
                            "Type " ++ prettyPrint preTy ++
                              " does not have a method named " ++ prettyPrint i ++
                              " matching argument types (" ++
@@ -316,7 +316,7 @@ lookupMethod mPre i tArgs argTys argPs = do
                                  ") is in scope"
 
         (_:_:_) -> fail $ case mPreTy of
-                            Just preTy -> 
+                            Just preTy ->
                                 "Type " ++ prettyPrint preTy ++
                                   " has more than one most specific method " ++ prettyPrint i ++
                                   " matching argument types (" ++
@@ -370,11 +370,11 @@ lookupFieldT typ i = do
     Just vti -> return vti
     Nothing -> failE $ toUndef $ "Class " ++ prettyPrint typ
                       ++ " does not have a field named " ++ prettyPrint i
-  
-lookupMethodT :: TcStateType 
-              -> Ident SourcePos 
-              -> [TypeArgument SourcePos] 
-              -> [TcType] 
+
+lookupMethodT :: TcStateType
+              -> Ident SourcePos
+              -> [TypeArgument SourcePos]
+              -> [TcType]
               -> [ActorPolicy]
               -> TcCodeM ([TypeParam SourcePos], MethodSig)
 lookupMethodT typ i tArgs argTys argPs = do
@@ -386,7 +386,7 @@ lookupMethodT typ i tArgs argTys argPs = do
     Just mMap -> do
       bests <- findBestMethod tArgs argTys argPs (getSigs mMap)
       case bests of
-        [] -> fail $ 
+        [] -> fail $
                 "Type " ++ prettyPrint typ ++
                             " does not have a method named " ++ prettyPrint i ++
                             " matching argument types (" ++
@@ -417,10 +417,10 @@ lookupMethodT typ i tArgs argTys argPs = do
                                     "  q: " ++ prettyPrint p) aps
                         return (tps, msig)
 
-lookupConstr :: TcClassType 
+lookupConstr :: TcClassType
              -> [TypeArgument SourcePos]
              -> ActorPolicy -- policyof(this), i.e. the result
-             -> [TcType] 
+             -> [TcType]
              -> [ActorPolicy]
              -> TcCodeM ([TypeParam SourcePos], [(RefType SourcePos, B.ByteString)], ConstrSig)
 lookupConstr ctyp tArgs pThis argTys argPs = do
@@ -442,7 +442,7 @@ lookupConstr ctyp tArgs pThis argTys argPs = do
                   \matching argument types (" ++
                  (unwords $ intersperse ", " $ map prettyPrint argTys) ++
                  ")"
-    (_:_:_) -> 
+    (_:_:_) ->
         fail $ "Type " ++ prettyPrint ctyp ++
                  " has more than one most specific \
                   \constructor matching argument types (" ++
@@ -467,7 +467,7 @@ lookupConstr ctyp tArgs pThis argTys argPs = do
 
 
 getSigs :: MethodMap -> [Sig]
-getSigs = map getSig . Map.assocs 
+getSigs = map getSig . Map.assocs
     where getSig ((tps, pTs, vAr), msig) = (tps, mPars msig, pTs, vAr)
 
 getSigsC :: ConstrMap -> [Sig]
@@ -479,27 +479,27 @@ substParPols :: Lattice m ActorPolicy =>
                 [(B.ByteString, ActorPolicy)] -> ActorPolicy -> m ActorPolicy
 substParPols subst (VarPolicy pol) = substParPrgPols subst pol
 substParPols subst (MetaJoin p q) = do
-  pp <- substParPols subst p 
+  pp <- substParPols subst p
   qq <- substParPols subst q
   pp `lub` qq
 substParPols subst (MetaMeet p q) = do
-  pp <- substParPols subst p 
+  pp <- substParPols subst p
   qq <- substParPols subst q
   pp `glb` qq
 substParPols _ p = return p
 
 substParPrgPols :: Lattice m ActorPolicy =>
                    [(B.ByteString, ActorPolicy)] -> PrgPolicy -> m ActorPolicy
-substParPrgPols subst p@(PolicyVar (PolicyOfVar i)) = 
+substParPrgPols subst p@(PolicyVar (PolicyOfVar i)) =
     case lookup i subst of
       Just newP -> return newP
       Nothing -> return $ VarPolicy p
 substParPrgPols subst (Join p q) = do
-  pp <- substParPrgPols subst p 
+  pp <- substParPrgPols subst p
   qq <- substParPrgPols subst q
   pp `lub` qq
 substParPrgPols subst (Meet p q) = do
-  pp <- substParPrgPols subst p 
+  pp <- substParPrgPols subst p
   qq <- substParPrgPols subst q
   pp `glb` qq
 substParPrgPols _ p = return $ VarPolicy p
@@ -507,11 +507,11 @@ substParPrgPols _ p = return $ VarPolicy p
 substTypeParPols :: (HasSubTyping m, Lattice m ActorPolicy) =>
                     [(B.ByteString, ActorPolicy)] -> TcType -> m TcType
 substTypeParPols subst (TcRefT rty) = TcRefT <$> substRefTypePPs rty
-  where substRefTypePPs rt = 
+  where substRefTypePPs rt =
             case rt of
-              TcArrayT ty p -> 
+              TcArrayT ty p ->
                   TcArrayT <$> substTypeParPols subst ty <*> substParPols subst p
-              TcClsRefT ct  -> 
+              TcClsRefT ct  ->
                   TcClsRefT <$> substClsTypePPs ct
               _ -> return rt
 
@@ -533,7 +533,7 @@ registerStateType i tyV mSty | tyV == actorT = do
     Nothing -> actorIdT <$> newActorId i -- fresh generation
     Just sty -> case mActorId sty of
                   Nothing -> panic (monadModule ++ ".registerStateType")
-                             $ "Actor state but non-actor target type: " 
+                             $ "Actor state but non-actor target type: "
                                   ++ show (tyV, sty)
                   Just aid -> do
                     newActorIdWith i aid
@@ -547,7 +547,7 @@ registerStateType i tyV mSty | tyV == policyT = do
                                        $ "Policy state but non-policy target type: "
                                              ++ show (tyV, sty)
                             Just bs -> bs
-  updateState $ \s -> 
+  updateState $ \s ->
       s { policySt = Map.insert (mkSimpleName EName i) pbs $ policySt s }
   return $ policyPolT pbs
 
@@ -559,14 +559,14 @@ registerStateType i tyV mSty | Just ct <- mClassType tyV = do
       Just sty -> case mInstanceType sty of
                     Just (_, aids) -> do
                       updateState $ \s ->
-                          s { instanceSt = Map.insert (mkSimpleName EName i) aids 
+                          s { instanceSt = Map.insert (mkSimpleName EName i) aids
                                            $ instanceSt s }
                       return $ instanceT ct aids
                     Nothing | isNullType sty -> return $ instanceT ct []
                             | otherwise -> panic (monadModule ++ ".registerStateType")
                                $ "Instance state but non-instance target type: "
                                          ++ show (tyV, sty)
-                                                  
+
 
 
 registerStateType _i tyV _mSty = return $ stateType tyV
@@ -579,7 +579,7 @@ updateStateType mN _mTyO tyV sty | tyV == actorT = do
       maybeM mN $ \n -> setActorId n aid
       return sty
     _ -> panic (monadModule ++ ".updateStateType")
-         $ "Actor state but non-actor target type: " 
+         $ "Actor state but non-actor target type: "
                ++ show (tyV, sty)
 
 -- TODO
@@ -589,7 +589,7 @@ updateStateType mN mTyO tyV mSty | tyV == policyT = do
     Just sty | Just pbs <- mPolicyPol sty -> do
 -}
 updateStateType _mN _mTyO ty _sty | isPrimType (stateType ty) = return $ stateType ty
-updateStateType mN _mTyO ty sty 
+updateStateType mN _mTyO ty sty
     | Just ct <- mClassType ty =
         case sty of
           TcInstance _ aids -> return $ TcInstance ct aids
@@ -632,7 +632,7 @@ getPolicyBounds mn mtyO = do
 
 getActorId :: Maybe (Name SourcePos) -> Maybe TcStateType -> TcCodeM ActorId
 getActorId mn mtyO = do
-  actorMap <- actorSt <$> getState  
+  actorMap <- actorSt <$> getState
   case maybe Nothing (\n -> Map.lookup n actorMap) mn of
     Nothing -> case (mtyO, mn) of
                  (Just styO, Just (Name _ _ _ i)) -> do
@@ -654,11 +654,11 @@ newActorIdWith :: Ident SourcePos -> ActorId -> TcCodeM ()
 newActorIdWith i aid = do
   updateState insertAct
       where insertAct :: CodeState -> CodeState
-            insertAct s@(CodeState { actorSt = actMap }) = 
+            insertAct s@(CodeState { actorSt = actMap }) =
                 s { actorSt = Map.insert (mkSimpleName EName i) (AI aid Stable) actMap }
 
 newActorId :: Ident SourcePos -> TcCodeM ActorId
-newActorId i = do 
+newActorId i = do
   aid <- liftTcDeclM $ freshActorId (prettyPrint i)
   newActorIdWith i aid
   return aid
@@ -722,7 +722,7 @@ equivTo (TcRefT rt1) (TcRefT rt2) = equivRefT rt1 rt2
         equivClsT (TcClassT n1 tas1) (TcClassT n2 tas2) =
             if n1 /= n2 then Nothing
              else equivTypeArgs tas1 tas2
-        
+
         equivTypeArgs :: [TcTypeArg] -> [TcTypeArg] -> Maybe [(ActorPolicy, ActorPolicy)]
         equivTypeArgs tas1 tas2 = concat <$> sequence (map (uncurry equivTypeArg) (zip tas1 tas2))
 
@@ -733,8 +733,8 @@ equivTo (TcRefT rt1) (TcRefT rt2) = equivRefT rt1 rt2
 
 equivTo t1 t2 = if t1 == t2 then return [] else Nothing
 
-isCastableTo :: TcType 
-             -> TcType 
+isCastableTo :: TcType
+             -> TcType
              -> TcCodeM (Maybe [(ActorPolicy, ActorPolicy)], Bool) -- (Can be cast, needs reference narrowing)
 isCastableTo t1 t2 = do
   -- 'isAssignableTo' handles the cases of identity, primitive widening,
@@ -750,7 +750,7 @@ isCastableTo t1 t2 = do
      case (t1, t2) of
        (TcPrimT pt1, TcPrimT pt2) -> -- primitive (widening +) narrowing
            return $ (if pt2 `elem` narrowConvert pt1 ++ widenNarrowConvert pt1 then Just [] else Nothing, False)
-       (TcRefT  rt1, TcPrimT pt2) 
+       (TcRefT  rt1, TcPrimT pt2)
            | Just ct2 <- box pt2 -> do -- reference widening + unboxing AND
                                        -- reference narrowing + unboxing
                -- We cheat and compare to the boxing of the target instead
@@ -776,12 +776,12 @@ lhs <<: rhs = isCastableTo (unStateType rhs) lhs
 widensTo :: TcType -> TcType -> TcDeclM Bool
 widensTo (TcPrimT pt1) (TcPrimT pt2) = return $ pt2 `elem` widenConvert pt1
 widensTo (TcRefT   rt1) (TcRefT   rt2) = rt1 `subTypeOf` rt2
-widensTo (TcPrimT pt1) t2@(TcRefT _) = 
-    maybe (return False) 
+widensTo (TcPrimT pt1) t2@(TcRefT _) =
+    maybe (return False)
               (\ct -> clsTypeToType ct `widensTo` t2) (box pt1)
-widensTo (TcRefT   rt1) t2@(TcPrimT _) = 
+widensTo (TcRefT   rt1) t2@(TcPrimT _) =
     case rt1 of
-      TcClsRefT ct -> maybe (return False) 
+      TcClsRefT ct -> maybe (return False)
                         (\pt -> TcPrimT pt `widensTo` t2) (unbox ct)
       _ -> return False
 {-- 5) Paragon-specific types
@@ -806,7 +806,7 @@ instance HasSubTyping TcDeclM where
                                return $ instantiate (zip tps tas) tsig
                             _ -> panic (monadModule ++ ".subTypeOf")
                                  $ show rt
-                          
+
                     Left err -> panic (monadModule ++ ".subTypeOf")
                                 $ "Looking up type:" ++ show rt ++ "\nError: " ++ show err
                     Right (_,tsig) -> return tsig
@@ -861,8 +861,8 @@ solve cs =
 --------------------------------------------------
 -- State scrambling
 
--- 'scramble' should be called at method calls, 
--- and will remove everything that is not known 
+-- 'scramble' should be called at method calls,
+-- and will remove everything that is not known
 -- not to be affected by that call.
 scrambleState :: TcCodeM ()
 scrambleState = do
@@ -914,9 +914,9 @@ varUpdatedNN n mPre i = do
   return ()
 
 isNullChecked :: Exp SourcePos -> TcCodeM ()
-isNullChecked ( BinOp _ (ExpName _ n@(Name _ EName mPre i)) (Equal _) (Lit _ (Null _)) ) = 
+isNullChecked ( BinOp _ (ExpName _ n@(Name _ EName mPre i)) (Equal _) (Lit _ (Null _)) ) =
     varUpdatedNN n mPre i
-isNullChecked ( BinOp _ (Lit _ (Null _)) (Equal _) (ExpName _ n@(Name _ EName mPre i)) ) = 
+isNullChecked ( BinOp _ (Lit _ (Null _)) (Equal _) (ExpName _ n@(Name _ EName mPre i)) ) =
     varUpdatedNN n mPre i
 isNullChecked _ = return ()
 

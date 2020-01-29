@@ -7,7 +7,7 @@ module Language.Java.Paragon.PolicyLang.Policy (
 {-    (
      IsPolicy(..),
      bottom, top, thisP, joinWThis, isTop, isBottom,
-     TcPolicy(..), PrgPolicy(..), PolicyBounds(..), 
+     TcPolicy(..), PrgPolicy(..), PolicyBounds(..),
      TcClause(..), TcAtom(..), TcActor(..), TcMetaVar(..),
      {- toPolicyLit, -} {-toRecPolicy,-}
      lockToAtom, specialConstraintAtom,
@@ -33,7 +33,7 @@ import Security.InfoFlow.Policy.FlowLocks
 import Control.Applicative
 import qualified Data.ByteString.Char8 as B
 --import Data.List ( (\\) {-, groupBy, nub-}  )
---import Data.Maybe 
+--import Data.Maybe
 
 #ifdef BASE4
 import Data.Data
@@ -52,7 +52,7 @@ import Prelude hiding ((<>))
 ---------------------------------------------------------------
 -- Basic policies
 {-
-data TcPolicy a = RealPolicy (PrgPolicy a) 
+data TcPolicy a = RealPolicy (PrgPolicy a)
                 | Join (TcPolicy a) (TcPolicy a)
                 | Meet (TcPolicy a) (TcPolicy a)
                 | VarPolicy (TcMetaVar a)
@@ -64,7 +64,7 @@ data PrgPolicy a = TcPolicy [TcClause a]
                  | TcJoin (PrgPolicy a) (PrgPolicy a)
                  | TcMeet (PrgPolicy a) (PrgPolicy a)
   deriving (Eq,Ord,Show,Data,Typeable)
--}  
+-}
 
 {-- TODO: This should go into the analysis instead,
 -- leaving this module all but pointless.
@@ -104,7 +104,7 @@ instance Eq ActorSetRep where
   NoActor == NoActor = True
   _ == _ = False
 
-instance HasSubTyping m => 
+instance HasSubTyping m =>
           PartialOrder m ActorSetRep where
     TypedActor rt1 _ `leq` TypedActor rt2 _ = rt2 `subTypeOf` rt1 -- in Monad.hs
     TypedActor rt1 _ `leq` SingletonActor (TypedActorIdSpec rt2 _) =
@@ -174,14 +174,14 @@ instance HasSubTyping m =>
 
     SingletonActor aid1 `glb` SingletonActor aid2
                        | aid1 == aid2 = return $ SingletonActor aid1
-                       | otherwise    = bottomM 
+                       | otherwise    = bottomM
 
 
 instance HasSubTyping m =>
           ActorSet m ActorSetRep TypedActorIdSpec where
 
   inSet aid1 (SingletonActor aid2) = return $ aid1 == aid2
-  inSet (TypedActorIdSpec rt1 _) (TypedActor rt2 _) = 
+  inSet (TypedActorIdSpec rt1 _) (TypedActor rt2 _) =
       rt1 `subTypeOf` rt2
   inSet _aid NoActor      = return False
 
@@ -231,12 +231,12 @@ specialConstraintAtom = TcAtom (mkSimpleName LName (mkIdent_ "-")) []
 ---------------------------------------------
 -- Pretty printing
 
-instance (Pretty name) => 
+instance (Pretty name) =>
     Pretty (Policy name ActorSetRep) where
   pretty (Policy []) = braces $ char ':'
   pretty (Policy cs) = text "{ " <> (hcat (punctuate (text "; ") $ map pretty cs)) <> text "}"
 
-instance (Pretty var, Pretty name) => 
+instance (Pretty var, Pretty name) =>
     Pretty (VarPolicy var name ActorSetRep) where
   pretty (ConcretePolicy p) = pretty p
   pretty (PolicyVar v) = pretty v
@@ -249,7 +249,7 @@ instance Pretty PolicyVarRep where
   pretty (PolicyOfVar bs) = text "policyof" <> parens (pretty bs)
   pretty (PolicyTypeParam n) = pretty n
 
-instance (Pretty mvar, Pretty var, Pretty name) => 
+instance (Pretty mvar, Pretty var, Pretty name) =>
     Pretty (MetaPolicy mvar var name ActorSetRep) where
   pretty (VarPolicy p)    = pretty p
   pretty (MetaJoin p1 p2) = pretty p1 <+> char '*' <+> pretty p2
@@ -259,21 +259,21 @@ instance (Pretty mvar, Pretty var, Pretty name) =>
 instance Pretty MetaVarRep where
   pretty (MetaVarRep k i) = text "$$" <> pretty i <> text (show k)
 
-instance (Pretty name) => 
+instance (Pretty name) =>
     Pretty (Clause name ActorSetRep) where
-  pretty (Clause h es b) = 
+  pretty (Clause h es b) =
       let qs = [ ta | ta@(TypedActor{}) <- es ]
-      in (if null qs 
+      in (if null qs
           then id
           else (parens (hcat (punctuate comma $ map pretty qs)) <+>)) $
-           pretty h <+> text ":" <+> 
+           pretty h <+> text ":" <+>
              hcat (punctuate (char ',') $ map (prettyAtom h es) b)
 
 prettyAtom :: (Pretty name) =>
               ActorSetRep -> [ActorSetRep] -> Atom name -> Doc
 prettyAtom hdom doms (Atom n reps) =
-    pretty n <> 
-           opt (not $ null reps) 
+    pretty n <>
+           opt (not $ null reps)
                    (parens (hcat (punctuate (text ", ") $ map prettyRep reps)))
 
   where prettyRep HeadActor = prettySetRep hdom
@@ -358,7 +358,7 @@ class IsPolicy p where
 instance IsPolicy PrgPolicy where
   toPolicy = id
   fromPolicy = Just
-  
+
   includesThis TcThis = True
   includesThis (TcJoin p q) = any includesThis [p,q]
   includesThis (TcMeet p q) = any includesThis [p,q]
@@ -377,7 +377,7 @@ instance IsPolicy TcPolicy where
   includesThis _ = False
 
   join (RealPolicy p) (RealPolicy q) = RealPolicy $ p `lub` q
-  join p q 
+  join p q
       | p == q = p
       | isBottom p = q
       | isBottom q = p
@@ -432,7 +432,7 @@ isBottom _ = False
 -- meet and join
 
 joinWThis :: (TcPolicy TcActor) -> (TcPolicy TcActor) -> (TcPolicy TcActor)
-joinWThis (RealPolicy p) (RealPolicy q) = RealPolicy $ lubWThis p q 
+joinWThis (RealPolicy p) (RealPolicy q) = RealPolicy $ lubWThis p q
 joinWThis p q = Join p q
 
 lubWThis :: (PrgPolicy TcActor) -> (PrgPolicy TcActor) -> (PrgPolicy TcActor)
@@ -443,12 +443,12 @@ lubWThis p q = lub p q
 lub :: (PrgPolicy TcActor) -> (PrgPolicy TcActor) -> (PrgPolicy TcActor)
 lub p1 p2 | p1 == p2 = p1 -- fake shortcut, we can do better!
 lub (TcPolicy cs1) (TcPolicy cs2) =
-      let sameFixedCs = [ TcClause (TcActor aid) (as ++ substAll senv bs) 
+      let sameFixedCs = [ TcClause (TcActor aid) (as ++ substAll senv bs)
                               | TcClause (TcActor aid) as <- cs1,
                                 TcClause (TcActor aid') bs <- cs2,
                                 aid == aid',
                                 let senv = zip (fuv bs) (map TcVar $ allBinders \\ fuv as)]
-          bothVarCs   = [ TcClause a1 (as ++ substAll senv bs) 
+          bothVarCs   = [ TcClause a1 (as ++ substAll senv bs)
                               | TcClause a1@(TcVar _) as <- cs1,
                                 TcClause (TcVar i2) bs <- cs2,
                                 let senv = (i2,a1): zip (fuv bs) (map TcVar $ allBinders \\ fuv as) ]
@@ -493,7 +493,7 @@ fuvA (TcActor _) = []
 fuvA (TcVar i) = [i]
 
 allBinders :: [B.ByteString]
-allBinders = map B.pack $ 
+allBinders = map B.pack $
               [ show c | c <- ['a' .. 'z']] ++
                [ c : show (i :: Int) | c <- ['a' .. 'z'], i <- [0..]]
 
@@ -501,7 +501,7 @@ allBinders = map B.pack $
 glb :: (PrgPolicy TcActor) -> (PrgPolicy TcActor) -> (PrgPolicy TcActor)
 -- This one could be smartified
 glb (TcPolicy as) (TcPolicy bs) = TcPolicy $ as ++ bs
-glb p1 p2 
+glb p1 p2
     | p1 == p2 = p1
     | isTop p1 = p2
     | isTop p2 = p1
@@ -524,12 +524,12 @@ specialise ls (TcPolicy cs) = TcPolicy $ concatMap (specClause ls) cs
 specialise _ p = p
 
 specClause :: [TcLock] -> TcClause TcActor -> [TcClause TcActor]
-specClause ls (TcClause h atoms) = 
+specClause ls (TcClause h atoms) =
     -- Step 1: generate possible substitutions from each atom
     let substss = map (genSubst ls) atoms -- :: [[Subst]]
         substs  = joinSubsts $ map ([]:) substss
     in remSubsumed [] $
-           [ TcClause (substA sub h) (substAll sub atoms \\ map lockToAtom ls) 
+           [ TcClause (substA sub h) (substAll sub atoms \\ map lockToAtom ls)
              | sub <- substs ]
 
   where genSubst :: [TcLock] -> TcAtom -> [Subst]
@@ -544,7 +544,7 @@ specClause ls (TcClause h atoms) =
                        let Just subst' = mSubst ]
 
         joinSubsts :: [[Subst]] -> [Subst]
-        joinSubsts sss = 
+        joinSubsts sss =
             let allS = map concat $ cartesian sss -- [Subst]
                 conS = catMaybes $ map toConsistent allS      -- [Subst]
             in conS
@@ -569,7 +569,7 @@ matchesActor (TcVar i) aid = Just [(i, TcActor aid)]
 matchesActor _ _ = Nothing
 
 toConsistent :: Subst -> Maybe Subst
-toConsistent sub = 
+toConsistent sub =
     let bndrs = groupBy (\a b -> fst a == fst b) sub
     in  sequence $ map checkConsistent bndrs
         where checkConsistent :: Subst -> Maybe (Ident SourcePos, TcActor)
@@ -616,7 +616,7 @@ zonkPolicy p = return p
 
 -- Invariant: policies are always closed by the env
 substPolicy :: [(B.ByteString, ActorPolicy)] -> PrgPolicy TcActor -> ActorPolicy
-substPolicy env (TcRigidVar _ i) 
+substPolicy env (TcRigidVar _ i)
     | Just q <- lookup i env = q
 substPolicy env (TcJoin p1 p2) =
     let pol1 = substPolicy env p1

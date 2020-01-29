@@ -36,8 +36,8 @@ noMods = ([],[])
 --   via a lock(-state) type parameter
 data LockSpec
     = ConcreteLock (Lock (Name SourcePos) TypedActorIdSpec)
-    -- ^ A concrete lock representation, parameterised 
-    --   over actors that may in turn be represented 
+    -- ^ A concrete lock representation, parameterised
+    --   over actors that may in turn be represented
     --   by type parameters
     | LockTypeParam B.ByteString
     -- ^ Lock (set) represented by a type parameter
@@ -47,16 +47,16 @@ data LockSpec
 
 skolemizeLock :: LockSpec -> Lock (Name SourcePos) TypedActorIdSpec
 skolemizeLock (LockTypeParam bi) =
-    Lock (Name defaultPos LName Nothing $ 
+    Lock (Name defaultPos LName Nothing $
                Ident defaultPos bi) []
 skolemizeLock (ConcreteLock l) = l
 
 type LockMods = LockDelta (Name SourcePos) TypedActorIdSpec
 
 
-instance (Pretty name, Pretty aid) => 
+instance (Pretty name, Pretty aid) =>
     Pretty (Lock name aid) where
-  pretty (Lock n aids) = pretty n <> 
+  pretty (Lock n aids) = pretty n <>
     opt (not $ null aids) (parens (hcat (punctuate (char ',') $ map pretty aids)))
 
 instance Pretty LockSpec where
@@ -65,7 +65,7 @@ instance Pretty LockSpec where
 
 instance (Pretty name, Pretty aid) =>
     Pretty (LockSet name aid) where
-  pretty (LockSet ls) = 
+  pretty (LockSet ls) =
       brackets (hcat (punctuate (char ',') $ map pretty ls))
   pretty NoSet = brackets empty
 

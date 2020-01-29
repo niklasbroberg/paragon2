@@ -20,8 +20,8 @@ import qualified Data.ByteString.Char8 as B
 constraintsModule :: String
 constraintsModule = typeCheckerBase ++ ".Constraints"
 
-data Constraint = 
-    LRT [(B.ByteString, ActorPolicy)] 
+data Constraint =
+    LRT [(B.ByteString, ActorPolicy)]
             [TcClause TcAtom] [TcLock] (TcPolicy TcActor) (TcPolicy TcActor)
   deriving (Show, Eq)
 
@@ -45,25 +45,25 @@ splitCstrs (LRT bs g ls p q) = [ LRT bs g ls x y | x <- disjoin p, y <- dismeet 
 isCstrVar :: Constraint -> Bool
 isCstrVar (LRT _ _ _ _ (RealPolicy _))    = False
 isCstrVar (LRT _ _ _ _ (VarPolicy (TcMetaVar _ _))) = True
-isCstrVar (LRT _ _ _ _ _) 
-    = panic (constraintsModule ++ ".isCstrVar") 
+isCstrVar (LRT _ _ _ _ _)
+    = panic (constraintsModule ++ ".isCstrVar")
       "Right-side of a constraint shouldn't be a join or meet!"
 
 --Check if a given constraint p<=q verifies that q is an unknown policy of a variable
 noVarLeft :: Constraint -> Bool
 noVarLeft (LRT _ _ _ (RealPolicy _) _)    = True
 noVarLeft (LRT _ _ _ (VarPolicy (TcMetaVar _ _)) _) = False
-noVarLeft (LRT bs g ls (Join p q) r) = 
+noVarLeft (LRT bs g ls (Join p q) r) =
     noVarLeft (LRT bs g ls p r) || noVarLeft (LRT bs g ls q r)
-noVarLeft (LRT bs g ls (Meet p q) r) = 
+noVarLeft (LRT bs g ls (Meet p q) r) =
     noVarLeft (LRT bs g ls p r) || noVarLeft (LRT bs g ls q r)
 
 {-
 partitionM :: (Constraint -> IO Bool) -> [Constraint] -> IO([Constraint], [Constraint])
 partitionM f xs = do
-  xs' <- mapM (\x -> do 
-                 b <- f x 
-                 return (b, x)) 
+  xs' <- mapM (\x -> do
+                 b <- f x
+                 return (b, x))
          xs
   xs'' <- return $ partition fst xs'
   return $ ((map snd $ fst xs''), (map snd $ snd xs''))
@@ -72,9 +72,9 @@ partitionM f xs = do
 {-
 filterM :: (Constraint -> IO Bool) -> [Constraint] -> IO([Constraint])
 filterM f xs = do
-  xs' <- mapM (\x -> do 
-                 b <- f x 
-                 return (b, x)) 
+  xs' <- mapM (\x -> do
+                 b <- f x
+                 return (b, x))
          xs
   xs'' <- return $ filter fst xs'
   return $ (map snd $ xs'')
@@ -89,7 +89,7 @@ linker _ _                          = panic "linker shouldn't be called on a non
 
 -- Given (ls, p) and (ls',q) s.t. (ls, p) <= X, returns (ls `union` ls', p) if q=X, (ls, p) either
 substPol :: (TcMetaVar TcActor) -> ([TcLock], (TcPolicy TcActor)) -> (([TcLock], TcPolicy TcActor)) -> ([TcLock], (TcPolicy TcActor))
-substPol x (ls, px) (ls', p@(VarPolicy y)) = 
+substPol x (ls, px) (ls', p@(VarPolicy y)) =
     case (x == y) of
       True  -> ((ls `union` ls'), px)
       False -> (ls', p)
@@ -99,7 +99,7 @@ substPol _ _ p             = p
 -- Add to a set of constraints the ones obtained by substituting a policy to a MetaVariable
 substitution :: (TcMetaVar TcActor) -> ([TcLock], (TcPolicy TcActor)) -> [Constraint] -> [Constraint]
 substitution _ _ [] = []
-substitution x (ls, px) ((c@(LRT bs g ls' p q)):cs) = 
+substitution x (ls, px) ((c@(LRT bs g ls' p q)):cs) =
     let (ls'', psubst) = substPol x (ls, px) (ls',p) in
     case ((psubst == p) && (ls'' == ls')) of
       True  -> c:(substitution x (ls, px) cs)

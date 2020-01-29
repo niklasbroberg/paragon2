@@ -1,14 +1,14 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
-module Language.Java.Paragon.Monad.PiReader 
-    ( 
+module Language.Java.Paragon.Monad.PiReader
+    (
       module Language.Java.Paragon.Monad.Base,
 
       PiPath, PiReader, runPiReader,
 
       MonadPR(..),
 
-      getPiPath, 
-      doesPkgExist, doesTypeExist, 
+      getPiPath,
+      doesPkgExist, doesTypeExist,
       getPkgContents, getTypeContents,
       getPiPathContents
 
@@ -18,7 +18,7 @@ import Language.Java.Paragon.Syntax (Name(..),NameType(..),CompilationUnit,Ident
 import Language.Java.Paragon.Pretty (prettyPrint)
 import Language.Java.Paragon.Parser (parser, compilationUnit)
 import Language.Java.Paragon.SourcePos (SourcePos)
-import Language.Java.Paragon.Interaction 
+import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Monad.Base
 
 import System.FilePath ((</>),(<.>),splitExtension)
@@ -130,7 +130,7 @@ getPkgContents pkgName = liftPR $ do
   piPath <- getPiPath
   completePath <- selectFirstPkg path piPath
   readContents completePath
-  
+
       where selectFirstPkg :: FilePath -> [FilePath] -> PiReader FilePath
             selectFirstPkg _ [] = panic (piReaderModule ++ ".getPkgContents")
                                 ("No such package exists - doesPkgExist not called successfully"
@@ -139,7 +139,7 @@ getPkgContents pkgName = liftPR $ do
                      isP <- liftIO $ doesDirectoryExist $ pip </> path
                      if isP then return $ pip </> path
                             else selectFirstPkg path pips
-                                 
+
             readContents :: FilePath -> PiReader [B.ByteString]
             readContents path = do
               files <- liftIO $ getDirectoryContents path
@@ -152,8 +152,8 @@ getPiPathContents = do
   pp <- getPiPath
   liftIO $ go pp ([],[])
 
-      where go :: [FilePath] -> ([B.ByteString], [B.ByteString]) 
-               -> IO ([B.ByteString], [B.ByteString]) 
+      where go :: [FilePath] -> ([B.ByteString], [B.ByteString])
+               -> IO ([B.ByteString], [B.ByteString])
             go [] acc = return acc
             go (p:pis) (ts,ps) = do
                        isDir <- doesDirectoryExist p
@@ -183,7 +183,7 @@ getTypeContents n = liftPR $ do
                                let pRes = parser compilationUnit fc
                                case pRes of
                                  Right cu -> return cu
-                                 Left pe  -> fail $ "Parse error in pi file for type " 
+                                 Left pe  -> fail $ "Parse error in pi file for type "
                                                    ++ prettyPrint n ++ ":\n"
                                                    ++ show pe
                        else findFirstPi path pips
@@ -200,16 +200,16 @@ filterPiIdents files =
   where stringToLower = map toLower
 
 -- |Given a directory and a list of directory names relative to that directory,
--- returns the list of directories that actually exist 
+-- returns the list of directories that actually exist
 -- and do not start with . (hidden)
 filterPkgIdentsM :: MonadIO m => FilePath -> [FilePath] -> m [B.ByteString]
 filterPkgIdentsM dir files = liftIO $ do
-    fs <- filterM (doesDirectoryExist . (dir </>)) files    
+    fs <- filterM (doesDirectoryExist . (dir </>)) files
     return [ B.pack f | f <- fs, head f /= '.' ]
 
 -- |Convert AST package name representation to file path to package directory
 pNameToDir :: Name a -> FilePath
-pNameToDir (Name _ PName mPre (Ident _ str)) = 
+pNameToDir (Name _ PName mPre (Ident _ str)) =
     let pf = case mPre of
                Nothing -> id
                Just pre -> let fp = pNameToDir pre in (fp </>)

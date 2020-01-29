@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies, 
+{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies,
              FlexibleInstances, FlexibleContexts,
              TupleSections, QuasiQuotes, BangPatterns #-}
 module Language.Java.Paragon.TypeCheck.Monad.TcDeclM
@@ -11,7 +11,7 @@ module Language.Java.Paragon.TypeCheck.Monad.TcDeclM
 
      fetchPkg, fetchType, skolemTypeDecl,
 
-     getThisType, getThisStateType, getSuperType, 
+     getThisType, getThisStateType, getSuperType,
      getTypeMap, lookupTypeOfType, lookupTypeOfStateType,
      getLocalTypeMap,
 
@@ -82,7 +82,7 @@ lookupTypeOfStateType _sty@(TcType ty) = liftTcDeclM $ do
   tm <- getTypeMap
   case lookupTypeOfT ty tm of
     Right (is, tsig) -> do
-      ias <- mapM (instanceActorId . Name SourcePos EName 
+      ias <- mapM (instanceActorId . Name SourcePos EName
 -}
 lookupTypeOfType :: MonadTcDeclM m => TcType -> m ([(RefType SourcePos, B.ByteString)], TypeSig)
 lookupTypeOfType ty = liftTcDeclM $ do
@@ -104,7 +104,7 @@ fetchPkg n@(Name pos _ _ _) = do
      extendGlobalTypeMap (extendTypeMapP n emptyTM)
      debugPrint $ "Done fetching package " ++ prettyPrint n
      return pos
-                       
+
 
 fetchType :: Name SourcePos -> TcDeclM ([TypeParam SourcePos],[(RefType SourcePos, B.ByteString)],TypeSig)
 fetchType n@(Name pos _ _ typName) = do
@@ -117,10 +117,10 @@ fetchType n@(Name pos _ _ typName) = do
      cUnit <- getTypeContents n
      pp <- getPiPath
      CompilationUnit _ pkg _ [td] <- liftBase $ resolveNames pp cUnit
-     withThisType (snd $ skolemTypeDecl td) $ 
+     withThisType (snd $ skolemTypeDecl td) $
       case td of
        ClassTypeDecl _ (ClassDecl _ ms cuName tps mSuper impls (ClassBody _ ds)) -> do
-               check (typName == cuName) $ 
+               check (typName == cuName) $
                  mkError (FileClassMismatchFetchType (prettyPrint typName) (prettyPrint cuName))
                          --(identPos cuName)
                          pos
@@ -129,13 +129,13 @@ fetchType n@(Name pos _ _ typName) = do
                               mapM (evalSrcClsType genBot) (maybe [] (:[]) mSuper)
                  implsTys  <- --map (TcRefT . TcClsRefT) <$>
                               mapM (evalSrcClsType genBot) impls
-               
+
                  -- Remove this line, and set tMembers to emptyTM,
                  -- if using "clever lookup" instead of "clever setup"
                  debugPrint $ "fetchType[superType]: " ++ prettyPrint superTys
                  superTm <- case superTys of
                               [] -> return emptyTM
-                              [superTy] -> tMembers . snd <$> 
+                              [superTy] -> tMembers . snd <$>
                                            lookupTypeOfType (clsTypeToType superTy)
                               _ -> panic (tcDeclMModule ++ ".fetchType")
                                  $ "More than one super class for class:"  ++ show superTys
@@ -182,13 +182,13 @@ fetchType n@(Name pos _ _ typName) = do
 --                     debugPrint $ "Result: " ++ show res ++ "\n"
                      return res
                    Nothing  -> panic (tcDeclMModule ++ ".fetchType") $
-                               "Just fetched type " ++ show n ++ 
+                               "Just fetched type " ++ show n ++
                               " but now it doesn't exist!"
 --               withTypeMapAlways (extendTypeMapT n rtps rsig) $ do
 --                 tm <- getTypeMap
 --                 debugPrint $ "TypeMap here: " ++ show tm ++ "\n"
 --                 return (rtps,rsig)
-               
+
               where unMemberDecl :: Decl SourcePos -> MemberDecl SourcePos
                     unMemberDecl (MemberDecl _ md) = md
                     unMemberDecl _ = panic (tcDeclMModule ++ ".fetchType") $
@@ -201,7 +201,7 @@ fetchType n@(Name pos _ _ typName) = do
 
                -- Remove this line, and set tMembers to emptyTM,
                -- if using "clever lookup" instead of "clever setup"
-               superTm <- foldl merge emptyTM <$> 
+               superTm <- foldl merge emptyTM <$>
                             mapM ((tMembers . snd <$>) . lookupTypeOfType . clsTypeToType) superTys
 
                let tnam = Name defaultPos TName (fmap (\(PackageDecl _ pn) -> pn) pkg) typName
@@ -223,7 +223,7 @@ fetchType n@(Name pos _ _ typName) = do
                  -- These will be written directly into the right
                  -- places in the TM, using the 'always' trick
                  fetchActors n mDs $ do
- 
+
                  let mDss = map (:[]) mDs
                  withFoldMap (fetchLTPs n) mDss $ do
 
@@ -237,7 +237,7 @@ fetchType n@(Name pos _ _ typName) = do
                  case lookupNamed types n tm of
                    Just res -> return res
                    Nothing  -> panic (tcDeclMModule ++ ".fetchType") $
-                               "Just fetched type " ++ show n ++ 
+                               "Just fetched type " ++ show n ++
                                " but now it doesn't exist!"
 
        _ -> fail $ "Enums not yet supported"
@@ -249,7 +249,7 @@ fetchLTPs n mDs tdma = do
             fetchLocks  n mDs $ do
             fetchPols   n mDs $ do
             fetchTypeMethods n mDs $ tdma
-          
+
 
 
 findImplActorParams :: [MemberDecl SourcePos] -> [(RefType SourcePos, B.ByteString)]
@@ -262,17 +262,17 @@ findImplActorParams mds = [ (rt, unIdent i)
 
 fetchActors :: Name SourcePos -> [MemberDecl SourcePos] -> TcDeclM a -> TcDeclM a
 fetchActors n mDecls tdra = do
-    -- debugPrint $  "fetchActors: " ++ show 
-    let acts = [ (ms, rt, vd) 
-                     | FieldDecl _ ms (RefType _ rt) vds <- mDecls 
-                     , vd <- vds 
-                     , Final defaultPos `elem` ms -- Static defaultPos `elem` ms 
+    -- debugPrint $  "fetchActors: " ++ show
+    let acts = [ (ms, rt, vd)
+                     | FieldDecl _ ms (RefType _ rt) vds <- mDecls
+                     , vd <- vds
+                     , Final defaultPos `elem` ms -- Static defaultPos `elem` ms
                ]
 --    let -- (sfs,unstables)  = partition (\(ms, _) -> Final defaultPos `elem` ms) acts
 --        (spawns  , stables ) = partition (\(_,_,VarDecl _ _ initz) -> initz == Nothing) acts -- sfs
 --        (sspawns , fspawns ) = partition (\(ms,_,_) -> Static defaultPos `elem` ms) spawns
 --        (sstables, fstables) = partition (\(ms,_,_) -> Static defaultPos `elem` ms) stables
-                               
+
 --    (ssas, ssvs) <- unzip <$> mapM spawnActorVd sspawns
 --    (fsas, fsvs) <- unzip <$> mapM paramActorVd fspawns
 --    (seas, sevs) <- unzip <$> mapM evalActorVd  sstables
@@ -289,17 +289,17 @@ fetchActors n mDecls tdra = do
     withCurrentTypeMap (return . merge loclTM) $ do
 --      debugPrint "Actors fetched"
       tdra
-    
-        
+
+
          where evalActorVd {-, spawnActorVd, paramActorVd , unknownActorVd -}
                    :: ([Modifier SourcePos], RefType SourcePos, VarDecl SourcePos)
                    -> TcDeclM (B.ByteString, PL.TypedActorIdSpec)
                   -- Static, only Nothing for initializer
 {-               spawnActorVd (ms, rt, VarDecl _ (VarId _ i) _) = do
                  rTy <- evalSrcRefType genBot rt
-                 a <- PL.TypedActorIdSpec rTy . PL.ConcreteActorId <$> freshActorId (prettyPrint i)                 
+                 a <- PL.TypedActorIdSpec rTy . PL.ConcreteActorId <$> freshActorId (prettyPrint i)
                  p <- PL.VarPolicy <$> getReadPolicy ms
-                 let vti = VSig (TcRefT rTy) p False 
+                 let vti = VSig (TcRefT rTy) p False
                             (Static defaultPos `elem` ms) (Final defaultPos `elem` ms) False
                  return ((unIdent i,a),(unIdent i,vti))
                spawnActorVd (_, _, VarDecl _ arvid _) =
@@ -309,7 +309,7 @@ fetchActors n mDecls tdra = do
                  rTy <- evalSrcRefType genBot rt
                  let a = PL.TypedActorIdSpec rTy $ PL.ActorTPVar $ unIdent i
                  p <- PL.VarPolicy <$> getReadPolicy ms
-                 let vti = VSig (TcRefT rTy) p False 
+                 let vti = VSig (TcRefT rTy) p False
                            (Static defaultPos `elem` ms) (Final defaultPos `elem` ms) False
                  return ((unIdent i,a),(unIdent i,vti))
                paramActorVd (_, _, VarDecl _ arvid _) =
@@ -329,7 +329,7 @@ fetchActors n mDecls tdra = do
                evalActorVd (ms, rt, VarDecl _ (VarId _ i) mInit) = do
                  rTy <- evalSrcRefType genBot rt
 --                 p <- PL.VarPolicy <$> getReadPolicy ms
---                 let vti = VSig (TcRefT rTy) p False 
+--                 let vti = VSig (TcRefT rTy) p False
 --                           (Static defaultPos `elem` ms) (Final defaultPos `elem` ms) False
                  a <- case mInit of
                         Just (InitExp _ e) -> do
@@ -340,18 +340,18 @@ fetchActors n mDecls tdra = do
                                  Just a -> return a
                                  Nothing -> PL.TypedActorIdSpec rTy . PL.ConcreteActorId <$> unknownActorId --fail "Internal error: no such actor"
                             InstanceCreation {} -> do
-                                 PL.TypedActorIdSpec rTy . 
+                                 PL.TypedActorIdSpec rTy .
                                    PL.ConcreteActorId <$> freshActorId (B.unpack $ unIdent i)
-                            _ -> PL.TypedActorIdSpec rTy . 
+                            _ -> PL.TypedActorIdSpec rTy .
                                       PL.ConcreteActorId <$> unknownActorId
-                        Nothing -> PL.TypedActorIdSpec rTy . 
+                        Nothing -> PL.TypedActorIdSpec rTy .
                                        PL.ConcreteActorId <$> unknownActorId
                  debugPrint $ "Evaluated field \"" ++ prettyPrint i ++ "\" to have actor id: " ++ prettyPrint a
                  return (unIdent i,a)
 
---               evalActorVd (_, _, VarDecl _ _ Nothing) 
+--               evalActorVd (_, _, VarDecl _ _ Nothing)
 --                   = panic (typeCheckerBase ++ ".evalActorVd") $ "No initializer"
-               evalActorVd (_, _, VarDecl _ arvid _) 
+               evalActorVd (_, _, VarDecl _ arvid _)
                    = fail $ "Deprecated array syntax not supported: " ++ prettyPrint arvid
 
 -- end actors
@@ -360,7 +360,7 @@ fetchActors n mDecls tdra = do
 
 fetchLocks :: Name SourcePos -> [MemberDecl SourcePos] -> TcDeclM a -> TcDeclM a
 fetchLocks n mds tdra = do
-  let lcs = [ (i, ms, tys, mProps) | 
+  let lcs = [ (i, ms, tys, mProps) |
                LockDecl _ ms i tys mProps <- mds ]
   when (not (null lcs)) $ debugPrint $ "fetchLocks: " ++ show lcs
   lsigs <- flip mapM lcs $ \(i, ms, tys, mProps) -> do
@@ -375,22 +375,22 @@ fetchLocks n mds tdra = do
 --       debugPrint $ "Locks fetched"
        tdra
 
-getLockModProps :: Maybe (Name SourcePos) -> Ident SourcePos 
+getLockModProps :: Maybe (Name SourcePos) -> Ident SourcePos
                 -> [Modifier SourcePos] -> TcDeclM PL.GlobalPol
 getLockModProps mTypN lockI ms = do
     let lockN = Name (ann lockI) LName mTypN lockI -- mkSimpleName LName lockI
         [domX,domY,domZ]  = map (anyActor . B.singleton) "xyz"
         [varX,varY,varZ] = map PL.QuantActor [0,1,2]
         atom n = PL.AtomPred . PL.Atom n
-        trans = PL.DatalogClause [domX,domY,domZ] 
+        trans = PL.DatalogClause [domX,domY,domZ]
                     (atom lockN [varX, varY])
                          [atom lockN [varX, varZ], atom lockN [varZ, varY]]
         refl  = PL.DatalogClause [domX] (atom lockN [varX, varX]) []
-        symm  = PL.DatalogClause [domX,domY] 
+        symm  = PL.DatalogClause [domX,domY]
                     (atom lockN [varX, varY]) [atom lockN [varY, varX]]
     return $
-       [ trans | Transitive _ <- ms ] ++ 
-       [ refl  | Reflexive  _ <- ms ] ++ 
+       [ trans | Transitive _ <- ms ] ++
+       [ refl  | Reflexive  _ <- ms ] ++
        [ symm  | Symmetric  _ <- ms ]
 
 
@@ -403,13 +403,13 @@ anyActor b = PL.TypedActor (TcClsRefT objectT) b
 
 fetchPols :: Name SourcePos -> [MemberDecl SourcePos] -> TcDeclM a -> TcDeclM a
 fetchPols n mds tdra = do
-  let pols = [ (unIdent i,initz, Static defaultPos `elem` ms) | 
+  let pols = [ (unIdent i,initz, Static defaultPos `elem` ms) |
                  FieldDecl _ ms (PrimType _ (PolicyT _)) vds <- mds,
                  VarDecl _ (VarId _ i) (Just (InitExp _ initz)) <- vds,
                  Final defaultPos `elem` ms
              ]
       (spols, fpols) = partition (\(_,_,b) -> b) pols
-      
+
   when (not (null pols)) $ do
                          debugPrint $ "fetchPols: "
                          mapM_ (debugPrint . ("  " ++) . show) pols
@@ -425,7 +425,7 @@ fetchPols n mds tdra = do
 --                    debugPrint $ "Policies fetched"
                     tdra
 
-      where fetchPol :: (B.ByteString, Exp SourcePos, a) 
+      where fetchPol :: (B.ByteString, Exp SourcePos, a)
                      -> TcDeclM (B.ByteString, PL.PrgPolicy)
             fetchPol (i,e,_) = (i,) <$> evalPolicy e
 -- end policies
@@ -433,7 +433,7 @@ fetchPols n mds tdra = do
 -- Working with typemethods
 fetchTypeMethods ::  Name SourcePos -> [MemberDecl SourcePos] -> TcDeclM a -> TcDeclM a
 fetchTypeMethods n mds tdra = do
-  let ipbs = [ (unIdent i,(ps,body)) | 
+  let ipbs = [ (unIdent i,(ps,body)) |
                MethodDecl _ ms _ _ i ps _ (MethodBody _ (Just body)) <- mds,
                Typemethod defaultPos `elem` ms
              ]
@@ -441,7 +441,7 @@ fetchTypeMethods n mds tdra = do
   let newTM = emptyTM { typemethods = Map.fromList ipidbs }
   extendGlobalTypeMap $ extendTypeMapN n $ merge newTM
   withCurrentTypeMap (return . merge newTM) $ do
---  withTypeMapAlways (extendTypeMapN n 
+--  withTypeMapAlways (extendTypeMapN n
 --                     (merge $ emptyTM { typemethods = Map.fromList ipidbs })) $ do
 --                    debugPrint "TypeMethods fetched"
                     tdra
@@ -451,7 +451,7 @@ fetchTypeMethods n mds tdra = do
                               return (i, (pids,b))
           paramIdent :: FormalParam SourcePos -> TcDeclM (B.ByteString)
           paramIdent (FormalParam _ _ _ _ (VarId _ i)) = return $ unIdent i
-          paramIdent (FormalParam _ _ _ _ arvid) = 
+          paramIdent (FormalParam _ _ _ _ arvid) =
               fail $ "Deprecated array syntax not supported: " ++ prettyPrint arvid
 
 -- end typemethods
@@ -470,7 +470,7 @@ fetchSignatures isNative n memDs = do
     extendGlobalTypeMap $ extendTypeMapN n $ merge newTM
 --    debugPrint "Signatures fetched"
     return ()
-    
+
  where
    unVarDecl :: VarDecl SourcePos -> TcDeclM (B.ByteString)
    unVarDecl (VarDecl _ (VarId _ i) _) = return $ unIdent i
@@ -478,13 +478,13 @@ fetchSignatures isNative n memDs = do
 
    fetchFields :: [MemberDecl SourcePos] -> TcDeclM (Map (B.ByteString) VarFieldSig)
    fetchFields = go Map.empty
-       where go :: Map (B.ByteString) VarFieldSig 
-                -> [MemberDecl SourcePos] 
+       where go :: Map (B.ByteString) VarFieldSig
+                -> [MemberDecl SourcePos]
                 -> TcDeclM (Map (B.ByteString) VarFieldSig)
              go acc [] = return acc
-             go fm (md:mds) = 
+             go fm (md:mds) =
                  case md of
-                   FieldDecl _ ms ty vds -> do                      
+                   FieldDecl _ ms ty vds -> do
                       tcty <- evalSrcType genBot ty
                       pol  <- getReadPolicy ms
                       let vti = VSig tcty (PL.VarPolicy pol)
@@ -494,14 +494,14 @@ fetchSignatures isNative n memDs = do
                       go newFm mds
                    _ -> go fm mds
 
-   fetchMethods :: [MemberDecl SourcePos] 
-                -> TcDeclM (Map (B.ByteString) MethodMap) 
+   fetchMethods :: [MemberDecl SourcePos]
+                -> TcDeclM (Map (B.ByteString) MethodMap)
    fetchMethods = go Map.empty
        where go :: Map (B.ByteString) MethodMap
                 -> [MemberDecl SourcePos]
                 -> TcDeclM (Map (B.ByteString) MethodMap)
              go acc [] = return acc
-             go mm (md:mds) = 
+             go mm (md:mds) =
                  case md of
                    MethodDecl _ ms tps retT i ps exns _ -> do
                            withFoldMap withTypeParam tps $ do
@@ -515,7 +515,7 @@ fetchSignatures isNative n memDs = do
                                           (mapM evalLock $ concat [ l | Closes  _ l <- ms ])
                              opens   <- map PL.skolemizeLock <$>
                                           (mapM evalLock $ concat [ l | Opens   _ l <- ms ])
-                             let nnp = [x | (Just x) <- mnnp]  
+                             let nnp = [x | (Just x) <- mnnp]
                              let mti = MSig {
                                          mRetType   = tcty,
                                          mModifiers = removeAnnotationMany ms,
@@ -536,14 +536,14 @@ fetchSignatures isNative n memDs = do
                                  newMm = Map.insertWith Map.union (unIdent i) newMethMap mm
                              go newMm mds
 
-                   _ -> go mm mds        
-             
+                   _ -> go mm mds
+
    fetchConstrs = go Map.empty
        where go :: ConstrMap
                 -> [MemberDecl SourcePos]
                 -> TcDeclM ConstrMap
              go acc [] = return acc
-             go cm (md:mds) = 
+             go cm (md:mds) =
                  case md of
                    ConstructorDecl _ ms tps _ ps exns _ -> do
                            withFoldMap withTypeParam tps $ do
@@ -572,9 +572,9 @@ fetchSignatures isNative n memDs = do
                                  newCm = Map.insert (tps, pTys, isVarArity) cti cm
                              go newCm mds
 
-                   _ -> go cm mds        
-             
- 
+                   _ -> go cm mds
+
+
    eSpecToSig :: ExceptionSpec SourcePos -> TcDeclM (TcType, ExnSig)
    eSpecToSig (ExceptionSpec _ ms eType) = do
           ty <- evalSrcType genBot (RefType defaultPos eType) -- should use evalSrcRefType
@@ -585,8 +585,8 @@ fetchSignatures isNative n memDs = do
           let esig = ExnSig {
                        exnReads = PL.VarPolicy rPol,
                        exnWrites = PL.VarPolicy wPol,
-                       exnMods = PL.LockDelta 
-                                   (map PL.skolemizeLock opens) 
+                       exnMods = PL.LockDelta
+                                   (map PL.skolemizeLock opens)
                                    (map PL.skolemizeLock closes)
                      }
           return (ty, esig)
@@ -597,18 +597,18 @@ fetchSignatures isNative n memDs = do
           pTy  <- evalSrcType genBot ty
           let mNn = if (Notnull defaultPos `elem` ms) then Just $ unIdent i else Nothing
           return (pTy, unIdent i, pPol, mNn)
-   paramInfo (FormalParam _ _ _ _ arvid) = 
+   paramInfo (FormalParam _ _ _ _ arvid) =
             fail $ "Deprecated array syntax not supported: " ++ prettyPrint arvid
 
 withTypeParam :: TypeParam SourcePos -> TcDeclM a -> TcDeclM a
-withTypeParam tp tcba = 
+withTypeParam tp tcba =
     case tp of
       ActorParam _ rt i -> do
           topp <- PL.topM
           rTy <- evalSrcRefType genBot rt
           let vti = VSig (TcRefT rTy) topp False False True False
               bI  = unIdent i
-          withCurrentTypeMap (\tm -> 
+          withCurrentTypeMap (\tm ->
               return $ tm { actors = Map.insert bI (PL.TypedActorIdSpec rTy $ PL.ActorTPVar bI) (actors tm),
                             fields = Map.insert bI vti (fields tm) }) $ tcba
       PolicyParam _ i -> do
@@ -625,7 +625,7 @@ withTypeParam tp tcba =
               return $ tm { locks = Map.insert (unIdent i) lti (locks tm) }) $ tcba
       TypeParam _ _i _ -> do
           --withCurrentTypeMap (\tm ->
-          --    tm { types = Map.insert i ([],Map.empty) (types tm) }) $ 
+          --    tm { types = Map.insert i ([],Map.empty) (types tm) }) $
             tcba
 
 
@@ -640,17 +640,17 @@ fetchSignature memDecl tcba = do
         pol  <- getReadPolicy ms
         let vti = VSig tcty pol False (Static defaultPos `elem` ms) (Final defaultPos `elem` ms)
         ids <- mapM unVarDecl vds
-        withTypeMap (\tm -> 
-           tm { fields = foldl 
-                         (\m i -> Map.insert i vti m) 
-                         (fields tm) ids 
+        withTypeMap (\tm ->
+           tm { fields = foldl
+                         (\m i -> Map.insert i vti m)
+                         (fields tm) ids
               }) $
           tcba
       MethodDecl _ ms tps retT i ps exns _ -> do
         withFoldMap withTypeParam tps $ do
         tcty <- evalReturnType retT
         (pTys, pPols) <- unzip <$> mapM paramInfo ps
-        rPol <- getReturnPolicy ms pPols 
+        rPol <- getReturnPolicy ms pPols
         wPol <- getWritePolicy ms
         exs <- mapM eSpecToSig exns
         expects <- mapM evalLock $ concat [ l | Expects _ l <- ms ]
@@ -665,7 +665,7 @@ fetchSignature memDecl tcba = do
                       mLMods   = (closes, opens),
                       mExns    = exs
                     }
-        withTypeMap (\tm -> 
+        withTypeMap (\tm ->
           tm { methods = Map.insert (i, pTys) (tps,mti) (methods tm) }) $
             tcba
       ConstructorDecl _ ms tps _ ps exns _ -> do
@@ -683,14 +683,14 @@ fetchSignature memDecl tcba = do
                       cLMods   = (closes, opens),
                       cExns    = exs
                     }
-        withTypeMap (\tm -> 
+        withTypeMap (\tm ->
           tm { constrs = Map.insert pTys (tps,cti) (constrs tm) }) $
             tcba
       LockDecl _ ms i mps Nothing -> do
         pL <- getLockPolicy ms
         -- TODO: Store lock properties!
         let lsig = LSig pL (length mps)
-        withTypeMap (\tm -> 
+        withTypeMap (\tm ->
           tm { locks = Map.insert i lsig (locks tm) }) $
             tcba
       LockDecl {} -> fail "Lock properties not yet supported"
@@ -715,7 +715,7 @@ fetchSignature memDecl tcba = do
           pPol <- getParamPolicy i ms
           pTy  <- evalSrcType ty
           return (pTy, pPol)
-        paramInfo (FormalParam _ _ _ _ arvid) = 
+        paramInfo (FormalParam _ _ _ _ arvid) =
             fail $ "Deprecated array syntax not supported: " ++ prettyPrint arvid
 -}
 
@@ -723,10 +723,10 @@ fetchSignature memDecl tcba = do
 
 ------------------------------------------------------------
 
--------------------------------------------------------------------------------------      
-getReadPolicy, getWritePolicy, getLockPolicy 
+-------------------------------------------------------------------------------------
+getReadPolicy, getWritePolicy, getLockPolicy
     :: [Modifier SourcePos] -> TcDeclM PL.PrgPolicy
-getReadPolicy mods = 
+getReadPolicy mods =
     case [pol |Reads _ pol <- mods ] of -- !!0 -- Read Policy? what if no read policy?
       [pol] -> evalPolicy pol
       [] -> PL.bottomM
@@ -761,7 +761,7 @@ getParamPolicy _i mods =
 
 
 getReturnPolicy :: [Modifier SourcePos] -> [PL.PrgPolicy] -> TcDeclM PL.PrgPolicy
-getReturnPolicy mods pPols = 
+getReturnPolicy mods pPols =
     case [pol | Reads _ pol <- mods ] of
       [pol] -> evalPolicy pol
       [] -> PL.bottomM >>= \bt -> foldM PL.lub bt pPols
@@ -792,7 +792,7 @@ instance HasSubTyping TcDeclM where
                                return $ instantiate (zip tps tas) tsig
                             _ -> panic (tcDeclMModule ++ ".subTypeOf")
                                  $ show rt
-                          
+
                     Left err -> panic (tcDeclMModule ++ ".subTypeOf")
                                 $ "Looking up type:" ++ show rt ++ "\nError: " ++ show err
                     Right (_,tsig) -> return tsig
@@ -802,7 +802,7 @@ instance HasSubTyping TcDeclM where
           supsups <- mapM superTypes allS
           return $ concat $ allS:supsups
 
-  
+
 
 instance EvalPolicyM TcDeclM where
   evalPolicy = evalPolicyD
@@ -812,7 +812,7 @@ instance EvalPolicyM TcDeclM where
 
 evalReturnType :: EvalPolicyM m => m PL.ActorPolicy -> ReturnType SourcePos -> m TcType
 evalReturnType _ (VoidType _) = return voidT
-evalReturnType _ (LockType _) = 
+evalReturnType _ (LockType _) =
     fail $ "lock as return type not yet implemented" -- return TcLockRetT
 evalReturnType gp (Type _ t)   = evalSrcType gp t
 
@@ -837,7 +837,7 @@ evalSrcClsType gp _ct@(ClassType _ n tas) = do
   baseTm <- getTypeMap
   -- debugPrint $ "Current type map: " ++ show baseTm
   (tps,_iaps,_tsig) <- case lookupNamed types n baseTm of
-                         Nothing -> liftTcDeclM $ fetchType n 
+                         Nothing -> liftTcDeclM $ fetchType n
                                     -- fail $ "Unknown type: " ++ prettyPrint n
                          Just res -> return res
 
@@ -847,30 +847,30 @@ evalSrcClsType gp _ct@(ClassType _ n tas) = do
   return $ TcClassT n tArgs
 
 
-evalSrcTypeArg :: EvalPolicyM m => 
+evalSrcTypeArg :: EvalPolicyM m =>
                   m PL.ActorPolicy -> TypeParam SourcePos -> TypeArgument SourcePos -> m TcTypeArg
 evalSrcTypeArg gp tp (ActualArg _ a) = evalSrcNWTypeArg gp tp a
 evalSrcTypeArg _ _ _ = fail "evalSrcTypeArg: Wildcards not yet supported"
 
-evalSrcNWTypeArg :: EvalPolicyM m => 
+evalSrcNWTypeArg :: EvalPolicyM m =>
                     m PL.ActorPolicy -> TypeParam SourcePos -> NonWildTypeArgument SourcePos -> m TcTypeArg
 -- Types may be names or types -- TODO: Check bounds
 evalSrcNWTypeArg gp (TypeParam {}) (ActualName _ n) = do
     TcActualType . TcClsRefT <$> evalSrcClsType gp (ClassType defaultPos n [])
-evalSrcNWTypeArg gp (TypeParam {}) (ActualType _ rt) = 
+evalSrcNWTypeArg gp (TypeParam {}) (ActualType _ rt) =
     TcActualType <$> evalSrcRefType gp rt
 -- Actors may only be names -- TODO: must be final
 evalSrcNWTypeArg _ (ActorParam {}) (ActualName _ n) = TcActualActor <$> evalActorId n
 -- Policies may be names, or special expressions -- TODO: names must be final
-evalSrcNWTypeArg _ (PolicyParam {}) (ActualName _ n) = 
+evalSrcNWTypeArg _ (PolicyParam {}) (ActualName _ n) =
     TcActualPolicy . PL.VarPolicy <$> evalPolicy (ExpName defaultPos n)
-evalSrcNWTypeArg _ (PolicyParam {}) (ActualExp  _ e) = 
+evalSrcNWTypeArg _ (PolicyParam {}) (ActualExp  _ e) =
     TcActualPolicy . PL.VarPolicy <$> evalPolicy e
 -- Lock states must be locks
-evalSrcNWTypeArg _ (LockStateParam {}) (ActualLockState _ ls) = 
+evalSrcNWTypeArg _ (LockStateParam {}) (ActualLockState _ ls) =
     TcActualLockState <$> mapM evalLock ls
 
-evalSrcNWTypeArg _ tp nwta = 
+evalSrcNWTypeArg _ tp nwta =
     fail $ "Trying to instantiate type parameter " ++ prettyPrint tp ++
            " with incompatible type argument " ++ prettyPrint nwta
 
@@ -904,7 +904,7 @@ evalPolicy e = case e of
             evalPolicy e
           _ -> do
             debugPrint $ "Name causing problem: " ++ show n
-            fail $ "evalPolicy: no such policy: " ++ prettyPrint n 
+            fail $ "evalPolicy: no such policy: " ++ prettyPrint n
   PolicyExp _ pl -> evalPolicyExp pl
   BinOp _ p1 (Add _) p2 -> do
     pol1 <- evalPolicy p1
@@ -961,7 +961,7 @@ evalActorId n = do
             evalActorId n
         _ -> do
           debugPrint $ "Name causing problem: " ++ show n
-          fail $ "evalActor: no such policy: " ++ prettyPrint n 
+          fail $ "evalActor: no such policy: " ++ prettyPrint n
   -- unknownActorId -- fail $ "evalActor: No such actor: " ++ prettyPrint n
 
 evalAtom (Atom _ n as) = TcAtom n <$> mapM evalActor as
@@ -990,17 +990,17 @@ evalLockD (Lock _ n@(Name _ _nt mPre i) ans) = do
   let rTysAids = map PL.actorType aids
   case Map.lookup (unIdent i) $ locks tm of
     Just lsig -> do
-      mapM_ (\(rTy, rTyAid) -> 
+      mapM_ (\(rTy, rTyAid) ->
                  checkM (rTyAid `subTypeOf` rTy) $
                         toUndef $ "Lock " ++ prettyPrint n ++ " expects argument of type " ++
-                                prettyPrint rTy ++ " but has been given argument of type " ++  
+                                prettyPrint rTy ++ " but has been given argument of type " ++
                                 prettyPrint rTyAid) $ zip (lArgs lsig) rTysAids
     Nothing -> fail $ "No such lock: " ++ prettyPrint n
   return $ PL.ConcreteLock $ PL.Lock n aids
 evalLockD (LockVar _ i) = return $ PL.LockTypeParam $ unIdent i
 evalLockD l = panic (tcDeclMModule ++ ".evalLock")
              $ show l
-  
+
 evalSrcLockProps :: Ident SourcePos -> Maybe (LockProperties SourcePos) -> TcDeclM PL.GlobalPol
 evalSrcLockProps _ Nothing = return []
 evalSrcLockProps i (Just (LockProperties _ lcs)) = do
@@ -1029,7 +1029,7 @@ evalClauseVarDecl (ClauseVarDecl _ rt i) = do
   return (i, rTy)
 
 --PL.DatalogClause <$> evalSimpleAtom i h <*> mapM evalAtom b
---evalLClause _ (ConstraintClause _ b) = 
+--evalLClause _ (ConstraintClause _ b) =
 --    TcClause specialConstraintAtom <$> mapM evalAtom b
 
 evalSimpleAtom :: [(Actor SourcePos, PL.ActorRep)] -> Ident SourcePos -> Atom SourcePos -> TcDeclM PL.TcAtom
@@ -1037,7 +1037,7 @@ evalSimpleAtom actMap i a@(Atom _ n _) = do
   TcClassT thisTypeName _tas <- getThisType
   debugPrint $ show thisTypeName
   case n of
-    (Name _ _ mPre aI) 
+    (Name _ _ mPre aI)
         | aI == i && (mPre == Nothing || mPre == (Just thisTypeName))
             -> return $ evalAtom actMap a
     _ -> fail $ "Lock property head does not match lock name: " ++
@@ -1059,7 +1059,7 @@ freshActorId = liftBase . PL.newFresh
 
 unknownActorId :: MonadBase m => m PL.ActorIdentity
 unknownActorId = liftBase PL.newUnknown
-  
+
 instanceActorId :: MonadBase m => Name SourcePos -> m PL.ActorIdentity
 instanceActorId = liftBase . PL.newInstance
 
@@ -1074,13 +1074,13 @@ lookupFieldD n = do
     Nothing -> do
       case lookupNamed actors n tm of
         Just aid -> return $ VAct aid
-        Nothing -> 
+        Nothing ->
             case n of
               Name _ _ (Just tn@(Name _ TName _ _)) _ -> do
                 _ <- fetchType tn
                 lookupFieldD n
               _ -> do
-                   fail $ "Referencing non-policy/actor field in typemethod: " 
+                   fail $ "Referencing non-policy/actor field in typemethod: "
                             ++ prettyPrint n
 
 {-
@@ -1123,12 +1123,12 @@ instance MonadIO (TcDeclM r) where
 instance MonadBase (TcDeclM r) where
   liftBase = liftTcBaseM . liftBase
 
-  withErrCtxt' ecf (TcDeclM f) = 
+  withErrCtxt' ecf (TcDeclM f) =
       TcDeclM $ \k -> do
         ec <- liftBase getErrCtxt
         withErrCtxt' ecf $ f (\a ->
           (withErrCtxt' (const ec)) $ k a)
-                                 
+
 instance MonadPR (TcDeclM r) where
   liftPR = liftTcBaseM . liftPR
 
@@ -1146,17 +1146,17 @@ instance MonadTcDeclM TcDeclM where
 --  liftCallCC = id
 
 -----------------------------------------------
--- Here's the whole reason why we go through 
+-- Here's the whole reason why we go through
 -- this lifting charade
 
 callCC :: ((a -> TcDeclM r b) -> TcDeclM r a) -> TcDeclM r a
-callCC cont = TcDeclM $ \k -> 
+callCC cont = TcDeclM $ \k ->
                 let TcDeclM g = cont (\a -> TcDeclM $ \_ -> k a) in g k
 
 withTypeMapAlways :: (TypeMap -> TypeMap) -> TcDeclM r a -> TcDeclM r a
 --withTypeMapAlways tmf tdm = callCC $ \cont -> do
 --                              withTypeMap tmf $ tdm >>= cont
-                            
+
 withTypeMapAlways tmf (TcDeclM f) = TcDeclM $ \k -> do
                                       withTypeMap tmf $ f k
 -}
@@ -1175,27 +1175,27 @@ skolemTypeDecl td =
           let (ty, subst) = skolemType i tps
               newIb = instantiate subst ib
           in (InterfaceTypeDecl sp $ InterfaceDecl isp ms i tps sups newIb, ty)
-      
 
-                             
+
+
 
 skolemType :: Ident SourcePos -> [TypeParam SourcePos] -> (TcClassType, [(TypeParam SourcePos, TcTypeArg)])
-skolemType i tps = 
+skolemType i tps =
     let args = map skolemParam tps
     in (TcClassT (mkSimpleName TName i) args, zip tps args)
 
 skolemParam :: TypeParam SourcePos -> TcTypeArg
-skolemParam tp = 
+skolemParam tp =
     case tp of
-      TypeParam _ i _    -> 
+      TypeParam _ i _    ->
           TcActualType (TcClsRefT (TcClassT (mkSimpleName TName i) []))
-      ActorParam  _ _rt i    -> 
+      ActorParam  _ _rt i    ->
           TcActualActor (PL.TypedActorIdSpec undefined $ PL.ActorTPVar $ unIdent i)
           -- It's actually fine to use undefined here, as we will always force a type
           -- on it when using it in instantiation in "skolemTypeDecl".
-      PolicyParam _ i    -> 
+      PolicyParam _ i    ->
           TcActualPolicy (PL.VarPolicy $ PL.PolicyVar $ PL.PolicyTypeParam $ unIdent i)
-      LockStateParam _ i -> 
+      LockStateParam _ i ->
           TcActualLockState [PL.LockTypeParam $ unIdent i]
 
 
@@ -1255,7 +1255,7 @@ instance MonadTcDeclM TcDeclM  where
 
 extendGlobalTypeMap :: MonadTcDeclM m => (TypeMap -> TypeMap) -> m ()
 extendGlobalTypeMap = liftTcDeclM . extendGlobalTypeMapTB
-  
+
 
 getTypeMap :: MonadTcDeclM m => m TypeMap
 getTypeMap = liftTcDeclM getTypeMapTB
@@ -1264,7 +1264,7 @@ getThisType :: MonadTcDeclM m => m TcClassType
 getThisType = liftTcDeclM getThisTypeTB
 
 withThisType :: TcClassType -> TcDeclM a -> TcDeclM a
-withThisType ct (TcDeclM f) = 
+withThisType ct (TcDeclM f) =
     TcDeclM $ \ctm gtm _oldty -> f ctm gtm ct
 
 getThisStateType :: MonadTcDeclM m => m TcStateType
@@ -1292,7 +1292,7 @@ withFreshCurrentTypeMap :: TcDeclM a -> TcDeclM a
 withFreshCurrentTypeMap = withCurrentTypeMap (return . const emptyTM)
 
 getLocalTypeMap :: MonadTcDeclM m => m TypeMap
-getLocalTypeMap = liftTcDeclM $ 
+getLocalTypeMap = liftTcDeclM $
      TcDeclM $ \ctm gtm _ -> return (ctm, gtm)
 
 getTypeMapTB :: TcDeclM TypeMap

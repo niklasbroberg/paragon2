@@ -27,7 +27,7 @@ typeMapModule :: String
 typeMapModule = typeCheckerBase ++ ".TypeMap"
 
 
-data VarFieldSig = VSig { 
+data VarFieldSig = VSig {
       varType   :: TcType,
       varPol    :: ActorPolicy,
       varParam  :: Bool,
@@ -52,10 +52,10 @@ data MethodSig = MSig {
     }
   deriving (Show, Data, Typeable)
 
-data ExnSig = ExnSig { 
-      exnReads :: ActorPolicy, 
-      exnWrites :: ActorPolicy, 
-      exnMods :: TcLockDelta -- ([TcLock],[TcLock]) 
+data ExnSig = ExnSig {
+      exnReads :: ActorPolicy,
+      exnWrites :: ActorPolicy,
+      exnMods :: TcLockDelta -- ([TcLock],[TcLock])
     }
   deriving (Show, Data, Typeable)
 
@@ -85,7 +85,7 @@ data TypeSig = TSig {
       tIsFinal    :: Bool,
       tSupers     :: [TcClassType],
       tImpls      :: [TcClassType],
-      tMembers    :: TypeMap 
+      tMembers    :: TypeMap
     }
   deriving (Show, Data, Typeable)
 
@@ -126,7 +126,7 @@ emptyTM = TypeMap {
               }
 
 hardCodedArrayTM :: TcType -> ActorPolicy -> TypeSig
-hardCodedArrayTM ty p = 
+hardCodedArrayTM ty p =
     let memTM = emptyTM {
                   fields = Map.fromList [(B.pack "length", VSig intT (VarPolicy thisP) False False True False)]
                 , methods = Map.fromList [] -- TODO
@@ -142,7 +142,7 @@ hardCodedArrayTM ty p =
 
 clearToPkgs :: TypeMap -> TypeMap
 clearToPkgs tm = emptyTM { packages = packages tm }
-                   
+
 clearToTypes :: TypeMap -> TypeMap
 clearToTypes tm = emptyTM { packages = packages tm, types = types tm }
 
@@ -174,34 +174,34 @@ extendTypeMapP = go . map unIdent . flattenName
   where
     go :: [B.ByteString] -> TypeMap -> TypeMap -> TypeMap
     go [] _ _ = panic (typeMapModule ++ ".extendTypeMapP") "Empty ident list"
-    go [i] leafTm tm = 
+    go [i] leafTm tm =
         tm { packages = Map.insert i leafTm (packages tm) }
     go (i:is) leafTm tm =
-        let mTm = packages tm 
+        let mTm = packages tm
             eTm = case Map.lookup i mTm of
                     Just innerTm -> innerTm
                     Nothing -> emptyTM
             newTm = go is leafTm eTm
         in tm { packages = Map.insert i newTm mTm }
 
-extendTypeMapT :: Name SourcePos 
-               -> [TypeParam SourcePos] 
-               -> [(RefType SourcePos, B.ByteString)] 
-               -> TypeSig 
-               -> TypeMap 
+extendTypeMapT :: Name SourcePos
+               -> [TypeParam SourcePos]
+               -> [(RefType SourcePos, B.ByteString)]
+               -> TypeSig
+               -> TypeMap
                -> TypeMap
 extendTypeMapT = go . map unIdent . flattenName
   where
-    go :: [B.ByteString] 
-       -> [TypeParam SourcePos] 
-       -> [(RefType SourcePos, B.ByteString)] 
+    go :: [B.ByteString]
+       -> [TypeParam SourcePos]
+       -> [(RefType SourcePos, B.ByteString)]
        -> TypeSig -> TypeMap -> TypeMap
     go [] _ _ _ _ = panic (typeMapModule ++ ".extendTypeMapT")
                     "Empty ident list"
     go [i] tps iaps tSig tm =
         tm { types = Map.insert i (tps,iaps,tSig) (types tm) }
     go (i:is) tps iaps tSig tm =
-        let mTm = packages tm 
+        let mTm = packages tm
             eTm = case Map.lookup i mTm of
                     Just innerTm -> innerTm
                     Nothing -> emptyTM
@@ -246,7 +246,7 @@ lookupNamed recf nam@(Name _ _ (Just pre) i) tm = do
                  (_tps, _iaps, tsig) <- lookupNamed types pre tm
                  --if not (null tps)
                   --then Nothing
-                  --else 
+                  --else
                  return $ tMembers tsig
                PName -> lookupNamed packages pre tm
 {-               EName -> do
@@ -257,7 +257,7 @@ lookupNamed recf nam@(Name _ _ (Just pre) i) tm = do
                _ -> panic (typeMapModule ++ ".lookupNamed") $
                     "Prefix is not a package or type: " ++ show nam
     Map.lookup (unIdent i) $ recf newTm
-    
+
 lookupNamed _ _ _ = panic (typeMapModule ++ ".lookupNamed")
                     "AntiQName should not appear in AST being type-checked"
 
@@ -265,13 +265,13 @@ lookupNamed _ _ _ = panic (typeMapModule ++ ".lookupNamed")
 lookupTypeOfStateT :: TcStateType -> TypeMap -> Either (Maybe String) TypeSig
 lookupTypeOfStateT (TcInstance (TcClsRefT (TcClassT n tas)) _ iaas _) startTm =
     case n of
-      Name _ TName _ _ -> 
+      Name _ TName _ _ ->
           let mSig = lookupNamed types n startTm
           in case mSig of
                Nothing -> Left Nothing
-               Just (tps, iaps, tsig) 
+               Just (tps, iaps, tsig)
                    -- TODO: Type argument inference
-                   | length tps /= length tas -> Left $ Just $ 
+                   | length tps /= length tas -> Left $ Just $
                              "Wrong number of type arguments in class type.\n" ++
                              "Type " ++ prettyPrint n ++ " expects " ++ show (length tps) ++
                              " arguments but has been given " ++ show (length tas)
@@ -286,7 +286,7 @@ lookupTypeOfStateT (TcInstance (TcClsRefT (TcClassT n tas)) _ iaas _) startTm =
 
 lookupTypeOfStateT (TcType (TcRefT (TcClsRefT (TcClassT n _tas))) _) startTm =
     case n of
-      Name _ TName _ _ -> 
+      Name _ TName _ _ ->
           let mSig = lookupNamed types n startTm
           in case mSig of
                Nothing -> Left Nothing
@@ -301,7 +301,7 @@ lookupTypeOfStateT (TcType t _) tm =
                        | otherwise -> panic (typeMapModule ++ ".lookupTypeOfStateT")
                                       $ "Needs implicit actor arguments: " ++ show (t, is)
       Left err -> Left err
-  
+
 lookupTypeOfStateT _ _ = Left Nothing
 
 -- | lookupTypeOfT will, given a type T and a top-level type environment,
@@ -320,13 +320,13 @@ lookupTypeOfRefT (TcTypeVar _ ) _ = panic (typeMapModule ++ ".lookupTypeOfRefT")
 lookupTypeOfRefT TcNullT _ = Left $ Just $ "Cannot dereference null"
 lookupTypeOfRefT _rt@(TcClsRefT (TcClassT n tas)) startTm =
     case n of
-      Name _ TName _ _ -> 
+      Name _ TName _ _ ->
           let mSig = lookupNamed types n startTm
           in case mSig of
                Nothing -> Left Nothing
-               Just (tps, iaps, tsig) 
+               Just (tps, iaps, tsig)
                    -- TODO: Type argument inference
-                   | length tps /= length tas -> Left $ Just $ 
+                   | length tps /= length tas -> Left $ Just $
                              "Wrong number of type arguments in class type.\n" ++
                              "Type " ++ prettyPrint n ++ " expects " ++ show (length tps) ++
                              " arguments but has been given " ++ show (length tas)
@@ -370,7 +370,7 @@ instantiate pas = transformBi instT
                       _ -> p
           instRP :: PrgPolicy -> ActorPolicy
           instRP rp = case rp of
-                        PolicyVar (PolicyTypeParam i) -> 
+                        PolicyVar (PolicyTypeParam i) ->
                             case lookup i ps of
                               Just p -> p
                               Nothing -> VarPolicy rp
@@ -398,7 +398,7 @@ instantiate pas = transformBi instT
                 Nothing -> [lv]
           instL l = [l]
 
-          typs = [ (unIdent i, rt) | (TypeParam    _ i _, TcActualType      rt) <- pas ] 
+          typs = [ (unIdent i, rt) | (TypeParam    _ i _, TcActualType      rt) <- pas ]
           as   = [ (unIdent i, n ) | (ActorParam     _ _rt i, TcActualActor      n) <- pas ]
           ps   = [ (unIdent i, p ) | (PolicyParam    _ i, TcActualPolicy     p) <- pas ]
           locs = [ (unIdent i, ls) | (LockStateParam _ i, TcActualLockState ls) <- pas ]
@@ -421,7 +421,7 @@ instance (Pretty k, Pretty v) => Pretty (Map.Map k v) where
                             nest 2 $ vcat $ map ppEntry as,
                             char '}'
                           ]
-                  where ppEntry (k, v) = vcat [pretty k <+> text "-->", 
+                  where ppEntry (k, v) = vcat [pretty k <+> text "-->",
                                                nest 2 $ pretty v]
 
 
@@ -461,9 +461,9 @@ instance Pretty TypeSig where
     pretty (TSig ty cl fin sups impls mems) =
         vcat [text "TSig {",
               nest 2 $ vcat [text "tType: " <+> pretty ty,
-                             text "tSupers: " <+> 
+                             text "tSupers: " <+>
                                   hcat (intersperse (text ", ") (map pretty sups)),
-                             text "tImpls: " <+> 
+                             text "tImpls: " <+>
                                   hcat (intersperse (text ", ") (map pretty impls)),
                              text "bools: " <+> text (show [cl, fin]),
                              vcat [text "tMembers: ", pretty mems]],
@@ -491,7 +491,7 @@ instance Pretty TypeMap where
                  text "TypeMap {",
                  nest 2 contents,
                  text "}"]
-               
+
         where contents = vcat [
                           mapCat "fields =>" (fields tm),
                           mapCat "methods =>"     (methods tm),

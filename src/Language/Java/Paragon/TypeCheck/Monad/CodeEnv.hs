@@ -37,7 +37,7 @@ data CodeEnv = CodeEnv  {
 -- Env to use when typechecking expressions not inside method
 -- bodies, e.g. in field initializers and policy modifiers
 simpleEnv :: ActorPolicy -> Bool -> String -> Bool -> CodeEnv
-simpleEnv brPol compT str statCtx = 
+simpleEnv brPol compT str statCtx =
     CodeEnv {
       vars = [emptyVarMap],
       lockstate = LockSet [],
@@ -64,7 +64,7 @@ exnE :: TcType -> Entity
 exnE = ExnEntity
 
 thisFE :: B.ByteString -> Entity
-thisFE = ThisFieldEntity 
+thisFE = ThisFieldEntity
 
 breakE, continueE, returnE, nullE :: Entity
 breakE = BreakE
@@ -80,7 +80,7 @@ emptyVarMap = Map.empty
 --------------------------------------
 
 branchPC :: Maybe Entity -> CodeEnv -> [(ActorPolicy, String)]
-branchPC men (CodeEnv { branchPCE = (bm, def) }) = 
+branchPC men (CodeEnv { branchPCE = (bm, def) }) =
     flip (maybe def) men $ \en ->
         maybe def id (Map.lookup en bm)
 

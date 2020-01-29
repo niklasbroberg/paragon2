@@ -4,7 +4,7 @@ import Language.Java.Paragon.SourcePos
 
 -- | Representing the context in which the error occurs
 data ContextInfo
-    = ClassContext            String 
+    = ClassContext            String
     | MethodContext           String
     | LockStateContext        String
     | LockSignatureContext    String
@@ -18,23 +18,23 @@ data ContextInfo
 data ErrorInfo
     = FallbackError     String
     | ParsingError      String
-    
+
     | PolViolatedAss    String String String String
-      
-    -- The parser supports more features than the compiler (E.g. enums, 
+
+    -- The parser supports more features than the compiler (E.g. enums,
     -- multi-class files.) Use this error type to indicate such errors
     | UnsupportedFeature String
-    
-    -- NameResolution 
+
+    -- NameResolution
     | UnresolvedName    String String
     | AmbiguousName     String String String String
-    | IllegalDeref      String String 
+    | IllegalDeref      String String
       -- ^"."-operator called on the entity specified as 2nd param,
       -- of type specified by 1st param (e.g. lock/method)
     | EInPackage        String String String
       -- ^Expression as direct member of package
       -- Expression / Expression type (e.g. lock) / Package
-    
+
     -- TcDeclM
     | FileClassMismatch String
     | FileInterfaceMismatch String
@@ -77,7 +77,7 @@ data ErrorInfo
     | ArrayInitExpPol   String String String
     | MethodArgRestr    String String String String
   deriving Show
- 
+
 
 -- | An error consists of the actual error information, the position in the
 -- file where the error originated and the context in which the error occurred.

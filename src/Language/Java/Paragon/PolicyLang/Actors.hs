@@ -24,27 +24,27 @@ import Data.Generics (Data(..),Typeable(..))
 
 import Prelude hiding ((<>))
 
--- | The actor identity representation in the Paragon dialect 
---   of Paralocks is slightly more complex than basic Paralocks, 
+-- | The actor identity representation in the Paragon dialect
+--   of Paralocks is slightly more complex than basic Paralocks,
 --   allowing slightly better precision for instance actors,
 --   i.e. non-static actor fields.
 data ActorIdentity
-    = Fresh Int String 
+    = Fresh Int String
     -- ^ Can be traced back to the actor initialization
-    | Instance (Name SourcePos) Int  
-    -- ^ The non-static fields - the first parameter is 
+    | Instance (Name SourcePos) Int
+    -- ^ The non-static fields - the first parameter is
     --   the point-separated address to the actor field
-    | Unknown Int 
+    | Unknown Int
     -- ^ Cannot be traced back to initialization
  deriving (Show, Eq, Ord, Data, Typeable)
 
 -- | In some cases we further allow actors to be specified through
 --   an actor type parameter.
-data ActorIdSpec 
+data ActorIdSpec
     = ConcreteActorId ActorIdentity
     -- ^ Concrete actor id representation
-    | ActorTPVar B.ByteString 
-    -- ^ Actor represented by a type parameter 
+    | ActorTPVar B.ByteString
+    -- ^ Actor represented by a type parameter
     --   (is instatiated upon instance creation)
     | ThisId
     -- ^ Actor representing the current object
@@ -69,7 +69,7 @@ instance ActorId ActorIdentity where
 
 instance Pretty ActorIdentity where
   pretty (Fresh k s) = text s <> text ('#':show k)
-  pretty (Instance n k) = pretty n <> text ('#':'#':show k) 
+  pretty (Instance n k) = pretty n <> text ('#':'#':show k)
   pretty (Unknown k) = text ('@':show k)
 
 instance ActorId ActorIdSpec where

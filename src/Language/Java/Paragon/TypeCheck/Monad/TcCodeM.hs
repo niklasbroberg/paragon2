@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections, BangPatterns, FlexibleInstances, MultiParamTypeClasses, ImpredicativeTypes, PatternGuards #-}
-module Language.Java.Paragon.TypeCheck.Monad.TcCodeM 
+module Language.Java.Paragon.TypeCheck.Monad.TcCodeM
     (
      module Language.Java.Paragon.TypeCheck.Monad.TcDeclM,
      module Language.Java.Paragon.TypeCheck.Monad.CodeEnv,
@@ -10,9 +10,9 @@ module Language.Java.Paragon.TypeCheck.Monad.TcCodeM
      getState, setState, updateState, mergeWithState,  -- State
      addConstraint,                                    -- Writer
 
---     withTypeMapAlwaysC, 
+--     withTypeMapAlwaysC,
 
-     setupStartState, 
+     setupStartState,
 
      getPrefix, touchPrefix,
 
@@ -80,32 +80,32 @@ gatherActorInfo = gatherActorInfo' Nothing
     where gatherActorInfo' mPre tm =
               let acts = Map.assocs $ actors tm -- :: [(Ident, ActorId)]
                   aMap = Map.fromList $ map (mkInfo mPre $ fields tm) acts
-                  tMap = gatherActorInfoAux TName mPre 
+                  tMap = gatherActorInfoAux TName mPre
                            (Map.assocs $ Map.map (tMembers . (\(_,_,x) -> x)) $ types tm)
                   pMap = gatherActorInfoAux PName mPre (Map.assocs $ packages tm)
               in foldl1 Map.union [aMap, tMap, pMap]
 
           mkStab :: VarFieldSig -> Stability
-          mkStab (VSig _ _ _ _ final) = 
+          mkStab (VSig _ _ _ _ final) =
               if final then Stable else FieldV Nothing
 
           mkInfo :: Maybe (Name ())
-                 -> Map (Ident ()) VarFieldSig 
-                 -> (Ident (), ActorId) 
+                 -> Map (Ident ()) VarFieldSig
+                 -> (Ident (), ActorId)
                  -> (Name (), ActorInfo)
-          mkInfo mPre fs (i,aid) = 
+          mkInfo mPre fs (i,aid) =
               case Map.lookup i fs of
                 Just vti -> (Name () EName mPre i, AI aid (mkStab vti))
-                _ -> panic (tcCodeMModule ++ ".gatherActorInfo") $ 
+                _ -> panic (tcCodeMModule ++ ".gatherActorInfo") $
                      "No field for corresponding actor " ++ show i
 
-          gatherActorInfoAux :: NameType 
-                             -> Maybe (Name ()) 
-                             -> [(Ident (), TypeMap)] 
+          gatherActorInfoAux :: NameType
+                             -> Maybe (Name ())
+                             -> [(Ident (), TypeMap)]
                              -> Map (Name ()) ActorInfo
           gatherActorInfoAux nt mPre = foldl Map.union Map.empty . map aux
               where aux :: (Ident (), TypeMap) -> Map (Name ()) ActorInfo
-                    aux (i,tm) = 
+                    aux (i,tm) =
                         let pre = Name () nt mPre i
                         in gatherActorInfo' (Just pre) tm
 
@@ -115,7 +115,7 @@ gatherPolicyBounds = gatherPolicyBounds' Nothing
 
     where gatherPolicyBounds' mPre tm =
               let pols = Map.assocs $ policies tm -- :: [(Ident, PrgPolicy)]
-                  aMap = Map.fromList $ map (mkPols mPre $ fields tm) 
+                  aMap = Map.fromList $ map (mkPols mPre $ fields tm)
                          $ map (second RealPolicy) pols
                   tMap = gatherPolicyBoundsAux TName mPre
                            (Map.assocs $ Map.map (tMembers . (\(_,_,x) -> x)) $ types tm)
@@ -123,22 +123,22 @@ gatherPolicyBounds = gatherPolicyBounds' Nothing
               in foldl1 Map.union [aMap, tMap, pMap]
 
           mkPols :: Maybe (Name ())
-                 -> Map (Ident ()) VarFieldSig 
-                 -> (Ident (), ActorPolicy) 
+                 -> Map (Ident ()) VarFieldSig
+                 -> (Ident (), ActorPolicy)
                  -> (Name (), ActorPolicyBounds)
-          mkPols mPre fs (i,p) = 
+          mkPols mPre fs (i,p) =
               case Map.lookup i fs of
                 Just _ -> (Name () EName mPre i, KnownPolicy p)
-                _ -> panic (tcCodeMModule ++ ".gatherActorInfo") $ 
+                _ -> panic (tcCodeMModule ++ ".gatherActorInfo") $
                      "No field for corresponding actor " ++ show i
 
-          gatherPolicyBoundsAux :: NameType 
-                              -> Maybe (Name ()) 
-                              -> [(Ident (), TypeMap)] 
+          gatherPolicyBoundsAux :: NameType
+                              -> Maybe (Name ())
+                              -> [(Ident (), TypeMap)]
                               -> Map (Name ()) ActorPolicyBounds
           gatherPolicyBoundsAux nt mPre = foldl Map.union Map.empty . map aux
               where aux :: (Ident (), TypeMap) -> Map (Name ()) ActorPolicyBounds
-                    aux (i,tm) = 
+                    aux (i,tm) =
                         let pre = Name () nt mPre i
                         in gatherPolicyBounds' (Just pre) tm
 -}
@@ -147,7 +147,7 @@ gatherPolicyBounds = gatherPolicyBounds' Nothing
 -- Running in parallel
 infix 1 |||
 (|||) :: TcCodeM a -> TcCodeM b -> TcCodeM (a,b)
-(TcCodeM f1) ||| (TcCodeM f2) = 
+(TcCodeM f1) ||| (TcCodeM f2) =
     TcCodeM $ \ !te !ts -> do
       (a, !ts1, cs1) <- f1 te ts
       (b, !ts2, cs2) <- f2 te ts
@@ -168,7 +168,7 @@ mergeStatesDecl s1 s2 = mergeStates s1 s2
 --------------------------------------------------
 -- The monad used for typechecking code snippets
 
-newtype TcCodeM a = 
+newtype TcCodeM a =
     TcCodeM (CodeEnv -> Maybe CodeState -> TcDeclM (a, Maybe CodeState, [ConstraintWMsg]))
 
 runTcCodeM :: CodeEnv -> CodeState -> TcCodeM a -> TcDeclM (a, [ConstraintWMsg])
@@ -272,7 +272,7 @@ getState = do
 getStateM :: TcCodeM (Maybe CodeState)
 getStateM = TcCodeM (\_ s -> return (s,s,[]))
 
-setState :: CodeState -> TcCodeM () 
+setState :: CodeState -> TcCodeM ()
 setState s = TcCodeM (\_ _ -> do
   tracePrint ("\n" ++ tcCodeMModule ++ ".setState:\n" ++ formatData s ++ "\n")
   return ((), Just s, []))
@@ -318,8 +318,8 @@ touchPrefix mn = do
           EName -> do
               let ist = instanceSt vm
               case Map.lookup (unIdent i) ist of
-                Just ii -> 
-                    let upd newVm = 
+                Just ii ->
+                    let upd newVm =
                             let newII = ii { iMembers = newVm }
                             in vmf $ vm { instanceSt = Map.insert (unIdent i) newII ist }
                     in return $ (iMembers ii, upd)
@@ -349,11 +349,11 @@ getPrefix mn = do
           EName -> do
               let ist = instanceSt vm
               case Map.lookup (unIdent i) ist of
-                Just ii -> 
---                    let upd newVm = 
+                Just ii ->
+--                    let upd newVm =
 --                            let newII = ii { iMembers = newVm }
 --                            in vmf $ vm { instanceSt = Map.insert (unIdent i) newII ist }
---                    in 
+--                    in
                       return $ iMembers ii --, upd)
                 Nothing -> panic (tcCodeMModule ++ ".getPrefix")
                            $ "Prefix not in state: " ++ show n
@@ -364,7 +364,7 @@ getPrefix mn = do
 
 -------------------------------
 -- | Lookup the prefix part of a name, which has to be dereferenceable.
---   Returns the relevant type (Nothing if package), its typemap 
+--   Returns the relevant type (Nothing if package), its typemap
 --   and the accumulated policy of the name access path.
 --   Last component - if prefix is a field -> is it static
 lookupPrefixName :: Name SourcePos -> TcCodeM (Maybe TcStateType, TypeMap, ActorPolicy, Maybe Bool)
@@ -378,9 +378,9 @@ lookupPrefixName n@(Name _ EName Nothing i) = do
     case lookupTypeOfStateT sty tm of
       Right newSig -> do
         -- debugPrint $ prettyPrint newSig
---        debugPrint $ "\nSig before instantiation: " 
+--        debugPrint $ "\nSig before instantiation: "
 --                       ++ prettyPrint (tMembers newSig)
---        debugPrint $ "\nSig after  instantiation: " 
+--        debugPrint $ "\nSig after  instantiation: "
 --                       ++ prettyPrint (instThis p (tMembers newSig)) ++ "\n"
         instTM <- instThis p $ tMembers newSig
         return (Just sty, instTM, p, mStatFld)
@@ -392,7 +392,7 @@ lookupPrefixName n@(Name _ nt mPre i) = do
   baseTm <- getTypeMap
   (mPreSty, preTm, prePol, mStatFld) <-
     case mPre of
-      Nothing -> do 
+      Nothing -> do
                 bt <- bottomM
                 return (Nothing, baseTm, bt, Nothing)
       Just pre -> lookupPrefixName pre
@@ -400,12 +400,12 @@ lookupPrefixName n@(Name _ nt mPre i) = do
   case nt of
     EName -> case Map.lookup (unIdent i) $ fields preTm of
                Just (VSig ty p _ _ _ nnf) -> do
-                   -- debugPrint $ "lookupPrefixName: EName: " ++ prettyPrint n ++ 
+                   -- debugPrint $ "lookupPrefixName: EName: " ++ prettyPrint n ++
                    --               " :: " ++ prettyPrint ty
                    -- debugPrint $ show (packages baseTm2) ++ "\n"
                    sty <- getStateType (Just n) mPreSty ty
                    when (nnf && (nullableFromStateType sty)) (
-                                                              do 
+                                                              do
                                                                 _ <- updateStateType (Just (n, True)) ty (Just (setNullInStateType sty (NotNull, Free)))
                                                                 return ())
                    _sty <- getStateType (Just n) mPreSty ty
@@ -416,7 +416,7 @@ lookupPrefixName n@(Name _ nt mPre i) = do
                      Left (Just err) -> fail err
                      _ -> panic (tcCodeMModule ++ ".lookupPrefixName")
                           $ "Unknown type: " ++ show ty
-               Nothing -> panic (tcCodeMModule ++ ".lookupPrefixName") 
+               Nothing -> panic (tcCodeMModule ++ ".lookupPrefixName")
                           $ "Not a field: " ++ show n
 
     TName -> do
@@ -428,7 +428,7 @@ lookupPrefixName n@(Name _ nt mPre i) = do
 -- This lookup arises from refering to static fields, and then type arguments aren't given.
 -- TODO: Check that field *is* static.
 --            check (null tps) $
---                      "Type " ++ prettyPrint n ++ " expects " ++ 
+--                      "Type " ++ prettyPrint n ++ " expects " ++
 --                      show (length tps) ++ " but has been given none."
             return (Just . stateType . TcRefT $ tType tsig, tMembers tsig, prePol, mStatFld)
 
@@ -474,13 +474,13 @@ lookupVar Nothing i@(Ident sp _) = do
             -- except as an actor identity
             case Map.lookup (unIdent i) $ actors tm of
               Just aid -> do
-                 let pnc = panic (tcCodeMModule ++ ".lookupVar:actors") 
+                 let pnc = panic (tcCodeMModule ++ ".lookupVar:actors")
                              $ "Not a var or field, but an actor, and yet...: " ++ show i
-                 -- Really ugly hack where we assume that only the actor id will be unwrapped 
+                 -- Really ugly hack where we assume that only the actor id will be unwrapped
                  -- at the use site
                  let sty = TcInstance pnc aid pnc pnc
                  return (sty, pnc, pnc, pnc)
-              Nothing -> panic (tcCodeMModule ++ ".lookupVar") 
+              Nothing -> panic (tcCodeMModule ++ ".lookupVar")
                          $ "Not a var or field: " ++ show i
   where lookupVarInVarMaps :: Ident a -> [Map B.ByteString VarFieldSig] -> Maybe VarFieldSig
         lookupVarInVarMaps _ [] = Nothing
@@ -492,7 +492,7 @@ lookupVar Nothing i@(Ident sp _) = do
 lookupVar (Just pre) i@(Ident sp _) = do
   (mPreTy, preTm, prePol, _) <- lookupPrefixName pre
   x <- liftIO checkNull
-  when ((case mPreTy of 
+  when ((case mPreTy of
            Just st | maybeNull st -> True
            _ -> False) && x) throwNull
   case Map.lookup (unIdent i) $ fields preTm of
@@ -507,8 +507,8 @@ lookupVar (Just pre) i@(Ident sp _) = do
       case mPreTy of
         Just preTy -> fail $ "Type " ++ prettyPrint preTy ++
                       " does not have a field named " ++ prettyPrint i
-        Nothing -> panic (tcCodeMModule ++ ".lookupVar") 
-                   $ "EName as direct child of PName: " 
+        Nothing -> panic (tcCodeMModule ++ ".lookupVar")
+                   $ "EName as direct child of PName: "
                          ++ show (Name sp EName (Just pre) i)
 
 --------------------------------------------
@@ -526,11 +526,11 @@ startState = updateState $ \s -> s { lockMods = noMods, exnS = Map.empty }
 -- associated type of that (instance) actor is returned. For policies the
 -- policy bounds. For all other types just the type with null-pointer
 -- information.
-getStateType :: Maybe (Name SourcePos)          -- ^ field/var name (if decidable) 
+getStateType :: Maybe (Name SourcePos)          -- ^ field/var name (if decidable)
              -> Maybe TcStateType        -- ^ containing object state type
              -> TcType                   -- ^ field/var/cell type
              -> TcCodeM TcStateType
-getStateType mn mtyO ty 
+getStateType mn mtyO ty
 --    | ty == actorT   = do actorIdT <$> getActorId mn mtyO
     | ty == policyT  = do policyPolT <$> getPolicyBounds mn mtyO
     | Just ct <- mClassType ty = do
@@ -539,7 +539,7 @@ getStateType mn mtyO ty
     | otherwise = return $ stateType ty
 
 {-
-getActorId :: Maybe (Name SourcePos) 
+getActorId :: Maybe (Name SourcePos)
            -> Maybe TcStateType
            -> TcCodeM ActorIdSpec
 getActorId Nothing Nothing = ConcreteActorId <$> liftTcDeclM unknownActorId
@@ -566,7 +566,7 @@ getActorId (Just (Name _ EName mPre i)) mstyO = do
 getActorId mn ms = panic (tcCodeMModule ++ ".getActorId")
                    $ show (mn, ms)
 -}
-getPolicyBounds :: Maybe (Name SourcePos) 
+getPolicyBounds :: Maybe (Name SourcePos)
                 -> Maybe TcStateType
                 -> TcCodeM ActorPolicyBounds
 getPolicyBounds Nothing Nothing = PolicyBounds <$> bottomM <*> topM
@@ -594,10 +594,10 @@ getPolicyBounds (Just (Name _ EName mPre i)) mstyO = do
         return pbs
 getPolicyBounds mn ms = panic (tcCodeMModule ++ ".getPolicyBounds")
                         $ show (mn, ms)
-                 
+
 
 getInstanceActors :: TcClassType
-                  -> Maybe (Name SourcePos) 
+                  -> Maybe (Name SourcePos)
                   -> Maybe TcStateType
                   -> TcCodeM (TypedActorIdSpec, [TypedActorIdSpec], NullType)
 getInstanceActors ct@(TcClassT tyN _) Nothing Nothing = do
@@ -623,7 +623,7 @@ getInstanceActors ct@(TcClassT tyN _) (Just (Name sp EName mPre i)) mstyO = do
                            tsig <- lookupTypeOfStateType styO
                            return $ tMembers tsig
                 Nothing -> debugPrint ("No mstyO!") >> getTypeMap
-        (stab, aid, aids) <- 
+        (stab, aid, aids) <-
             case Map.lookup (unIdent i) $ fields tm of
               Just (VSig ty _ _ _ fin _) -> do
                 (iaps, _) <- lookupTypeOfType ty
@@ -648,19 +648,19 @@ getInstanceActors ct@(TcClassT tyN _) (Just (Name sp EName mPre i)) mstyO = do
 getInstanceActors ct mn ms = panic (tcCodeMModule ++ ".getPolicyBounds")
                              $ show (ct, mn, ms)
 
-throwNull :: TcCodeM () 
+throwNull :: TcCodeM ()
 throwNull = do
    (_rX, wX) <- lookupExn nullExnT
    -- Check E[branchPC](X) <= E[exns](X)[write]
    bpc <- getBranchPC (exnE nullExnT)
    constraintPC bpc wX $ \p src -> toUndef $
-     "Exception with write effect " ++ prettyPrint wX ++ 
+     "Exception with write effect " ++ prettyPrint wX ++
      " may not be thrown in " ++ src ++
      " with write effect bound " ++ prettyPrint p
    -- Check exnPC(S) <= E[exns](X)[write]
    epc <- getExnPC
    constraintPC epc wX $ \p src -> toUndef $
-     "Exception with write effect " ++ prettyPrint wX ++ 
+     "Exception with write effect " ++ prettyPrint wX ++
      " may not be thrown in " ++ src ++
      " with write effect bound " ++ prettyPrint p
    throwExn (ExnType nullExnT) wX
@@ -670,11 +670,11 @@ updateStateType :: Maybe (Name SourcePos, Bool) -- field/var name and stability 
                 -> TcType                -- field/var/cell type
                 -> Maybe TcStateType     -- rhs state type (Nothing if no initialiser)
                 -> TcCodeM TcStateType
---updateStateType mN tyV mRhsSty 
+--updateStateType mN tyV mRhsSty
 --    | tyV == actorT = actorIdT <$> updateActorId mN mRhsSty
-updateStateType mN tyV mRhsSty 
+updateStateType mN tyV mRhsSty
     | tyV == policyT = policyPolT <$> updatePolicyBounds mN mRhsSty
-updateStateType mN tyV mRhsSty 
+updateStateType mN tyV mRhsSty
     | Just ct <- mClassType tyV = do
                    debugPrint $ "updateStateType[instance]: " ++ show mN
                    (aid, as, nt) <- updateInstanceActors ct mN mRhsSty
@@ -684,7 +684,7 @@ updateStateType _ tyV _ = return $ stateType tyV
 updateActorId :: Maybe (Name SourcePos, Bool) -- field/var name and stability (if decidable)
               -> Maybe TcStateType     -- rhs state type (Nothing if no initialiser)
               -> TcCodeM ActorIdSpec
-updateActorId Nothing (Just rhsSty) = 
+updateActorId Nothing (Just rhsSty) =
     case mActorId rhsSty of
       Just aid -> return aid
       Nothing -> panic (tcCodeMModule ++ ".updateActorId")
@@ -747,7 +747,7 @@ updateInstanceActors ct@(TcClassT tyN _) (Just (_n@(Name _ EName mPre i), stab))
                             return $ TypedActorIdSpec rTy $ ConcreteActorId aid) iaps
               return (aid, as, (MaybeNull, Free))
             Just sty | Just (_, aid, aids, nt) <- mInstanceType sty -> return (aid, aids, nt)
-                     | isNullType sty -> 
+                     | isNullType sty ->
                          getInstanceActors ct Nothing Nothing
             Just _ -> panic (tcCodeMModule ++ ".updateInstanceActors")
                       $ "Non-instance rhs for class type field: " ++ show mRhsSty
@@ -779,15 +779,15 @@ registerExn tyX rX wX = registerExns [(tyX, (rX,wX))]
 
 registerExns :: [(TcType, (ActorPolicy, ActorPolicy))] -> TcCodeM a -> TcCodeM a
 registerExns tysPols =
-    withEnv $ \env -> 
+    withEnv $ \env ->
         let oldMap = exnsE env
             newMap = foldl (\m (t,ps) -> Map.insert t ps m) oldMap tysPols
         in return $ env { exnsE = newMap }
 
 
 extendLockEnv :: [TcLock] -> TcCodeM a -> TcCodeM a
-extendLockEnv locs = withEnv $ \env -> 
-                        return $ env { lockstate = lockstate env 
+extendLockEnv locs = withEnv $ \env ->
+                        return $ env { lockstate = lockstate env
                                           ||>> openAll (map skolemizeLock locs) }
 
 getBranchPC :: Entity -> TcCodeM [(ActorPolicy, String)]
@@ -810,8 +810,8 @@ addBranchPCList is =
         in return $ env { branchPCE = (newBm, def) }
 
 addBranchPC :: Entity -> TcCodeM a -> TcCodeM a
-addBranchPC ent = 
-    withEnv $ \env -> 
+addBranchPC ent =
+    withEnv $ \env ->
         let (bm, def) = branchPCE env
             newBm = Map.insert ent [] bm
         in return $ env { branchPCE = (newBm, def) }
@@ -868,7 +868,7 @@ constraintPC bpcs pW msgf = mapM_ (uncurry constraintPC_) bpcs
     where constraintPC_ ::  ActorPolicy -> String -> TcCodeM ()
           -- Don't take lock state into account
           constraintPC_ pPC src = constraint emptyLockSet pPC pW $ (msgf pPC src)
-  
+
 
 
 exnConsistent :: Either (Name SourcePos) TcClassType
@@ -876,7 +876,7 @@ exnConsistent :: Either (Name SourcePos) TcClassType
 exnConsistent caller exnTy (rX,wX) = do
     exnMap <- exnsE <$> getEnv
     --debugTc $ "Using exnMap: " ++ show exnMap
-    let (callerName, callerSort) = 
+    let (callerName, callerSort) =
             case caller of
               Left n   -> (prettyPrint n , "method"     )
               Right ct -> (prettyPrint ct, "constructor")
@@ -887,14 +887,14 @@ exnConsistent caller exnTy (rX,wX) = do
                     "Exception " ++ prettyPrint exnTy ++ ", thrown by invocation of " ++
                     callerSort ++ " " ++ callerName ++ ", has write effect " ++
                     prettyPrint wX ++
-                    " but the context in which the " ++ callerSort ++ 
-                    " is invoked expects its write effect to be no less restrictive than " ++ 
+                    " but the context in which the " ++ callerSort ++
+                    " is invoked expects its write effect to be no less restrictive than " ++
                     prettyPrint wE
         constraint emptyLockSet rX rE $ toUndef $ -- constraintLS?
                     "Exception " ++ prettyPrint exnTy ++ ", thrown by invocation of " ++
                     callerSort ++ " " ++ callerName ++ ", has policy " ++ prettyPrint rX ++
-                    " but the context in which the " ++ callerSort ++ 
-                    " is invoked expects its policy to be no more restrictive than " ++ 
+                    " but the context in which the " ++ callerSort ++
+                    " is invoked expects its policy to be no more restrictive than " ++
                     prettyPrint rE
 
 
@@ -911,14 +911,14 @@ throwExn et pX = do
       newXmap = Map.fromList [(et, ExnPoint state pX)]
   mergedXmap <- liftTcDeclM $ mergeExns oldXmap newXmap
   setState $ state { exnS = mergedXmap }
-  
+
 deactivateExn :: ExnType -> TcCodeM ()
-deactivateExn et = 
-    updateState $ \s -> 
+deactivateExn et =
+    updateState $ \s ->
         let oldEmap = exnS s
             newEmap = Map.delete et oldEmap
         in s { exnS = newEmap }
-  
+
 
 activateExns :: [(ExnType, (ActorPolicy, LockMods))] -> TcCodeM ()
 activateExns exns = do
@@ -960,7 +960,7 @@ openLock, closeLock :: TcLock -> TcCodeM ()
 openLock  l = applyLockMods $ open  $ skolemizeLock l
 closeLock l = applyLockMods $ close $ skolemizeLock l
 
-                 
+
 registerStateType :: Ident SourcePos               -- Entity to register
                   -> TcType                 -- Its type
                   -> Bool                   -- Its stability

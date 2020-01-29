@@ -3,12 +3,12 @@
 -- that is at the bottom of our monad stack and adds error-handling and
 -- unique number generation on top of IO.
 -- The module also contains some general monadic functions / combinators.
-module Language.Java.Paragon.Monad.Base 
+module Language.Java.Paragon.Monad.Base
     (
      ErrCtxt, BaseM, runBaseM,
      raiseErrors,
 
-     MonadIO(..), MonadBase(..), 
+     MonadIO(..), MonadBase(..),
      liftEither, liftEitherMB, tryCatch,
 
      getFreshInt, getErrCtxt, withErrCtxt,
@@ -41,8 +41,8 @@ newtype BaseM a = BaseM (ErrCtxt -> Uniq -> StateT [Error] IO (Maybe a))
 instance Monad BaseM where
   return x = BaseM $ \_ _ -> return . Just $ x
 
-  BaseM f >>= k = 
-      BaseM $ \ec u -> 
+  BaseM f >>= k =
+      BaseM $ \ec u ->
           do esa <- f ec u
              case esa of
                Nothing -> return Nothing
@@ -121,7 +121,7 @@ class MonadIO m => MonadBase m where
   -- | Try computation, returning the result in case of success or the errors
   tryM :: m a -> m (Either [Error] a)
   -- | Fatal error: abort computation (like fail, but on Error, not String)
-  failE :: Error -> m a       
+  failE :: Error -> m a
   -- | Non-fatal error: continue computation from provided default value
   failEC :: a -> Error -> m a
 
@@ -155,7 +155,7 @@ instance MonadBase BaseM where
 withErrCtxt :: MonadBase m => ContextInfo -> m a -> m a
 withErrCtxt err = withErrCtxt' (. (addContextInfo err))
 
--- | Try first argument. If and only it fails, execute catch computation 
+-- | Try first argument. If and only it fails, execute catch computation
 -- given as second argument.
 tryCatch :: MonadBase m => m a -> ([Error] -> m a) -> m a
 tryCatch tr ctch = do esa <- tryM tr

@@ -34,20 +34,20 @@ import System.Console.GetOpt
 main :: IO ()
 main = do
   (flags, files) <- compilerOpts =<< getArgs
-  
+
   -- Parse verbosity flags and set using 'setVerbosity'.
   mapM_ setVerbosity $ [ k | Verbose k <- flags ]
 
   setCheckNull (not $ NoNullCheck `elem` flags)
-  
+
   when (Version `elem` flags) -- When the flag Version is set
            $ normalPrint paracVersionString -- Print the version string (the
-                                            -- function is defined in 
+                                            -- function is defined in
                                             -- Interaction.hs
   -- When the flag help is set or no flags nor files were provided:
-  when (Help    `elem` flags || null flags && null files) 
+  when (Help    `elem` flags || null flags && null files)
            $ normalPrint $ usageInfo usageHeader options
-  
+
   -- When files are specified, try to compile them
   when (not (null files)) $
     -- Case distinction only done to not break test suite:
@@ -100,13 +100,13 @@ options =
                  "Do not check for flows via unchecked nullpointer exceptions"
     ]
 
--- |Converts the list of arguments to a pair of two lists of equal length. 
+-- |Converts the list of arguments to a pair of two lists of equal length.
 -- The first lists the flags used, the second a list of files
 -- that need to be compiled
 compilerOpts :: [String]              -- ^ The list of arguments
              -> IO ([Flag], [String]) -- ^ Pair of flags + file names list
 compilerOpts argv =
-    -- RequireOrder --> no option processing after first non-option 
+    -- RequireOrder --> no option processing after first non-option
     case getOpt RequireOrder options argv of
       (o,n,[]) -> return (o,n)
       -- in case of errors: show errors parsing arguments + usage info
@@ -119,7 +119,7 @@ compilerOpts argv =
 -- Returns true iff there was at least one error
 handleErrors :: [Flag] -> [(String, [Error])] -> IO Bool
 handleErrors flags errors = do
-  mapM_ (if (OldSkool `elem` flags) then errorTxtOld else 
+  mapM_ (if (OldSkool `elem` flags) then errorTxtOld else
            if (Eclipse `elem` flags) then errorEclipse else errorTxt) errors -- TODO should be different function for XML ofc.
   return . not . null $ concat $ map snd errors
 
@@ -138,14 +138,14 @@ buildPiPath flags filePath = do
   -- If this set is empty, use the current directory.
   let pDirsSpec = concat [ splitSearchPath dir | PiPath dir <- flags ] ++ pp
       pDirs = if null pDirsSpec then ["./"] else pDirsSpec
-  debugPrint $ show pDirs  
+  debugPrint $ show pDirs
   return pDirs
 
 -- | Compile several files at once, return a list files and the errors
 -- found in them (if any)
 multiCompile :: [Flag] -> [String] -> IO [(String, [Error])]
 multiCompile flags = mapM (
-      \f -> do normalPrint $ "Compiling " ++ f 
+      \f -> do normalPrint $ "Compiling " ++ f
                compile flags f)
 
 -- | Actual compiler function
@@ -157,11 +157,11 @@ compile flags filePath = do
   debugPrint $ "Filepath: " ++ filePath
   pDirs <- buildPiPath flags filePath
   fc <- readFile filePath
-  
+
   -- Compilation
   res <- runBaseM . withDefaultErrCtxt $ compilationStages pDirs fc
   return $ (filePath, either id (\_ -> []) res) -- Return possibly empty list of errors
-  
+
    where withDefaultErrCtxt = withErrCtxt EmptyContext
          compilationStages pDirs fc = do
            -- Converting to abstract syntax tree
@@ -172,7 +172,7 @@ compile flags filePath = do
            ast1 <- resolveNames pDirs ast
            raiseErrors
            detailPrint "Name resolution complete!"
-           
+
            debugPrint $ prettyPrint ast1
            -- Type check
            ast2 <- typeCheck pDirs (takeBaseName filePath) ast1
@@ -183,9 +183,9 @@ compile flags filePath = do
            detailPrint "File generation complete!"
 
 convertParseToErr :: Either ParseError a -> Either Error a
-convertParseToErr (Left x)  = Left $ 
+convertParseToErr (Left x)  = Left $
    mkError (ParsingError $ messageString (head $ errorMessages x))
-           (parSecToSourcePos $ PS.errorPos x) 
+           (parSecToSourcePos $ PS.errorPos x)
 convertParseToErr (Right x) = Right x
 
 -- | Converts the environment variable PIPATH to a list of FilePaths
@@ -215,7 +215,7 @@ genFiles flags filePath ast  = let -- create .java ast
                              java,pifile :: String
                              java      = prettyPrint astC
                              pifile    = prettyPrint astPi
-                         in do createDirectoryIfMissing True outdir 
+                         in do createDirectoryIfMissing True outdir
                                writeFile javaPath java
                                >> writeFile piPath pifile
   where getOutdir []               = "."

@@ -25,7 +25,7 @@ import Language.Java.Paragon.Monad.Base
 
 {-# NOINLINE unsafeVerbosityGlobalVar #-}
 unsafeVerbosityGlobalVar :: IORef Int
--- ^Stores the verbosity level as an Int in an IO Reference. 
+-- ^Stores the verbosity level as an Int in an IO Reference.
 -- Set to 1 by default.
 unsafeVerbosityGlobalVar = unsafePerformIO $ newIORef 1
 
@@ -54,10 +54,10 @@ tracePrint  = verbosePrint 5      -- ^State and env changes
 
 -- This trace function uses haskell-src-exts to get nice formating.
 -- To avoid depending on this package, comment out this version and the imports above, and
--- comment in the version using show below. 
+-- comment in the version using show below.
 formatData :: Show a => a -> String
 formatData s = case parseExp (show s) of
-    ParseOk x -> prettyPrintStyleMode 
+    ParseOk x -> prettyPrintStyleMode
       -- ribbonsPerLine adjust how eager the printer is to break lines eg in records.
       Style{ mode = PageMode, lineLength = 150, ribbonsPerLine = 2.5 } defaultMode x
     ParseFailed{} -> show s
@@ -87,7 +87,7 @@ enableXmlOutput :: IO ()
 enableXmlOutput = writeIORef unsafeXmlOutputGlobalVar True
 -}
 --xmlOutput :: IORef XMLNode
---xmlOutput = unsafePerformIO $ newIORef $ 
+--xmlOutput = unsafePerformIO $ newIORef $
 --            XMLNode "parac" [XMLAttribute "version" versionString] []
 
 --insertXMLNode :: XMLNode -> IO ()
@@ -101,7 +101,7 @@ panic :: String -> String -> a
 panic cause extra = error $ "Panic! " ++ cause ++ " caused the impossible, \
                             \and the world is now about to end in 3.. 2.. 1.. \n\
                             \Please report as a bug at: " ++ issueTracker ++
-                            if not (null extra) 
+                            if not (null extra)
                             then "\nExtra information: " ++ extra
                             else ""
 

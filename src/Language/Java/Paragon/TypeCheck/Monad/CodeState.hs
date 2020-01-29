@@ -24,7 +24,7 @@ import qualified Data.ByteString.Char8 as B
 import Data.List (intersect, union)
 import Data.Maybe (fromJust, catMaybes)
 import Control.Monad (zipWithM)
-import Control.Applicative 
+import Control.Applicative
 
 import Data.Data
 
@@ -144,7 +144,7 @@ mergeStates (CodeState vm1 ls1 es1) (CodeState vm2 ls2 es2) = do
 -- Instance tracking
 ------------------------------------------
 
-mergeGeneric :: Ord k => (v -> v -> TcDeclM v) 
+mergeGeneric :: Ord k => (v -> v -> TcDeclM v)
              -> Map.Map k v -> Map.Map k v -> TcDeclM (Map.Map k v)
 mergeGeneric mergeVals m1 m2 = do
   let newKeys = Map.keys m1 `intersect` Map.keys m2
@@ -169,21 +169,21 @@ mergeInstances m1 m2 = do --mergeGeneric mergeIInfos
                    as <- mergeIas (iImplActorArgs ii1) (iImplActorArgs ii2)
                    newMems <- mergeVarMaps (iMembers ii1) (iMembers ii2)
                    newNull <- mergeNullTypes (iNull ii1) (iNull ii2)
-                   return $ Just (k, II 
-                                       (iType ii1) 
+                   return $ Just (k, II
+                                       (iType ii1)
                                        (iStable ii1)
                                        (iFresh ii1 && iFresh ii2)
                                        aid as newMems newNull)
 
               mergeIas :: [TypedActorIdSpec] -> [TypedActorIdSpec] -> TcDeclM [TypedActorIdSpec]
               mergeIas ias1 ias2 = zipWithM mergeIa ias1 ias2
-              
+
               mergeIa :: TypedActorIdSpec -> TypedActorIdSpec -> TcDeclM TypedActorIdSpec
-              mergeIa ai1 ai2 
+              mergeIa ai1 ai2
                   | ai1 == ai2 = return ai1
-              mergeIa (TypedActorIdSpec rt (ConcreteActorId (Instance n _))) _ 
+              mergeIa (TypedActorIdSpec rt (ConcreteActorId (Instance n _))) _
                   = TypedActorIdSpec rt . ConcreteActorId <$> newInstance n
-              mergeIa _ (TypedActorIdSpec rt (ConcreteActorId (Instance n _))) 
+              mergeIa _ (TypedActorIdSpec rt (ConcreteActorId (Instance n _)))
                   = TypedActorIdSpec rt . ConcreteActorId <$> newInstance n
               mergeIa (TypedActorIdSpec rt (ConcreteActorId (Unknown _))) _
                   = TypedActorIdSpec rt . ConcreteActorId <$> newUnknown
@@ -233,11 +233,11 @@ scramble stab state = do
 
 scramble' :: Stability -> ActorInfo -> BaseM ActorInfo
 scramble' stab a@(AI _ stab') =
-    if scrambles stab stab' 
+    if scrambles stab stab'
      then do aid' <- newUnknown
              return $ AI aid' stab'
      else return a
-             
+
 -}
 {-
 mergeActors :: ActorMap -> ActorMap -> BaseM ActorMap

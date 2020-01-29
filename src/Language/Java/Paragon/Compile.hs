@@ -17,12 +17,12 @@ import qualified Data.ByteString.Char8 as B
 compilerModule :: String
 compilerModule = libraryBase ++ ".Compile"
 
-compileTransform :: CompilationUnit T -> CompilationUnit () 
+compileTransform :: CompilationUnit T -> CompilationUnit ()
 compileTransform (CompilationUnit _ mp is tds) =
     CompilationUnit () (fmap voidAnn mp) (map voidAnn is) $ map compileTypeDecl tds
 
 compileTypeDecl :: TypeDecl T -> TypeDecl ()
-compileTypeDecl td = 
+compileTypeDecl td =
     case td of
       ClassTypeDecl     _ cdecl -> ClassTypeDecl     () $ compileClassDecl     cdecl
       InterfaceTypeDecl _ idecl -> InterfaceTypeDecl () $ compileInterfaceDecl idecl
@@ -38,7 +38,7 @@ compileInterfaceDecl (InterfaceDecl _ ms i tps sups ibody) =
        compileInterfaceBody ibody
 
 compileInterfaceBody :: InterfaceBody T -> InterfaceBody ()
-compileInterfaceBody (InterfaceBody _ mds) = 
+compileInterfaceBody (InterfaceBody _ mds) =
     InterfaceBody () $ map (compileSimpleMemberDecl [] []) mds
 
 -- 1. Remove Paragon modifiers
@@ -64,22 +64,22 @@ compileClassDecl _ = panic (compilerModule ++ ".compileClassDecl")
 --     b) a parameter to every constructor of the class
 --     c) an assignment of the parameter b) to the field a)
 --        at the beginning of every constructor of the class
-splitTypeParams :: [TypeParam T] 
+splitTypeParams :: [TypeParam T]
                 -> ([TypeParam ()],[MemberDecl ()],[FormalParam ()],[BlockStmt ()])
 splitTypeParams = go ([],[],[],[]) -- error "compileTypeParams undefined"
-    where 
+    where
       go (ttps,fds,fps,as) [] = (reverse ttps, reverse fds, reverse fps, reverse as)
-      go (ttps,fds,fps,as) (tp:tps) = 
+      go (ttps,fds,fps,as) (tp:tps) =
           case tp of
             TypeParam{}      -> go (voidAnn tp:ttps,fds,fps,as) tps -- Retain
             LockStateParam{} -> go (           ttps,fds,fps,as) tps -- Ignore
-            _ -> let (i,ty) = 
+            _ -> let (i,ty) =
                          case tp of
-                           ActorParam  _ rt iP -> 
+                           ActorParam  _ rt iP ->
                                (voidAnn iP, -- [typeQQ| se.chalmers.paragon.ConcreteActor |]
                                 RefType () (voidAnn rt))    -- concreteActorType)
 
-                           PolicyParam _ iP -> 
+                           PolicyParam _ iP ->
                                (voidAnn iP, -- [typeQQ| se.chalmers.paragon.Policy        |]
                                 policyType)
                            _ -> panic (compilerModule ++ ".splitTypeParams")
@@ -89,14 +89,14 @@ splitTypeParams = go ([],[],[],[]) -- error "compileTypeParams undefined"
                      fp = -- [formalParamQQ| final #T#ty #i         |]
                           FormalParam () [Final ()] ty False (VarId () i)
                      a  = -- [blockStmtQQ| this.#i = #i;         |]
-                          BlockStmt () (ExpStmt () (Assign () 
-                             (FieldLhs () (PrimaryFieldAccess () (This ()) i)) 
+                          BlockStmt () (ExpStmt () (Assign ()
+                             (FieldLhs () (PrimaryFieldAccess () (This ()) i))
                              (EqualA ()) (ExpName () (Name () EOrLName Nothing i))))
                  in go (ttps,fd:fds,fp:fps,a:as) tps
 
-                                
+
 compileClassBody :: ClassBody T -> [MemberDecl ()] -> [FormalParam ()] -> [BlockStmt ()] -> ClassBody ()
-compileClassBody (ClassBody _ ds) tpMembers tpPars tpAsss = 
+compileClassBody (ClassBody _ ds) tpMembers tpPars tpAsss =
   let ds' = concat $ map (compileDecl tpPars tpAsss) ds
   in ClassBody () (map (MemberDecl ()) tpMembers ++ ds')
 
@@ -117,7 +117,7 @@ compileSimpleMemberDecl tpPars tpAsss md =
       -- Actors
       FieldDecl _ ms t vds -> compileVarDeclGeneric (FieldDecl ()) ms t vds
 
-      MethodDecl _ ms tps rt i fps xs mb -> 
+      MethodDecl _ ms tps rt i fps xs mb ->
           let ms' = removeParagonMods ms
               (tps', _, tpPs, _) = splitTypeParams tps
               rt' = compileReturnType rt
@@ -132,40 +132,40 @@ compileSimpleMemberDecl tpPars tpAsss md =
               xs'  = map compileExn xs
               -- Add the downgraded type parameters: class parameters (tpPars) first,
               -- then parameters specific to this constructor (tpPs)
-          in ConstructorDecl () ms' tps' (voidAnn i) (tpPars ++ tpPs ++ fps') xs' 
+          in ConstructorDecl () ms' tps' (voidAnn i) (tpPars ++ tpPs ++ fps') xs'
                  $ compileConstrBody tpAsss cb
 
       _ -> panic (compilerModule ++ ".compileSimpleMemberDecl")
            $ prettyPrint md -- Locks should be filtered out already
 
 compileConstrBody :: [BlockStmt ()] -> ConstructorBody T -> ConstructorBody ()
-compileConstrBody tpAsss (ConstructorBody _ meci bss) = 
+compileConstrBody tpAsss (ConstructorBody _ meci bss) =
     -- Add the initialization of the downgraded type parameters
     ConstructorBody () (fmap compileECI meci) (tpAsss ++ map compileBlockStmt bss)
 
 compileECI :: ExplConstrInv T -> ExplConstrInv ()
-compileECI (ThisInvoke  _ tas as) = 
+compileECI (ThisInvoke  _ tas as) =
     let (trueTas, demotedArgs) = splitNWTypeArgs tas
     in ThisInvoke  () trueTas (demotedArgs ++ map compileExp as)
-compileECI (SuperInvoke _ tas as) = 
+compileECI (SuperInvoke _ tas as) =
     let (trueTas, demotedArgs) = splitNWTypeArgs tas
     in SuperInvoke () trueTas (demotedArgs ++ map compileExp as)
-compileECI (PrimarySuperInvoke _ e tas as) = 
+compileECI (PrimarySuperInvoke _ e tas as) =
     let (trueTas, demotedArgs) = splitNWTypeArgs tas
     in PrimarySuperInvoke () (compileExp e) trueTas (demotedArgs ++ map compileExp as)
 
 compileFormalParam :: FormalParam T -> FormalParam ()
-compileFormalParam (FormalParam _ ms t va vid) = 
+compileFormalParam (FormalParam _ ms t va vid) =
     FormalParam () (removeParagonMods ms) (compileType t) va (voidAnn vid)
 
 actorVarDecl, policyVarDecl, compileVarDecl :: VarDecl T -> VarDecl ()
-actorVarDecl (VarDecl _ (VarId _ i@(Ident _ rawI)) Nothing) 
+actorVarDecl (VarDecl _ (VarId _ i@(Ident _ rawI)) Nothing)
     = -- [varDeclQQ| $$i = Actor.newConcreteActor($s$rawI) |]
       vDecl (voidAnn i) $ callStatic "Actor" "newConcreteActor"
                              [Lit () $ String () $ B.unpack rawI]
 actorVarDecl vd = compileVarDecl vd
 
-policyVarDecl (VarDecl _ (VarId _ i@(Ident _ rawI)) 
+policyVarDecl (VarDecl _ (VarId _ i@(Ident _ rawI))
                            (Just (InitExp _ (PolicyExp _ (PolicyLit _ cs)))))
     = vDecl (voidAnn i) $ callStatic "Policy" "newPolicy"
       (Lit () (String () $ B.unpack rawI) : map clauseToExp cs)
@@ -191,13 +191,13 @@ compileType t@(PrimType _ pt) = case pt of
 compileType t = voidAnn t
 
 compileRefType :: RefType T -> RefType ()
-compileRefType (ArrayType _ t mps) = 
+compileRefType (ArrayType _ t mps) =
     ArrayType () (compileType t) $ map (const Nothing) mps -- No policy parameters!
 compileRefType (ClassRefType _ ct) = ClassRefType () $ compileClassType_ ct
 compileRefType rt = voidAnn rt
 
 compileClassType :: ClassType T -> (ClassType (), [Argument ()])
-compileClassType (ClassType _ n tas) = 
+compileClassType (ClassType _ n tas) =
     let (trueTas, demotedArgs) = splitTypeArgs tas
     in (ClassType () (voidAnn n) trueTas, demotedArgs)
 
@@ -238,15 +238,15 @@ compileVarDeclGeneric con ms t vds =
 compileStmt :: Stmt T -> Stmt ()
 compileStmt (StmtBlock _ bl) = StmtBlock () $ compileBlock bl
 compileStmt (Open t (Lock _ lN aN )) = ExpStmt () $ MethodInv () $ MethodCallOrLockQuery ()
-         (Name () MName (Just $ voidAnn lN) 
-                   (Ident () (B.pack "open"))) 
+         (Name () MName (Just $ voidAnn lN)
+                   (Ident () (B.pack "open")))
          $ map (compileExp . (\aname -> case aname of
                                           ActorName _ x -> ExpName t x
                                           ActorTypeVar _ _ i -> ExpName t (Name t EName Nothing i)
                              )) aN
 compileStmt (Close t (Lock _ lN aN )) = ExpStmt () $ MethodInv () $ MethodCallOrLockQuery ()
-         (Name () MName (Just $ voidAnn lN) 
-                   (Ident () (B.pack "close"))) 
+         (Name () MName (Just $ voidAnn lN)
+                   (Ident () (B.pack "close")))
          $ map (compileExp . (\(ActorName _ x) -> (ExpName t x))) aN
 compileStmt (OpenBlock  _ _ bl) = StmtBlock () $ compileBlock bl
 compileStmt (CloseBlock _ _ bl) = StmtBlock () $ compileBlock bl
@@ -288,7 +288,7 @@ compileExp (PolicyExp _ pe) = compilePolicyExp pe
 
 -- For instance creation, we need to move type
 -- arguments to actual arguments -- but not right now!
-compileExp (InstanceCreation a tas ct args mcbody) = 
+compileExp (InstanceCreation a tas ct args mcbody) =
     let isNative = maybe False snd a
         (trueTas, demotedArgs) = splitTypeArgs tas
         (ct', classDemotedArgs) = compileClassType ct
@@ -303,7 +303,7 @@ compileExp (ArrayCreate _ t edims idims) =
     let edims' = map (compileExp *** const Nothing) edims
         idims' = map (const Nothing) idims
     in ArrayCreate () (compileType t) edims' idims'
-compileExp e@(ArrayCreateInit{}) = 
+compileExp e@(ArrayCreateInit{}) =
     error $ "Compilation of ArrayCreateInit not yet supported: " ++ prettyPrint e
 
 compileExp (FieldAccess _ fa) = FieldAccess () $ compileFieldAccess fa
@@ -333,10 +333,10 @@ compileExp (ClassLit _ mt) = ClassLit () (fmap compileType mt)
 compileExp (Paren _ e) = Paren () $ compileExp e
 compileExp (Cond _ c th el) = Cond () (compileExp c) (compileExp th) (compileExp el)
 
-compileExp (Assign _ lhs aop e) = compileAOp (voidAnn aop) lhs e 
+compileExp (Assign _ lhs aop e) = compileAOp (voidAnn aop) lhs e
 --    Assign () (compileLhs lhs) (compileAOp aop) (compileExp e)
 
-compileExp e@(InstanceOf{}) = 
+compileExp e@(InstanceOf{}) =
     error $ "Compilation of InstanceOf not yet supported: " ++ prettyPrint e
 
 -- Lit, This, ThisClass, AntiQExp
@@ -347,12 +347,12 @@ compileMethodInv :: MethodInvocation T -> MethodInvocation ()
 compileMethodInv mi = case mi of
   MethodCallOrLockQuery _ n@(Name _ LName _ _) as ->
       MethodCallOrLockQuery ()
-         (Name () MName (Just $ voidAnn n) 
-                   (Ident () (B.pack "isOpen"))) 
+         (Name () MName (Just $ voidAnn n)
+                   (Ident () (B.pack "isOpen")))
          $ map compileExp as
 
   MethodCallOrLockQuery _ n as -> MethodCallOrLockQuery () (voidAnn n) $ map compileExp as
-  PrimaryMethodCall _ e tas i as -> 
+  PrimaryMethodCall _ e tas i as ->
       let isNative = maybe False snd $ ann mi
           (trueTas,demotedArgs) = splitNWTypeArgs tas
           args = (if isNative then id else (demotedArgs ++)) $ map compileExp as
@@ -376,7 +376,7 @@ splitTypeArgs = go ([], [])
                           -- go (compileWildcard ta:ttas, as) tas
             ActualArg _ nwta ->
                 case nwta of
-                  ActualType _ rt -> 
+                  ActualType _ rt ->
                       let ta' = ActualArg () $ ActualType () $ compileRefType rt
                       in go (ta':ttas, as) tas
                   ActualName _ (Name _ TName _ _) -> go (voidAnn ta:ttas, as) tas
@@ -404,7 +404,7 @@ compileBinOp :: Op () -> Exp T -> Exp T -> Exp ()
 compileBinOp op e1 e2
              | Just (t1, _) <- ann e1, t1 == policyT,
                Just (t2, _) <- ann e2, t2 == policyT,
-               op `elem` [Mult (), Add ()] = 
+               op `elem` [Mult (), Add ()] =
                    mkParagonPolicyOp op (compileExp e1) (compileExp e2)
 compileBinOp op e1 e2 = BinOp () (compileExp e1) op (compileExp e2)
 
@@ -417,9 +417,9 @@ mkParagonPolicyOp op e1 e2 =
                  PrimaryMethodCall () e1 [] (Ident () (B.pack "meet")) [e2]
       _ -> panic (compilerModule ++ ".mkParagonPolicyOp")
            $ "Unexpected operator: " ++ show op
-                  
+
 mkParagonPolicyAssign :: AssignOp () -> Lhs () -> Exp () -> Exp ()
-mkParagonPolicyAssign aop lhs e = 
+mkParagonPolicyAssign aop lhs e =
     case aop of
       MultA _ -> MethodInv () $
                   PrimaryMethodCall () (lhsToExp lhs) []
@@ -437,11 +437,11 @@ lhsToExp (ArrayLhs _ ai) = ArrayAccess () ai
 -- lockExpToExp is irrelevant - Lock never happens!
 lockExpToExp :: Lock T -> Exp ()
 lockExpToExp (Lock _ n _ans) = -- [expQQ| #N#n.isOpen() |]
-  MethodInv () (MethodCallOrLockQuery () 
+  MethodInv () (MethodCallOrLockQuery ()
                 (Name () MName (Just $ voidAnn n) (Ident () (B.pack "isOpen"))) [])
-lockExpToExp (LockVar _ i) = 
-  MethodInv () (MethodCallOrLockQuery () 
-                (Name () MName (Just $ mkSimpleName EName $ voidAnn i) 
+lockExpToExp (LockVar _ i) =
+  MethodInv () (MethodCallOrLockQuery ()
+                (Name () MName (Just $ mkSimpleName EName $ voidAnn i)
                           (Ident () (B.pack "isOpen"))) [])
 
 -----
@@ -456,18 +456,18 @@ compileAOp :: AssignOp () -> Lhs T -> Exp T -> Exp ()
 compileAOp aop lhs e
     | Just (t1,_) <- ann lhs, t1 == policyT,
       Just (t2,_) <- ann e,   t2 == policyT,
-      aop `elem` [MultA (), AddA ()] = 
+      aop `elem` [MultA (), AddA ()] =
           mkParagonPolicyAssign aop (compileLhs lhs) (compileExp e)
-compileAOp aop lhs e = Assign () (compileLhs lhs) aop (compileExp e)      
+compileAOp aop lhs e = Assign () (compileLhs lhs) aop (compileExp e)
 
 compileArrayIndex :: ArrayIndex T -> ArrayIndex ()
-compileArrayIndex (ArrayIndex _ eArr eI) 
+compileArrayIndex (ArrayIndex _ eArr eI)
     = ArrayIndex () (compileExp eArr) (compileExp eI)
 
 compileFieldAccess :: FieldAccess T -> FieldAccess ()
 compileFieldAccess fa =
     case fa of
-      PrimaryFieldAccess _ e i -> 
+      PrimaryFieldAccess _ e i ->
           PrimaryFieldAccess () (compileExp e) (voidAnn i)
       _ -> voidAnn fa
 
@@ -482,16 +482,16 @@ compilePolicyExp (PolicyLit _ cs) = callStatic "Policy" "newPolicy"
 compilePolicyExp (PolicyTypeVar _ i) = ExpName () (mkSimpleName EName $ voidAnn i)
 -- PolicyOf may only appear in modifiers, which will have been removed.
 compilePolicyExp pe =
-    panic (compilerModule ++ ".compilePolicyExp") 
+    panic (compilerModule ++ ".compilePolicyExp")
               $ prettyPrint pe
 
 
 -- Clauses and components
 
 clauseToExp :: Clause T -> Exp ()
-clauseToExp (Clause _ _ h body) = 
-    let vs = nub [ a | Var _ a <- universeBi (clauseHeadToActor $ voidAnn h) 
-                               ++ universeBi (map voidAnn body) ] 
+clauseToExp (Clause _ _ h body) =
+    let vs = nub [ a | Var _ a <- universeBi (clauseHeadToActor $ voidAnn h)
+                               ++ universeBi (map voidAnn body) ]
              `zip` [0..] -- Substs
         exps = clauseHeadToExp vs h : map (atomToExp vs) body
      in callStatic "Policy" "newPClause" exps
@@ -508,13 +508,13 @@ clauseHeadToExp vs (ClauseVarHead _ a) = actorToExp vs a
 headToExp, atomToExp :: [(Ident (), Int)] -> Atom T -> Exp ()
 headToExp vs (Atom _ _ acts) =
     callStatic "ActorList" "newActorList" (map (actorToExp vs) acts)
-atomToExp vs (Atom _ n acts) = 
+atomToExp vs (Atom _ n acts) =
     callStatic "Atom" "newAtom" (ExpName () (voidAnn n): map (actorToExp vs) acts)
 
 actorToExp :: [(Ident (), Int)] -> Actor T -> Exp ()
 actorToExp _vs (Actor _ (ActorName _ n)) = ExpName () $ voidAnn n
 actorToExp _vs (Actor _ (ActorTypeVar _ _rt tv)) = ExpName () (mkSimpleName EName (voidAnn tv))
-actorToExp vs (Var _ i) = 
+actorToExp vs (Var _ i) =
     let res = lookup (voidAnn i) vs
         k = case res of
               Just m -> fromIntegral m
@@ -525,7 +525,7 @@ actorToExp vs (Var _ i) =
 
 -- Locks
 
--- Compile a lock declaration into a (static) Lock declaration 
+-- Compile a lock declaration into a (static) Lock declaration
 -- plus (static) initialization of its lock properties.
 -- Precondition: md is a LockDecl
 compileLockDecl :: MemberDecl T -> [Decl ()]
@@ -535,16 +535,16 @@ compileLockDecl md =
               let -- Properties defined in modifiers
                   lmExps = map (lockModToExp i) $ filter isLockMod ms
                   -- Properties defined explicitly
-                  lpExps = maybe [] 
-                             (map (lockPropToExp i) . (\(LockProperties _ cs) -> cs)) 
+                  lpExps = maybe []
+                             (map (lockPropToExp i) . (\(LockProperties _ cs) -> cs))
                              mLProps
-                  lockE = callStatic "Lock" "newLock" 
+                  lockE = callStatic "Lock" "newLock"
                                [Lit () $ String () $ B.unpack rawI, Lit () $ Int () (fromIntegral $ length pars)]
                   lockD = FieldDecl () ([Static (),Final ()] `union` removeParagonMods ms)
                             lockType
                             -- [typeQQ| se.chalmers.paragon.Lock |]
                             [vDecl (voidAnn i) lockE]
-              in MemberDecl () lockD : 
+              in MemberDecl () lockD :
                         lockExpsToInit i (lmExps ++ lpExps)
 
       _ -> fail $ "Internal error: compileLockDecl: " ++ show md
@@ -555,7 +555,7 @@ lockExpsToInit :: Ident T -> [Exp ()] -> [Decl ()]
 lockExpsToInit _ [] = []
 lockExpsToInit _i es = [InitDecl () True . Block () $
                         map (BlockStmt () . ExpStmt ()) es]
-                        
+
 lockPropToExp :: Ident T -> LClause T -> Exp ()
 lockPropToExp _i@(Ident _ rawI) (LClause _ _ h body) =
     let vs = nub [ a | Var _ a <- universeBi (map voidAnn (h:body)) ] `zip` [0..] -- Substs
@@ -566,7 +566,7 @@ lockPropToExp i _ = panic (compilerModule ++ ".lockPropToExp")
                     $ prettyPrint i
 
 lockModToExp :: Ident T -> Modifier T -> Exp ()
-lockModToExp (Ident _ rawI) m = 
+lockModToExp (Ident _ rawI) m =
     let mname = prettyPrint m
      in call [B.unpack rawI,mname] []
 lockModToExp i _ = panic (compilerModule ++ ".lockModToExp")
@@ -578,7 +578,7 @@ isLockMod m = case m of
   Reflexive  _ -> True
   Transitive _ -> True
   Symmetric  _ -> True
-  _ -> False               
+  _ -> False
 
 isParagonMod :: Modifier a -> Bool
 isParagonMod m = case m of
@@ -596,15 +596,15 @@ isParagonMod m = case m of
   _ -> False
 
 removeParagonMods :: [Modifier a] -> [Modifier ()]
-removeParagonMods = map voidAnn . filter (not . isParagonMod) 
+removeParagonMods = map voidAnn . filter (not . isParagonMod)
 
 callStatic :: String -> String -> [Exp ()] -> Exp ()
-callStatic typ met args = 
-    MethodInv () $ MethodCallOrLockQuery () 
+callStatic typ met args =
+    MethodInv () $ MethodCallOrLockQuery ()
                   (Name () MName (Just $ mkPkgTypeName typ) (Ident () (B.pack met))) args
 
 call :: [String] -> [Exp ()] -> Exp ()
-call strs args = 
+call strs args =
     MethodInv () $ MethodCallOrLockQuery () (mkName const MName EName $ map (Ident () . B.pack) strs) args
 
 vDecl :: Ident () -> Exp () -> VarDecl ()
