@@ -3,4 +3,5 @@
 *.hi
 *.o
 \#*
+dist-newstyle
 
