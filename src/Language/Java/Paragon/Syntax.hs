@@ -25,7 +25,7 @@ syntaxModule = libraryBase ++ ".Syntax"
 -- a package declaration, followed by a (possibly empty) list of imports and
 -- a (usually non-empty) list of type declaration, where a type is a class
 -- or interface.
--- Note that the paragon compiler currently only accepts a single type per 
+-- Note that the paragon compiler currently only accepts a single type per
 -- compilation unit and does not yet suport enums, although files containing
 -- enums can be parsed
 data CompilationUnit a = CompilationUnit a (Maybe (PackageDecl a)) [ImportDecl a] [TypeDecl a]
@@ -44,10 +44,10 @@ data PackageDecl a = PackageDecl a (Name a)
 #endif
 
 -- | An import declaration allows a static member or a named type to be referred
--- to by a single unqualified identifier. 
--- The first argument signals whether the declaration only imports static 
+-- to by a single unqualified identifier.
+-- The first argument signals whether the declaration only imports static
 -- members.
--- The last argument signals whether the declaration brings all names in the 
+-- The last argument signals whether the declaration brings all names in the
 -- named type or package, or only brings a single name into scope.
 data ImportDecl a
     = SingleTypeImport     a (Name a)
@@ -78,9 +78,9 @@ data ClassDecl a
     | EnumDecl  a [Modifier a] (Ident a)                                     [ClassType a] (EnumBody a)
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
--- | A class body may contain declarations of members of the class, that is, 
---   fields, classes, interfaces and methods. 
---   A class body may also contain instance initializers, static 
+-- | A class body may contain declarations of members of the class, that is,
+--   fields, classes, interfaces and methods.
+--   A class body may also contain instance initializers, static
 --   initializers, and declarations of constructors for the class.
 data ClassBody a = ClassBody a [Decl a]
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
@@ -93,9 +93,9 @@ data EnumBody a = EnumBody a [EnumConstant a] [Decl a]
 data EnumConstant a = EnumConstant a (Ident a) [Argument a] (Maybe (ClassBody a))
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
--- | An interface declaration introduces a new reference type whose members 
---   are classes, interfaces, constants and abstract methods. This type has 
---   no implementation, but otherwise unrelated classes can implement it by 
+-- | An interface declaration introduces a new reference type whose members
+--   are classes, interfaces, constants and abstract methods. This type has
+--   no implementation, but otherwise unrelated classes can implement it by
 --   providing implementations for its abstract methods.
 data InterfaceDecl a
     = InterfaceDecl a [Modifier a] (Ident a) [TypeParam a] [ClassType a] (InterfaceBody a)
@@ -171,7 +171,7 @@ data FormalParam a = FormalParam a [Modifier a] (Type a) Bool (VarDeclId a)
 getFormalParamId :: FormalParam a -> Ident a
 getFormalParamId (FormalParam _ _ _ _ varDeclId) = getVarDeclId varDeclId
 
--- | A method body is either a block of code that implements the method or simply a 
+-- | A method body is either a block of code that implements the method or simply a
 --   semicolon, indicating the lack of an implementation (modelled by 'Nothing').
 data MethodBody a = MethodBody a (Maybe (Block a))
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
@@ -181,10 +181,10 @@ data MethodBody a = MethodBody a (Maybe (Block a))
 data ConstructorBody a = ConstructorBody a (Maybe (ExplConstrInv a)) [BlockStmt a]
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
--- | An explicit constructor invocation invokes another constructor of the 
+-- | An explicit constructor invocation invokes another constructor of the
 --   same class, or a constructor of the direct superclass, which may
---   be qualified to explicitly specify the newly created object's immediately 
---   enclosing instance. 
+--   be qualified to explicitly specify the newly created object's immediately
+--   enclosing instance.
 data ExplConstrInv a
     = ThisInvoke         a         [NonWildTypeArgument a] [Argument a]
     | SuperInvoke        a         [NonWildTypeArgument a] [Argument a]
@@ -227,14 +227,14 @@ isMethodStatic ms = Static () `elem` removeAnnotationMany ms
 -----------------------------------------------------------------------
 -- Statements
 
--- | A block is a sequence of statements, local class declarations 
+-- | A block is a sequence of statements, local class declarations
 --   and local variable declaration statements within braces.
 data Block a = Block a [BlockStmt a]
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
 
 
--- | A block statement is either a normal statement, a local 
+-- | A block statement is either a normal statement, a local
 --   class declaration or a local variable declaration.
 data BlockStmt a
     = BlockStmt a (Stmt a)
@@ -258,7 +258,7 @@ data Stmt a
     | IfThenElse a (Exp a) (Stmt a) (Stmt a)
     -- | The @while@ statement executes an expression and a statement repeatedly until the value of the expression is false.
     | While a (Exp a) (Stmt a)
-    -- | The basic @for@ statement executes some initialization code, then executes an expression, a statement, and some 
+    -- | The basic @for@ statement executes some initialization code, then executes an expression, a statement, and some
     --   update code repeatedly until the value of the expression is false.
     | BasicFor a (Maybe (ForInit a)) (Maybe (Exp a)) (Maybe [Exp a]) (Stmt a)
     -- | The enhanced @for@ statement iterates over an array or a value of a class that implements the @iterator@ interface.
@@ -269,7 +269,7 @@ data Stmt a
     --   assignments, pre- or post-inc- or decrementation, method invocation or class instance
     --   creation expressions.
     | ExpStmt a (Exp a)
-    -- | An assertion is a statement containing a boolean expression, where an error is reported if the expression 
+    -- | An assertion is a statement containing a boolean expression, where an error is reported if the expression
     --   evaluates to false.
     | Assert a (Exp a) (Maybe (Exp a))
     -- | The switch statement transfers control to one of several statements depending on the value of an expression.
@@ -278,25 +278,25 @@ data Stmt a
     | Do a (Stmt a) (Exp a)
     -- | A @break@ statement transfers control out of an enclosing statement.
     | Break a (Maybe (Ident a))
-    -- | A @continue@ statement may occur only in a while, do, or for statement. Control passes to the loop-continuation 
+    -- | A @continue@ statement may occur only in a while, do, or for statement. Control passes to the loop-continuation
     --   point of that statement.
     | Continue a (Maybe (Ident a))
     -- A @return@ statement returns control to the invoker of a method or constructor.
     | Return a (Maybe (Exp a))
-    -- | A @synchronized@ statement acquires a mutual-exclusion lock on behalf of the executing thread, executes a block, 
+    -- | A @synchronized@ statement acquires a mutual-exclusion lock on behalf of the executing thread, executes a block,
     --   then releases the lock. While the executing thread owns the lock, no other thread may acquire the lock.
     | Synchronized a (Exp a) (Block a)
-    -- | A @throw@ statement causes an exception to be thrown. 
+    -- | A @throw@ statement causes an exception to be thrown.
     | Throw a (Exp a)
-    -- | A try statement executes a block. If a value is thrown and the try statement has one or more catch clauses that 
-    --   can catch it, then control will be transferred to the first such catch clause. If the try statement has a finally 
-    --   clause, then another block of code is executed, no matter whether the try block completes normally or abruptly, 
+    -- | A try statement executes a block. If a value is thrown and the try statement has one or more catch clauses that
+    --   can catch it, then control will be transferred to the first such catch clause. If the try statement has a finally
+    --   clause, then another block of code is executed, no matter whether the try block completes normally or abruptly,
     --   and no matter whether a catch clause is first given control.
     | Try a (Block a) [Catch a] (Maybe {- finally -} (Block a))
     -- | Statements may have label prefixes.
     | Labeled a (Ident a) (Stmt a)
-    
--- Paragon    
+
+-- Paragon
     -- | Locks can be opened or closed.
     | Open  a (Lock a)
     | Close a (Lock a)
@@ -307,17 +307,17 @@ data Stmt a
     | WhenThenElse Lock Stmt Stmt    -}
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
--- | If a value is thrown and the try statement has one or more catch clauses that can catch it, then control will be 
+-- | If a value is thrown and the try statement has one or more catch clauses that can catch it, then control will be
 --   transferred to the first such catch clause.
 data Catch a = Catch a (FormalParam a) (Block a)
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
 -- | A block of code labelled with a @case@ or @default@ within a @switch@ statement.
 data SwitchBlock a
-    = SwitchBlock a (SwitchLabel a) [BlockStmt a]    
+    = SwitchBlock a (SwitchLabel a) [BlockStmt a]
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
--- | A label within a @switch@ statement. 
+-- | A label within a @switch@ statement.
 data SwitchLabel a
     -- | The expression contained in the @case@ must be a 'Lit' or an @enum@ constant.
     = SwitchCase a (Exp a)
@@ -347,7 +347,7 @@ type Argument a = (Exp a)
 data Exp a
     -- | A literal denotes a fixed, unchanging value.
     = Lit a (Literal a)
-    -- | A class literal, which is an expression consisting of the name of a class, interface, array, 
+    -- | A class literal, which is an expression consisting of the name of a class, interface, array,
     --   or primitive type, or the pseudo-type void (modelled by 'Nothing'), followed by a `.' and the token class.
     | ClassLit a (Maybe (Type a))
     -- | The keyword @this@ denotes a value that is a reference to the object for which the instance method
@@ -355,8 +355,8 @@ data Exp a
     | This a
     -- | Any lexically enclosing instance can be referred to by explicitly qualifying the keyword this.
     | ThisClass a (Name a)
-    -- | A parenthesized expression is a primary expression whose type is the type of the contained expression 
-    --   and whose value at run time is the value of the contained expression. If the contained expression 
+    -- | A parenthesized expression is a primary expression whose type is the type of the contained expression
+    --   and whose value at run time is the value of the contained expression. If the contained expression
     --   denotes a variable then the parenthesized expression also denotes that variable.
     | Paren a (Exp a)
     -- | A class instance creation expression is used to create new objects that are instances of classes.
@@ -364,7 +364,7 @@ data Exp a
     --   What follows is the type to be instantiated, the list of arguments passed to the constructor, and
     --   optionally a class body that makes the constructor result in an object of an /anonymous/ class.
     | InstanceCreation a [TypeArgument a] (ClassType a) [Argument a] (Maybe (ClassBody a))
-    -- | A qualified class instance creation expression enables the creation of instances of inner member classes 
+    -- | A qualified class instance creation expression enables the creation of instances of inner member classes
     --   and their anonymous subclasses.
     | QualInstanceCreation a (Exp a) [TypeArgument a] (Ident a) [Argument a] (Maybe (ClassBody a))
     -- | An array instance creation expression is used to create new arrays. The last argument denotes the number
@@ -397,16 +397,16 @@ data Exp a
     | PreBitCompl a (Exp a)
     -- | Logical complementation of boolean values.
     | PreNot  a (Exp a)
-    -- | A cast expression converts, at run time, a value of one numeric type to a similar value of another 
-    --   numeric type; or confirms, at compile time, that the type of an expression is boolean; or checks, 
-    --   at run time, that a reference value refers to an object whose class is compatible with a specified 
+    -- | A cast expression converts, at run time, a value of one numeric type to a similar value of another
+    --   numeric type; or confirms, at compile time, that the type of an expression is boolean; or checks,
+    --   at run time, that a reference value refers to an object whose class is compatible with a specified
     --   reference type.
     | Cast a (Type a) (Exp a)
     -- | The application of a binary operator to two operand expressions.
     | BinOp a (Exp a) (Op a) (Exp a)
     -- | Testing whether the result of an expression is an instance of some reference type.
     | InstanceOf a (Exp a) (RefType a)
-    -- | The conditional operator @? :@ uses the boolean value of one expression to decide which of two other 
+    -- | The conditional operator @? :@ uses the boolean value of one expression to decide which of two other
     --   expressions should be evaluated.
     | Cond a (Exp a) (Exp a) (Exp a)
     -- | Assignment of the result of an expression to a variable.
@@ -435,23 +435,23 @@ data Literal  a
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
 -- | A binary infix operator.
-data Op a 
-    = Mult a | Div a | Rem a | Add a | Sub a 
+data Op a
+    = Mult a | Div a | Rem a | Add a | Sub a
     | LShift a | RShift a | RRShift a
     | LThan a | GThan a | LThanE a | GThanE a | Equal a | NotEq a
     | And a | Or a | Xor a | CAnd a | COr a
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
 -- | An assignment operator.
-data AssignOp a 
-    = EqualA a 
+data AssignOp a
+    = EqualA a
     | MultA a | DivA a | RemA a | AddA a | SubA a
-    | LShiftA a | RShiftA a | RRShiftA a 
+    | LShiftA a | RShiftA a | RRShiftA a
     | AndA a | XorA a | OrA a
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
--- | The left-hand side of an assignment expression. This operand may be a named variable, such as a local 
---   variable or a field of the current object or class, or it may be a computed variable, as can result from 
+-- | The left-hand side of an assignment expression. This operand may be a named variable, such as a local
+--   variable or a field of the current object or class, or it may be a computed variable, as can result from
 --   a field access or an array access.
 data Lhs a
     = NameLhs a (Name a)          -- ^ Assign to a variable
@@ -463,7 +463,7 @@ data Lhs a
 data ArrayIndex a = ArrayIndex a (Exp a) (Exp a)    -- ^ Index into an array
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
--- | A field access expression may access a field of an object or array, a reference to which is the value 
+-- | A field access expression may access a field of an object or array, a reference to which is the value
 --   of either an expression or the special keyword super.
 data FieldAccess a
     = PrimaryFieldAccess a (Exp a) (Ident a)     -- ^ Accessing a field of an object or array computed from an expression.
@@ -474,7 +474,7 @@ data FieldAccess a
 
 -- | A method invocation expression is used to invoke a class or instance method.
 data MethodInvocation a
-    -- | Invoking a specific named method. 
+    -- | Invoking a specific named method.
     = MethodCallOrLockQuery a (Name a) [Argument a]
     -- | Invoking a method of a class computed from a primary expression, giving arguments for any generic type parameters.
     | PrimaryMethodCall a (Exp a) [NonWildTypeArgument a] (Ident a) [Argument a]
@@ -486,7 +486,7 @@ data MethodInvocation a
     | TypeMethodCall a (Name a) [NonWildTypeArgument a] (Ident a) [Argument a]
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
--- | An array initializer may be specified in a declaration, or as part of an array creation expression, creating an 
+-- | An array initializer may be specified in a declaration, or as part of an array creation expression, creating an
 --   array and providing some initial values
 data ArrayInit a
     = ArrayInit a [VarInit a]
@@ -509,17 +509,17 @@ data Type a
     | AntiQType a String
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
--- | There are three kinds of reference types: class types, interface types, and array types. 
+-- | There are three kinds of reference types: class types, interface types, and array types.
 --   Reference types may be parameterized with type arguments.
 --   Type variables are introduced by generic type parameters.
 data RefType a
     = ClassRefType a (ClassType a)
     | TypeVariable a (Ident a)
-    | ArrayType a (Type a) [Maybe (Policy a)] 
+    | ArrayType a (Type a) [Maybe (Policy a)]
     -- ^ The second argument to ArrayType is the base type, and should not be an array type
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
--- | A class or interface type consists of a type declaration specifier, 
+-- | A class or interface type consists of a type declaration specifier,
 --   optionally followed by type arguments (in which case it is a parameterized type).
 data ClassType a
     = ClassType a (Name a) [TypeArgument a]
@@ -572,7 +572,7 @@ aOfPrimType (DoubleT x)  = x
 aOfPrimType (ActorT x)   = x
 aOfPrimType (PolicyT x)  = x
 
--- | A class is generic if it declares one or more type variables. These type variables are known 
+-- | A class is generic if it declares one or more type variables. These type variables are known
 --   as the type parameters of the class.
 --   Paragon adds three new forms - actor, policy and lockstate parameters.
 data TypeParam a = TypeParam a (Ident a) [RefType a]
@@ -626,10 +626,10 @@ data Actor a = Actor a (ActorName a)    -- ^ Free actor variables
              | Var   a (Ident a)        -- ^ Quantified actor variables
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
-data ActorName a 
-    = ActorName a (Name a)     
+data ActorName a
+    = ActorName a (Name a)
     -- ^ A free actor variable
-    | ActorTypeVar a (RefType a) (Ident a) 
+    | ActorTypeVar a (RefType a) (Ident a)
     -- ^ A free actor type parameter
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
@@ -666,24 +666,24 @@ unIdent (AntiQIdent _ str) = panic (syntaxModule ++ ".unIdent")
 -- | A name, i.e. a period-separated list of identifiers.
 data Name a = Name a NameType (Maybe (Name a)) (Ident a)
             | AntiQName a String
--- Show removed to get more readable debug output 
+-- Show removed to get more readable debug output
   deriving (Eq,Ord,Typeable,Data,Functor)
 
 -- Prints name as a simple string to be easier to read.
--- To get printout of the whole recursive name structure, comment this out and put 
--- Show in the deriving clause. 
+-- To get printout of the whole recursive name structure, comment this out and put
+-- Show in the deriving clause.
 instance Show (Name a) where
-  show (Name _ _ nextBase (Ident _ iBase)) = 
+  show (Name _ _ nextBase (Ident _ iBase)) =
     show (showInner nextBase ++ B.unpack iBase)
     where
       showInner Nothing = ""
-      showInner (Just (Name _ _ next (Ident _ i))) =  showInner next ++ B.unpack i ++ "." 
+      showInner (Just (Name _ _ next (Ident _ i))) =  showInner next ++ B.unpack i ++ "."
 
 
 data NameType
     = EName    -- ^Expression name
     | MName    -- ^Method name
-    | TName    -- ^Type (class, interface, enum [not implemented]) name 
+    | TName    -- ^Type (class, interface, enum [not implemented]) name
     | PName    -- ^Package name
     | LName    -- ^Lock name
     | POrTName -- ^Either package or Type name
@@ -694,7 +694,7 @@ data NameType
 
 nameType :: Name a -> NameType
 nameType (Name _ nt _ _) = nt
-nameType _ = panic (syntaxModule ++ ".nameType") 
+nameType _ = panic (syntaxModule ++ ".nameType")
              $ "AntiQName"
 
 setNameType :: NameType -> Name a -> Name a
@@ -707,10 +707,10 @@ mkSimpleName nt i = Name (ann i) nt Nothing i
 mkUniformName :: (a -> a -> a) -- Merge annotations
               -> NameType -> [Ident a] -> Name a
 mkUniformName f nt ids = mkName' (reverse ids)
-    where mkName' [] = panic (syntaxModule ++ ".mkUniformName") 
+    where mkName' [] = panic (syntaxModule ++ ".mkUniformName")
                        $ "Empty list of idents"
           mkName' [i] = Name (ann i) nt Nothing i
-          mkName' (i:is) = 
+          mkName' (i:is) =
               let pre = mkName' is
                   a = f (ann pre) (ann i)
               in Name a nt (Just pre) i
@@ -748,7 +748,7 @@ mkIdent_ = mkIdent defaultPos
 -----------------------------------------------------------------------
 -- Annotations
 
-$(deriveAnnMany 
+$(deriveAnnMany
   [''CompilationUnit, ''PackageDecl, ''ImportDecl,
    ''TypeDecl, ''ClassDecl, ''ClassBody, ''EnumBody, ''EnumConstant,
    ''InterfaceDecl, ''InterfaceBody, ''Decl, ''MemberDecl,
@@ -756,7 +756,7 @@ $(deriveAnnMany
    ''FormalParam, ''MethodBody, ''ConstructorBody, ''ExplConstrInv,
    ''Modifier, ''Block, ''BlockStmt, ''Stmt,
    ''Catch, ''SwitchBlock, ''SwitchLabel, ''ForInit, ''ExceptionSpec,
-   ''Exp, ''Literal, ''Op, ''AssignOp, ''Lhs, 
+   ''Exp, ''Literal, ''Op, ''AssignOp, ''Lhs,
    ''ArrayIndex, ''FieldAccess, ''MethodInvocation,
    ''Type, ''PrimType, ''RefType, ''ClassType, ''ReturnType,
    ''TypeArgument, ''NonWildTypeArgument, ''WildcardBound, ''TypeParam,

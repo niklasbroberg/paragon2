@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module Language.Java.Paragon.Pretty 
+module Language.Java.Paragon.Pretty
     (
      prettyPrint, Pretty(..),
      opt,
@@ -23,7 +23,7 @@ prettyPrint = show . pretty
 class Pretty a where
   pretty :: a -> Doc
   pretty = prettyPrec 0
-  
+
   prettyPrec :: Int -> a -> Doc
   prettyPrec _ = pretty
 
@@ -44,15 +44,15 @@ instance Pretty (PackageDecl a) where
   pretty (PackageDecl _ name) = text "package" <+> pretty name <> semi
 
 instance Pretty (ImportDecl a) where
---  pretty (ImportDecl _ st name wc) = 
+--  pretty (ImportDecl _ st name wc) =
 --    text "import" <+> opt st (text "static")
 --                  <+> pretty name <> opt wc (text ".*")
 --                  <> semi
 
-  pretty imp = 
+  pretty imp =
       let (st, name, mId, dem) = aux imp
       in text "import" <+> opt st (text "static")
-             <+> pretty name 
+             <+> pretty name
              <> maybe empty (\i -> char '.' <> pretty i) mId
              <> opt dem (text ".*")
              <> semi
@@ -71,10 +71,10 @@ instance Pretty (TypeDecl a) where
   pretty (InterfaceTypeDecl _ idecl) = pretty idecl
 
 instance Pretty (ClassDecl a) where
-  pretty (EnumDecl _ mods ident impls body) = 
+  pretty (EnumDecl _ mods ident impls body) =
     hsep [hsep (map pretty mods)
           , text "enum"
-          , pretty ident 
+          , pretty ident
           , ppImplements impls
          ] $$ pretty body
 
@@ -88,20 +88,20 @@ instance Pretty (ClassDecl a) where
          ] $$ pretty body
 
 instance Pretty (ClassBody a) where
-  pretty (ClassBody _ ds) = 
+  pretty (ClassBody _ ds) =
     braceBlock (map pretty ds)
-    
+
 instance Pretty (EnumBody a) where
   pretty (EnumBody _ cs ds) =
-    braceBlock $ 
-        punctuate comma (map pretty cs) ++ 
+    braceBlock $
+        punctuate comma (map pretty cs) ++
         opt (not $ null ds) semi : map pretty ds
 
 instance Pretty (EnumConstant a) where
   pretty (EnumConstant _ ident args mBody) =
-    pretty ident 
+    pretty ident
         -- needs special treatment since even the parens are optional
-        <> opt (not $ null args) (ppArgs args) 
+        <> opt (not $ null args) (ppArgs args)
       $$ maybePP mBody
 
 instance Pretty (InterfaceDecl a) where
@@ -119,7 +119,7 @@ instance Pretty (InterfaceBody a) where
 
 instance Pretty (Decl a) where
   pretty (MemberDecl _ md) = pretty md
-  pretty (InitDecl _ b bl) = 
+  pretty (InitDecl _ b bl) =
     opt b (text "static") <+> pretty bl
 
 instance Pretty (MemberDecl a) where
@@ -158,7 +158,7 @@ ppArity mis = parens $ hsep $ punctuate comma $ map pretty mis
 
 instance Pretty (VarDecl a) where
   pretty (VarDecl _ vdId mInitz) =
-    pretty vdId 
+    pretty vdId
         <+> maybe empty (\initz -> char '=' <+> pretty initz) mInitz
 
 instance Pretty (VarDeclId a) where
@@ -239,7 +239,7 @@ instance Pretty (BlockStmt a) where
           , text "lock"
           , pretty ident <> ppArity arity
          ] <> maybe empty (\lp -> char ' ' <> pretty lp) lockProps <> semi
-  
+
 {-  pretty (LocalPolicy mods ident pol) =
     hsep [hsep (map pretty mods)
           , text "policy"
@@ -247,7 +247,7 @@ instance Pretty (BlockStmt a) where
           , char '='
           , pretty pol
          ] <> semi
-  
+
   pretty (LocalActor mods ident mInit) =
     hsep [hsep (map pretty mods)
           , text "actor"
@@ -265,10 +265,10 @@ instance Pretty (Stmt a) where
     hsep [text "if", parens (pretty c)]
     $$ pretty th $$ text "else" $$ pretty el
 
-      
+
   pretty (While _ c stmt) =
     hsep [text "while", parens (pretty c), pretty stmt]
-  
+
   pretty (BasicFor _ mInit mE mUp stmt) =
     hsep [text "for"
           , parens $ hsep [maybePP mInit, semi
@@ -287,7 +287,7 @@ instance Pretty (Stmt a) where
                ]] $$ pretty stmt
 
   pretty (Empty _) = semi
-  
+
   pretty (ExpStmt _ e) = pretty e <> semi
 
   pretty (Assert _ ass mE) =
@@ -295,28 +295,28 @@ instance Pretty (Stmt a) where
       <+> maybe empty ((colon <>) . pretty) mE <> semi
 
   pretty (Switch _ e sBlocks) =
-    text "switch" <+> parens (pretty e) 
+    text "switch" <+> parens (pretty e)
       $$ braceBlock (map pretty sBlocks)
 
   pretty (Do _ stmt e) =
     hsep [text "do", pretty stmt, text "while"
           , parens (pretty e)] <> semi
-  
+
   pretty (Break _ mIdent) =
     text "break" <+> maybePP mIdent <> semi
-  
+
   pretty (Continue _ mIdent) =
     text "continue" <+> maybePP mIdent <> semi
-  
+
   pretty (Return _ mE) =
     text "return" <+> maybePP mE <> semi
-  
+
   pretty (Synchronized _ e block) =
     text "synchronized" <+> parens (pretty e) $$ pretty block
-  
+
   pretty (Throw _ e) =
     text "throw" <+> pretty e <> semi
-  
+
   pretty (Try _ block catches mFinally) =
     text "try" $$ pretty block $$
       vcat (map pretty catches ++ [ppFinally mFinally])
@@ -334,8 +334,8 @@ instance Pretty (Stmt a) where
   pretty (CloseBlock _ lock block) = text "close" <+> pretty lock <+> pretty block
 
 
-{-  pretty (WhenThen lock th) = 
-    hsep [text "when", parens (pretty lock) 
+{-  pretty (WhenThen lock th) =
+    hsep [text "when", parens (pretty lock)
           ,text "then", pretty th
          ]
   pretty (WhenThenElse lock th el) =
@@ -354,7 +354,7 @@ instance Pretty (SwitchBlock a) where
     vcat (pretty lbl : map (nest 2 . pretty) stmts)
 
 instance Pretty (SwitchLabel a) where
-  pretty (SwitchCase _ e) = 
+  pretty (SwitchCase _ e) =
     text "case" <+> pretty e <> colon
   pretty (Default _) = text "default:"
 
@@ -370,23 +370,23 @@ instance Pretty (ForInit a) where
 
 instance Pretty (Exp a) where
   pretty (Lit _ l) = pretty l
-  
-  pretty (ClassLit _ mT) = 
+
+  pretty (ClassLit _ mT) =
     maybe (text "void") pretty mT <> text ".class"
 
   pretty (This _) = text "this"
-  
-  pretty (ThisClass _ name) = 
+
+  pretty (ThisClass _ name) =
     pretty name <> text ".this"
-    
+
   pretty (Paren _ e) = parens (pretty e)
-  
+
   pretty (InstanceCreation _ tArgs ct args mBody) =
-    hsep [text "new" 
-          , ppTypeParams tArgs 
+    hsep [text "new"
+          , ppTypeParams tArgs
           , pretty ct <> ppArgs args
          ] $$ maybePP mBody
-  
+
   pretty (QualInstanceCreation _ e tArgs ident args mBody) =
     hsep [pretty e <> char '.' <> text "new"
           , ppTypeParams tArgs
@@ -394,51 +394,51 @@ instance Pretty (Exp a) where
          ] $$ maybePP mBody
 
   pretty (ArrayCreate _ t eps ps) =
-    text "new" <+> 
-         hcat (pretty t : 
-                      map ppArrayDim 
+    text "new" <+>
+         hcat (pretty t :
+                      map ppArrayDim
                               (map (first Just) eps ++
                                map (Nothing,) ps))
---      hcat (pretty t : map (brackets . pretty) es 
+--      hcat (pretty t : map (brackets . pretty) es
 --                ++ replicate k (text "[]"))
-  
+
   pretty (ArrayCreateInit _ t ps ainit) =
     text "new"
         <+> hcat (pretty t : map ppArrayDim (map (Nothing,) ps))
         <+> pretty ainit
 
   pretty (FieldAccess _ fa) = pretty fa
-  
+
   pretty (MethodInv _ mi) = pretty mi
-  
+
   pretty (ArrayAccess _ ain) = pretty ain
 
   pretty (ExpName _ name) = pretty name
-  
+
   pretty (PostIncrement _ e) = pretty e <> text "++"
-  
+
   pretty (PostDecrement _ e) = pretty e <> text "--"
 
   pretty (PreIncrement _ e)  = text "++" <> pretty e
-  
+
   pretty (PreDecrement _ e)  = text "--" <> pretty e
 
   pretty (PrePlus _ e) = char '+' <> pretty e
-  
+
   pretty (PreMinus _ e) = char '-' <> pretty e
-  
+
   pretty (PreBitCompl _ e) = char '~' <> pretty e
-  
+
   pretty (PreNot _ e) = char '!' <> pretty e
 
   pretty (Cast _ t e) = parens (pretty t) <+> pretty e
-  
+
   pretty (BinOp _ e1 op e2) =
     hsep [pretty e1, pretty op, pretty e2]
-  
+
   pretty (InstanceOf _ e rt) =
     hsep [pretty e, text "instanceof", pretty rt]
-    
+
   pretty (Cond _ c th el) =
     hsep [pretty c, char '?', pretty th, colon, pretty el]
 
@@ -485,7 +485,7 @@ instance Pretty (Op a) where
     Or      _ -> "|"
     CAnd    _ -> "&&"
     COr     _ -> "||"
-    
+
 instance Pretty (AssignOp a) where
   pretty aop = text $ case aop of
     EqualA   _ -> "="
@@ -522,7 +522,7 @@ instance Pretty (MethodInvocation a) where
     pretty name <> ppArgs args
 
   pretty (PrimaryMethodCall _ e tArgs ident args) =
-    hcat [pretty e, char '.', ppTypeParams tArgs, 
+    hcat [pretty e, char '.', ppTypeParams tArgs,
            pretty ident, ppArgs args]
 
   pretty (SuperMethodCall _ tArgs ident args) =
@@ -532,7 +532,7 @@ instance Pretty (MethodInvocation a) where
   pretty (ClassMethodCall _ name tArgs ident args) =
     hcat [pretty name, text ".super.", ppTypeParams tArgs,
            pretty ident, ppArgs args]
-  
+
   pretty (TypeMethodCall _ name tArgs ident args) =
     hcat [pretty name, char '.', ppTypeParams tArgs,
            pretty ident, ppArgs args]
@@ -546,7 +546,7 @@ ppArgs :: Pretty a => [a] -> Doc
 ppArgs = parens . hsep . punctuate comma . map pretty
 
 ppArrayDim :: (Maybe (Exp a), Maybe (Policy a)) -> Doc
-ppArrayDim (mE, mP) = 
+ppArrayDim (mE, mP) =
     brackets (maybe empty pretty mE) <>
     maybe empty (angles . pretty) mP
 
@@ -561,8 +561,8 @@ instance Pretty (Type a) where
 instance Pretty (RefType a) where
   pretty (ClassRefType _ ct) = pretty ct
   pretty (TypeVariable _ i)  = pretty i
-  pretty (ArrayType _ ty mPols) = 
-      pretty ty <> hcat ((flip map) mPols 
+  pretty (ArrayType _ ty mPols) =
+      pretty ty <> hcat ((flip map) mPols
                      (\mP -> brackets empty <> maybe empty (angles . pretty) mP))
 
 instance Pretty (ClassType a) where
@@ -601,11 +601,11 @@ instance Pretty (PrimType a) where
 
 instance Pretty (TypeParam a) where
   pretty (TypeParam _ ident rts) =
-    pretty ident 
-      <+> opt (not $ null rts) 
-           (hsep $ text "extends": 
+    pretty ident
+      <+> opt (not $ null rts)
+           (hsep $ text "extends":
                     punctuate (text " &") (map pretty rts))
-  pretty (ActorParam _ rt ident) = 
+  pretty (ActorParam _ rt ident) =
       text "actor" <+> pretty rt <+> pretty ident
   pretty (PolicyParam _ ident) = text "policy" <+> pretty ident
   pretty (LockStateParam _ ident) = text "lock[]" <+> pretty ident
@@ -616,17 +616,17 @@ ppTypeParams tps = angles $ hsep (punctuate comma (map pretty tps))
 
 ppImplements :: [ClassType x] -> Doc
 ppImplements [] = empty
-ppImplements rts = text "implements" 
+ppImplements rts = text "implements"
     <+> hsep (punctuate comma (map pretty rts))
 
 ppExtends :: [ClassType x] -> Doc
 ppExtends [] = empty
-ppExtends rts = text "extends" 
+ppExtends rts = text "extends"
     <+> hsep (punctuate comma (map pretty rts))
 
 ppThrows :: [ExceptionSpec x] -> Doc
 ppThrows [] = empty
-ppThrows ess = text "throws" 
+ppThrows ess = text "throws"
     <+> hsep (punctuate comma (map pretty ess))
 
 instance Pretty (ExceptionSpec a) where
@@ -654,21 +654,21 @@ instance Pretty (PolicyExp a) where
 
 -- HERE
 instance Pretty (Clause a) where
-  pretty (Clause _ qs h b) = 
-      (if not (null qs) 
+  pretty (Clause _ qs h b) =
+      (if not (null qs)
        then parens $ hcat $ punctuate comma $ map pretty qs
        else empty) <+>
-             pretty h <> char ':' <+> 
+             pretty h <> char ':' <+>
              hcat (punctuate comma $ map pretty b)
 
 instance Pretty (LClause a) where
-  pretty (LClause _ qs h b) = 
+  pretty (LClause _ qs h b) =
       parens (hcat $ punctuate comma $ map pretty qs) <+>
-             pretty h <> char ':' <+> 
+             pretty h <> char ':' <+>
              hcat (punctuate comma $ map pretty b)
-  pretty (ConstraintClause _ qs b) = 
+  pretty (ConstraintClause _ qs b) =
       parens (hcat $ punctuate comma $ map pretty qs) <+>
-             char '-' <> char ':' <+> 
+             char '-' <> char ':' <+>
              hcat (punctuate comma $ map pretty b)
 
 instance Pretty (ClauseVarDecl a) where
@@ -687,7 +687,7 @@ instance Pretty (ActorName a) where
   pretty (ActorTypeVar _ _rt i) = pretty i
 
 instance Pretty (Atom a) where
-  pretty (Atom _ pr vs) = pretty pr <> 
+  pretty (Atom _ pr vs) = pretty pr <>
     opt (not $ null vs) (parens (hcat (punctuate (char ',') $ map pretty vs)))
 
 instance Pretty (Lock a) where
@@ -711,7 +711,7 @@ prettyLocks ls  = parens . hsep . punctuate (char ',') $ map pretty ls
 
 instance Pretty (Name a) where
   pretty (Name _ _ mPrefix i) =
-      maybe empty (\pre -> pretty pre <> char '.') mPrefix 
+      maybe empty (\pre -> pretty pre <> char '.') mPrefix
                 <> pretty i
   pretty (AntiQName _ s) = text "#N#" <> text s
 
@@ -728,7 +728,7 @@ instance Pretty NameType where
 
 {-
 instance Pretty (Name a) where
-  pretty (Name _ is) = 
+  pretty (Name _ is) =
     hcat (punctuate (char '.') $ map pretty is)
   pretty (AntiQName _ s) = text "#N#" <> text s
   pretty n = pretty (flattenName n)

@@ -1,7 +1,7 @@
 {
-{-# OPTIONS_GHC 
-    -fno-warn-unused-matches 
-    -fno-warn-name-shadowing 
+{-# OPTIONS_GHC
+    -fno-warn-unused-matches
+    -fno-warn-name-shadowing
     -fno-warn-lazy-unlifted-bindings
     -fno-warn-missing-signatures
     -fno-warn-unused-binds
@@ -132,7 +132,7 @@ tokens  :-
     true            { \p _ -> L (posn p) $ BoolTok True    }
     false           { \p _ -> L (posn p) $ BoolTok False   }
 
--- HERE    
+-- HERE
 --    ' $javaLetter $javaLetterOrDigit*   { \p s -> L (posn p) $ VarActorTok (tail s) }
 
     ' (@charEscape | ~[\\\']) '               { \p s -> L (posn p) $ CharTok (readCharTok s) }
@@ -393,7 +393,7 @@ data Token
     | Op_RShiftE
     | Op_RRShiftE
     | Op_AtSign
-    
+
 -- Paragon
     | KW_P_Actor
     | KW_P_Close
