@@ -1,4 +1,4 @@
-{-# LANGUAGE QuasiQuotes, TemplateHaskell #-}
+-- {-# LANGUAGE QuasiQuotes, TemplateHaskell #-}
 module Language.Java.Paragon.QuasiQuoter where
 
 --import Language.Haskell.TH.Syntax

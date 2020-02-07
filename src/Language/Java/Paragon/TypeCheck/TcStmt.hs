@@ -7,20 +7,15 @@ import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.SourcePos
 
---import Language.Java.Paragon.TypeCheck.Policy
---import Language.Java.Paragon.TypeCheck.Locks
 import qualified Language.Java.Paragon.PolicyLang as PL
 import Language.Java.Paragon.TypeCheck.Monad
 import Language.Java.Paragon.TypeCheck.Types
 import Language.Java.Paragon.TypeCheck.TypeMap
 
 import Language.Java.Paragon.TypeCheck.TcExp
---import Language.Java.Paragon.TypeCheck.Evaluate
 
-import Control.Monad (unless, when)
+import Control.Monad (unless)
 import Control.Applicative ( (<$>) )
---import Data.Maybe (fromJust)
-import Prelude hiding (catch)
 
 import qualified Data.ByteString.Char8 as B
 

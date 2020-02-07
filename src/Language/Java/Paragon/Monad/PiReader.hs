@@ -14,7 +14,7 @@ module Language.Java.Paragon.Monad.PiReader
 
     ) where
 
-import Language.Java.Paragon.Syntax (Name(..),NameType(..),CompilationUnit,Ident(..))
+import Language.Java.Paragon.Syntax (Name(..), NameType(..), CompilationUnit, Ident(..))
 import Language.Java.Paragon.Pretty (prettyPrint)
 import Language.Java.Paragon.Parser (parser, compilationUnit)
 import Language.Java.Paragon.SourcePos (SourcePos)
@@ -22,13 +22,12 @@ import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Monad.Base
 
 import System.FilePath ((</>),(<.>),splitExtension)
-import System.Directory (doesFileExist,doesDirectoryExist,getDirectoryContents)
+import System.Directory (doesFileExist, doesDirectoryExist, getDirectoryContents)
 
 import qualified Data.ByteString.Char8 as B
 import Data.Char (toLower)
 
 import Control.Monad (liftM, filterM, ap)
-import Control.Applicative
 import Control.Arrow (second)
 import qualified Control.Monad.Fail as Fail
 

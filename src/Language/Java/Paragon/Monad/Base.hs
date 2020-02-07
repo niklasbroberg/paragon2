@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts, FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
 -- | This mpdule contains the implementation of the BaseM monad, the monad
 -- that is at the bottom of our monad stack and adds error-handling and
 -- unique number generation on top of IO.
@@ -21,10 +21,8 @@ module Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.Monad.Uniq
 import Language.Java.Paragon.Error
 
-import Control.Applicative
 import Control.Monad
-import Control.Monad.Trans.State (StateT(..),runStateT,modify,get)
--- import System.Exit()
+import Control.Monad.Trans.State (StateT(..), runStateT, modify, get)
 
 import Data.Maybe
 

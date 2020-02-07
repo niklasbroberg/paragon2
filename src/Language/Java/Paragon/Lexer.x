@@ -2,7 +2,6 @@
 {-# OPTIONS_GHC
     -fno-warn-unused-matches
     -fno-warn-name-shadowing
-    -fno-warn-lazy-unlifted-bindings
     -fno-warn-missing-signatures
     -fno-warn-unused-binds
  #-}

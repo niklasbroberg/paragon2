@@ -1,5 +1,4 @@
-{-# LANGUAGE TupleSections, PatternGuards, BangPatterns,
-    TypeSynonymInstances, FlexibleInstances, FlexibleContexts #-}
+{-# LANGUAGE PatternGuards, FlexibleInstances, FlexibleContexts #-}
 module Language.Java.Paragon.TypeCheck.Monad
     (
 {-     check, checkM, ignore, orElse, maybeM,
@@ -75,36 +74,20 @@ import Language.Java.Paragon.Pretty
 import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.SourcePos
 
--- import Language.Java.Paragon.Monad.Base (failE)
---import Language.Java.Paragon.TypeCheck.Monad.TcBase
---import Language.Java.Paragon.TypeCheck.Monad.TcCont
---import Language.Java.Paragon.TypeCheck.Monad.TcMonad
 import Language.Java.Paragon.TypeCheck.Monad.TcDeclM
 import Language.Java.Paragon.TypeCheck.Monad.TcCodeM
-
--- import Language.Java.Paragon.TypeCheck.Monad.CodeEnv
--- import Language.Java.Paragon.TypeCheck.Monad.CodeState
-
 
 import Language.Java.Paragon.TypeCheck.Types
 import Language.Java.Paragon.TypeCheck.TypeMap
 
---import Language.Java.Paragon.TypeCheck.Actors
---import Language.Java.Paragon.TypeCheck.Policy
---import Language.Java.Paragon.TypeCheck.Locks
---import Language.Java.Paragon.TypeCheck.Containment
---import Language.Java.Paragon.TypeCheck.Constraints
 import Language.Java.Paragon.PolicyLang
 
 import Language.Java.Paragon.TypeCheck.NullAnalysis
 
-import Control.Monad hiding (join) -- (filterM, zipWithM, when,)
---import qualified Control.Monad (join) as Monad
+import Control.Monad hiding (join)
 import Control.Applicative ( (<$>), (<*>) )
---import Control.Arrow ( first, second )
 import qualified Data.Map as Map
---import Data.IORef
-import Data.List (intersperse, partition)
+import Data.List (intersperse)
 import Data.Maybe (isJust)
 import Data.Generics.Uniplate.Data
 

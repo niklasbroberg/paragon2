@@ -8,11 +8,7 @@ import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.SourcePos
 
---import Language.Java.Paragon.TypeCheck.Policy
---import Language.Java.Paragon.TypeCheck.Actors
---import Language.Java.Paragon.TypeCheck.Locks
 import qualified Language.Java.Paragon.PolicyLang as PL
-
 
 import Language.Java.Paragon.TypeCheck.Monad.TcCodeM
 import Language.Java.Paragon.TypeCheck.Monad
@@ -20,11 +16,10 @@ import Language.Java.Paragon.TypeCheck.Types
 import Language.Java.Paragon.TypeCheck.TypeMap
 import Language.Java.Paragon.TypeCheck.NullAnalysis
 
-import Data.List ( (\\), nub, delete)
-import Data.Maybe (fromJust, isJust, fromMaybe)
+import Data.List ((\\))
+import Data.Maybe (fromJust, fromMaybe)
 import qualified Data.Map as Map
 import Control.Applicative ( (<$>) )
--- import Control.Arrow ( first, second )
 import Control.Monad ( when, foldM )
 
 import qualified Data.ByteString.Char8 as B (pack)
@@ -32,7 +27,6 @@ import qualified Data.ByteString.Char8 as B (pack)
 tcExpModule :: String
 tcExpModule = typeCheckerBase ++ ".TcExp"
 
---import qualified Data.Map as Map
 -----------------------------------
 --    Types of literal values    --
 -----------------------------------

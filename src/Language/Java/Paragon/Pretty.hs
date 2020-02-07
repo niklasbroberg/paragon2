@@ -9,13 +9,12 @@ module Language.Java.Paragon.Pretty
 import Text.PrettyPrint
 import Data.Char (toLower)
 import Control.Arrow (first)
+import Prelude hiding ((<>))
 
 import Language.Java.Paragon.Syntax
--- import Language.Java.Paragon.Interaction (panic)
 
 import qualified Data.ByteString.Char8 as B
 
-import Prelude hiding ((<>))
 
 prettyPrint :: Pretty a => a -> String
 prettyPrint = show . pretty

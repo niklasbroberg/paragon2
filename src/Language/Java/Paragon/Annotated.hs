@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, TypeSynonymInstances, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances #-}
 module Language.Java.Paragon.Annotated where
 
 import Language.Haskell.TH

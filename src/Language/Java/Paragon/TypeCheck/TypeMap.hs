@@ -7,9 +7,6 @@ import Language.Java.Paragon.Pretty
 import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.SourcePos
 
---import Language.Java.Paragon.TypeCheck.Actors
---import Language.Java.Paragon.TypeCheck.Policy
---import Language.Java.Paragon.TypeCheck.Locks
 import Language.Java.Paragon.PolicyLang
 
 import Language.Java.Paragon.TypeCheck.Types
@@ -20,8 +17,6 @@ import Data.Generics.Uniplate.Data
 import qualified Data.ByteString.Char8 as B
 
 import Data.Data
-
---import Debug.Trace
 
 typeMapModule :: String
 typeMapModule = typeCheckerBase ++ ".TypeMap"

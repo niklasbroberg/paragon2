@@ -1,5 +1,4 @@
-{-# LANGUAGE CPP, DeriveDataTypeable, PatternGuards,
-             MultiParamTypeClasses, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE CPP, DeriveDataTypeable, MultiParamTypeClasses, FlexibleInstances, UndecidableInstances #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 module Language.Java.Paragon.PolicyLang.Policy (
   module Language.Java.Paragon.PolicyLang.Policy,

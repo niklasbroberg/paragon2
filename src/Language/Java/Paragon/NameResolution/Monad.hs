@@ -21,13 +21,11 @@ module Language.Java.Paragon.NameResolution.Monad
 
     ) where
 
-import Language.Java.Paragon.Syntax --(Name(..),NameType(..))
+import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.Monad.PiReader
 import Language.Java.Paragon.SourcePos
 
 import Control.Monad
-import Control.Applicative
-
 import qualified Data.Map as Map
 import qualified Data.ByteString.Char8 as B
 

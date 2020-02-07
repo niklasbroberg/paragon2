@@ -31,25 +31,16 @@ import Language.Java.Paragon.TypeCheck.Monad.TcDeclM
 import Language.Java.Paragon.TypeCheck.Monad.CodeEnv
 import Language.Java.Paragon.TypeCheck.Monad.CodeState
 
---import Language.Java.Paragon.TypeCheck.Constraints (ConstraintWMsg, Constraint)
-
---import Language.Java.Paragon.TypeCheck.Actors
---import Language.Java.Paragon.TypeCheck.Locks
---import Language.Java.Paragon.TypeCheck.Policy
 import Language.Java.Paragon.PolicyLang
 
 import Language.Java.Paragon.TypeCheck.TypeMap
 import Language.Java.Paragon.TypeCheck.Types
 import Language.Java.Paragon.TypeCheck.NullAnalysis
 import Language.Java.Paragon.TypeCheck.Interpreter
---import Language.Java.Paragon.TypeCheck.Containment
 
 import Control.Monad hiding (join)
-import Control.Applicative
---import Control.Arrow (second)
 
 import qualified Data.Map as Map
-import Data.List (union)
 import qualified Data.ByteString.Char8 as B
 
 

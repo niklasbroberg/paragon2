@@ -1,4 +1,4 @@
-{-# LANGUAGE QuasiQuotes #-}
+-- {-# LANGUAGE QuasiQuotes #-}
 module Language.Java.Paragon.TypeCheck.Compile where
 
 {-- Lives in TypeCheck since the compilation is partly type-driven.

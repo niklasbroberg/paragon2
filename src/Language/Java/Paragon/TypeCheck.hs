@@ -1,39 +1,30 @@
-module Language.Java.Paragon.TypeCheck ( typeCheck, T ) where
+module Language.Java.Paragon.TypeCheck (typeCheck, T) where
 
 import Language.Java.Paragon.Syntax
---import Language.Java.Paragon.Parser (parser, compilationUnit)
 import Language.Java.Paragon.Pretty
 import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.SourcePos
 
---import Language.Java.Paragon.TypeCheck.Actors
---import Language.Java.Paragon.TypeCheck.Locks
---import Language.Java.Paragon.TypeCheck.Policy
 import qualified Language.Java.Paragon.PolicyLang as PL
 
 import Language.Java.Paragon.TypeCheck.TcExp
 import Language.Java.Paragon.TypeCheck.TcStmt
 import Language.Java.Paragon.TypeCheck.Monad
 
-
 import Language.Java.Paragon.TypeCheck.Types
---import Language.Java.Paragon.TypeCheck.Evaluate
 import Language.Java.Paragon.TypeCheck.TypeMap
 import Language.Java.Paragon.TypeCheck.NullAnalysis
 
---import System.FilePath
-
---import System.Exit
 import Control.Monad (when, foldM, void)
 import qualified Data.Map as Map
 import Data.Map((!))
 import qualified Data.Set as Set
 import qualified Data.ByteString.Char8 as B
 import Data.Maybe
-import Data.List (partition, intersperse, unzip4)
-import Control.Applicative ( (<$>) )
-import Control.Arrow ( second )
+import Data.List (intersperse, unzip4)
+import Control.Applicative ((<$>))
+import Control.Arrow (second)
 
 -- import Data.Data ()
 -- import Data.Generics.Uniplate.Data (transformBi)

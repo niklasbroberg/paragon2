@@ -1,6 +1,5 @@
-{-# LANGUAGE MultiParamTypeClasses, FunctionalDependencies,
-             FlexibleInstances, FlexibleContexts,
-             TupleSections, QuasiQuotes, BangPatterns #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts,
+             TupleSections,  BangPatterns #-}
 module Language.Java.Paragon.TypeCheck.Monad.TcDeclM
     (
      module Language.Java.Paragon.Monad.PiReader,
@@ -44,13 +43,9 @@ import Language.Java.Paragon.Pretty
 import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.NameResolution
 import Language.Java.Paragon.SourcePos
---import Language.Java.Paragon.QuasiQuoter
 
 import Language.Java.Paragon.TypeCheck.TypeMap
 import Language.Java.Paragon.TypeCheck.Types
---import Language.Java.Paragon.TypeCheck.Actors
---import Language.Java.Paragon.TypeCheck.Policy
---import Language.Java.Paragon.TypeCheck.Locks
 import qualified Language.Java.Paragon.PolicyLang as PL
 import Language.Java.Paragon.TypeCheck.NullAnalysis
 import Language.Java.Paragon.TypeCheck.Interpreter

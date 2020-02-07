@@ -5,18 +5,13 @@ module Language.Java.Paragon.TypeCheck.Monad.CodeState
      ActorPolicyBounds(..), ActorPolicy
     ) where
 
---import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.Pretty
 import Language.Java.Paragon.Interaction
 
---import Language.Java.Paragon.TypeCheck.Policy
---import Language.Java.Paragon.TypeCheck.Actors
---import Language.Java.Paragon.TypeCheck.Locks
 import Language.Java.Paragon.PolicyLang
 import Language.Java.Paragon.TypeCheck.Types
 import Language.Java.Paragon.TypeCheck.NullAnalysis
 
---import Language.Java.Paragon.Monad.Base
 import Language.Java.Paragon.TypeCheck.Monad.TcDeclM
 
 import qualified Data.Map as Map
@@ -24,7 +19,6 @@ import qualified Data.ByteString.Char8 as B
 import Data.List (intersect, union)
 import Data.Maybe (fromJust, catMaybes)
 import Control.Monad (zipWithM)
-import Control.Applicative
 
 import Data.Data
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE QuasiQuotes, PatternGuards #-}
+{-# LANGUAGE PatternGuards #-}
 module Language.Java.Paragon.Compile (compileTransform) where
 
 import Language.Java.Paragon.Syntax

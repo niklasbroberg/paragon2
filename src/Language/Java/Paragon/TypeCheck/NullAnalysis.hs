@@ -1,6 +1,4 @@
-{-# LANGUAGE CPP, DeriveDataTypeable #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE CPP, DeriveDataTypeable, FlexibleInstances #-}
 module Language.Java.Paragon.TypeCheck.NullAnalysis
     (
      NullType, NullAnnot(..), NullModif(..),

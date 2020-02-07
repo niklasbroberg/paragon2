@@ -45,7 +45,6 @@ import Language.Java.Paragon.PolicyLang.Actors
 import Language.Java.Paragon.PolicyLang.Locks
 import Language.Java.Paragon.PolicyLang.Policy
 
---import Security.InfoFlow.Policy.Paralocks (ActorSetRep(..))
 import Security.InfoFlow.Policy.FlowLocks
 
 import Control.Applicative

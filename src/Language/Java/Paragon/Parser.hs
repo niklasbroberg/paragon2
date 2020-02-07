@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, PatternGuards, TupleSections, DeriveDataTypeable #-}
+{-# LANGUAGE CPP, PatternGuards, TupleSections #-}
 module Language.Java.Paragon.Parser (
     parser,
 
@@ -41,23 +41,19 @@ module Language.Java.Paragon.Parser (
 
     ) where
 
-import Language.Java.Paragon.Lexer ( L(..), Token(..), lexer)
+import Language.Java.Paragon.Lexer (L(..), Token(..), lexer)
 import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.Pretty (prettyPrint)
 import Language.Java.Paragon.Interaction
---import Language.Java.Paragon.Monad.Base
 import Text.ParserCombinators.Parsec hiding (SourcePos)
--- import Text.ParserCombinators.Parsec.Pos as PSPos --(newPos)
-import Language.Java.Paragon.SourcePos -- as ParaPos -- as (SourcePos)
+import Language.Java.Paragon.SourcePos
 
-import Prelude hiding ( exp, catch, (>>), (>>=) )
-import qualified Prelude as P ( (>>), (>>=) )
+import Prelude hiding (exp, (>>), (>>=))
+import qualified Prelude as P ((>>), (>>=))
 import qualified Data.ByteString.Char8 as B
-import Data.Maybe ( isJust, catMaybes, fromJust )
-import Control.Monad ( ap )
-import Control.Applicative ( Applicative(..), (<$>), (<*>) )
+import Data.Maybe (isJust, catMaybes, fromJust)
+import Control.Applicative (Applicative(..), (<$>), (<*>))
 import Control.Monad (unless)
---import Control.Arrow ( first )
 
 import Data.Generics.Uniplate.Data
 #ifdef BASE4
@@ -66,7 +62,6 @@ import Data.Data
 import Data.Generics (Data(..),Typeable(..))
 #endif
 
--- import Debug.Trace (trace)
 
 parserModule :: String
 parserModule = libraryBase ++ ".Parser"

@@ -1,14 +1,10 @@
-{-# LANGUAGE CPP, DeriveDataTypeable, PatternGuards, RelaxedPolyRec #-}
+{-# LANGUAGE CPP, DeriveDataTypeable, RelaxedPolyRec #-}
 module Language.Java.Paragon.TypeCheck.Monad.CodeEnv where
 
 import Language.Java.Paragon.Syntax
---import Language.Java.Paragon.Pretty
 import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.SourcePos
 
---import Language.Java.Paragon.TypeCheck.Actors
---import Language.Java.Paragon.TypeCheck.Policy
---import Language.Java.Paragon.TypeCheck.Locks
 import Language.Java.Paragon.PolicyLang
 import Language.Java.Paragon.TypeCheck.Types
 

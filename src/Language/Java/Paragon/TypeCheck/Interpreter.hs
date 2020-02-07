@@ -7,8 +7,6 @@ import Language.Java.Paragon.Syntax
 import Language.Java.Paragon.Pretty
 import Language.Java.Paragon.SourcePos
 
---import Language.Java.Paragon.TypeCheck.Policy
---import Language.Java.Paragon.TypeCheck.Actors
 import qualified Language.Java.Paragon.PolicyLang as PL
 
 import {-# SOURCE #-} Language.Java.Paragon.TypeCheck.Monad.TcDeclM
@@ -16,7 +14,6 @@ import Language.Java.Paragon.TypeCheck.TypeMap
 import Language.Java.Paragon.TypeCheck.Types
 
 import qualified Data.Map as Map
-import Control.Applicative
 import Control.Monad (forM_, ap)
 
 import Data.Maybe (fromJust)
