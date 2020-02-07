@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, QuasiQuotes, Rank2Types #-}
+{-# LANGUAGE TupleSections, Rank2Types #-}
 -- | This module implements the name resolution stage of the compiler
 module Language.Java.Paragon.NameResolution (resolveNames) where
 
@@ -16,9 +16,8 @@ import Control.Applicative
 import Control.Monad (unless)
 import Data.Traversable
 import Data.List (nub)
+import Data.Maybe (maybeToList)
 import Prelude hiding (mapM)
-
--- import Text.ParserCombinators.Parsec.Pos
 
 nameResModule :: String
 nameResModule = libraryBase ++ ".NameResolution"
@@ -84,8 +83,8 @@ mkTpsExpn tps =
     expandAll $ newER {
           expandTypes = [ tI | TypeParam _ tI _ <- tps ],
           expandLocks = [ lI | LockStateParam _ lI <- tps ],
-          expandExps  = ([aI | ActorParam _ _rt aI <- tps ]
-                          ++ [ pI | PolicyParam _ pI <- tps ]) }
+          expandExps  = [aI | ActorParam _ _rt aI <- tps ]
+                          ++ [ pI | PolicyParam _ pI <- tps ] }
 
 rnTypeDecl :: Resolve TypeDecl
 rnTypeDecl (ClassTypeDecl pos (ClassDecl pos' ms ci tps mSuper impls cb)) = do
@@ -141,7 +140,7 @@ rnInterfaceBody (InterfaceBody pos mds) = do
       InterfaceBody pos <$> mapM rnMemberDecl mds
 
 rnDecl :: Resolve Decl
-rnDecl (InitDecl pos static bl) = InitDecl pos static <$> rnBlock bl
+rnDecl (InitDecl pos statiic bl) = InitDecl pos statiic <$> rnBlock bl
 rnDecl (MemberDecl pos md) = MemberDecl pos <$> rnMemberDecl md
 
 rnModifier :: Resolve Modifier
@@ -197,7 +196,7 @@ rnMemberDecl md = do
             <*> mapM rnRefType arity
             <*> mapM rnLockProperties mProps
       decl -> do failEC decl . mkErrorFromInfo $
-                  (UnsupportedFeature "Inner types not supported")
+                  UnsupportedFeature "Inner types not supported"
 
 
 rnConstructorBody :: Resolve ConstructorBody
@@ -367,7 +366,7 @@ rnForInit (Just (ForLocalVars pos ms t vds)) cont = do
             <$> mapM rnModifier ms
             <*> rnType t
 
-  (vds', a) <- rnVarDecls vds $ cont
+  (vds', a) <- rnVarDecls vds cont
   return (Just $ flvf vds', a)
 
 rnExp :: Resolve Exp
@@ -384,12 +383,12 @@ rnExp expr =
               <*> mapM rnClassBody mcb
       qic@(QualInstanceCreation _pos _e _tas _i _as _mcb) ->
         failEC qic . mkErrorFromInfo $
-          (UnsupportedFeature "Inner classes not yet supported")
+          UnsupportedFeature "Inner classes not yet supported"
       ArrayCreate pos t dimExprs dims ->
           ArrayCreate pos
               <$> rnType t
               <*> (let (es, ps) = unzip dimExprs
-                   in pure zip <*> mapM rnExp es <*> mapM (mapM rnExp) ps)
+                   in zip <$> mapM rnExp es <*> mapM (mapM rnExp) ps)
               <*> mapM (mapM rnExp) dims
       ArrayCreateInit pos t dims aInit ->
           ArrayCreateInit pos
@@ -602,7 +601,7 @@ rnName n@(Name pos nt Nothing i) = do
             | nt `elem` [AmbName, POrTName, TName] && isT -> return tName
             | otherwise -> do -}
           debugPrint $ "Name: " ++ show n
-          debugPrint $ "Expansion: "
+          debugPrint "Expansion: "
           mapM_ (debugPrint . ("  " ++) . show) $ Map.toList expn
           failE $ Error (UnresolvedName (prettyPrint nt) (prettyPrint i)) pos []
 
@@ -797,7 +796,7 @@ buildMapFromTd mPkgPre td expn = do
     (pos, i, tps, supers) <-
         case td of
           ClassTypeDecl     pos (ClassDecl     _ _ i tps mSuper _ _) ->
-            return (pos, i, tps, maybe [] (:[]) mSuper)
+            return (pos, i, tps, maybeToList mSuper)
           InterfaceTypeDecl pos (InterfaceDecl _ _ i tps supers _  ) ->
             return (pos, i, tps, supers)
           _ -> failE . mkErrorFromInfo $
@@ -809,7 +808,7 @@ buildMapFromTd mPkgPre td expn = do
     -- Run name resolution on super types
     rnSups <- runNameRes (mapM rnClassType supers)
                          thisFullName
-                         (expansionUnion [expn, (mkTpsExpn tps)])
+                         (expansionUnion [expn, mkTpsExpn tps])
     superExpns <- mapM buildMapFromSuper rnSups
 
     -- Type expansion for the type declaration itself
@@ -850,7 +849,7 @@ buildMapFromTd mPkgPre td expn = do
        supersAndMembers superTd =
          case superTd of
            ClassTypeDecl _ (ClassDecl _ _ _ _ mSupSup _ (ClassBody _ ds))
-             -> return $ (maybe [] (:[]) mSupSup, unMemberDecls ds)
+             -> return (maybeToList mSupSup, unMemberDecls ds)
            InterfaceTypeDecl _ (InterfaceDecl _ _ _ _ supSups (InterfaceBody _ mds))
              -> return (supSups, mds)
            _ -> failE . mkErrorFromInfo $
@@ -892,7 +891,7 @@ buildMapFromImportName imp = do
 
               isTy <- doesTypeExist resName
               if isTy
-               then return $ (resImp, resExpn)
+               then return (resImp, resExpn)
                else failEC (resImp, Map.empty) . mkErrorFromInfo $
                  case mPre' of
                     Nothing -> UnresolvedName "type" (prettyPrint tn)

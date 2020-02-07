@@ -63,10 +63,13 @@ formatData s = case parseExp (show s) of
     ParseFailed{} -> show s
 -- formatData = show
 
+{-# NOINLINE unsafeCheckNullGlobalVar #-}
 unsafeCheckNullGlobalVar :: IORef Bool
 unsafeCheckNullGlobalVar = unsafePerformIO $ newIORef False
+
 checkNull :: IO Bool
 checkNull = readIORef unsafeCheckNullGlobalVar
+
 setCheckNull :: Bool -> IO ()
 setCheckNull b = writeIORef unsafeCheckNullGlobalVar b
 

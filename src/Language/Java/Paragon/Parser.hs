@@ -128,7 +128,7 @@ importDecl = do
             = TypeImportOnDemand pos $ flattenRealName pOrTName n
         mkImportDecl pos True  True  n
             = StaticImportOnDemand pos $ flattenRealName tName n
-        mkImportDecl pos True  False n@(Name{}) =
+        mkImportDecl pos True  False n@Name{} =
             let is = flattenName n
             in case reverse is of
                  [] -> panic (parserModule ++ ".importDecl") "Empty name"
@@ -136,10 +136,10 @@ importDecl = do
                      SingleStaticImport pos
                        (tName $ reverse initN) lastI
         mkImportDecl _ _ _ _
-            = error $ "Single static import declaration \
-                      \requires at least one non-antiquote ident"
+            = error "Single static import declaration \
+                    \requires at least one non-antiquote ident"
 
-        flattenRealName rebuild n@(Name{}) = rebuild $ flattenName n
+        flattenRealName rebuild n@Name{} = rebuild $ flattenName n
         flattenRealName _ n = n
 
 typeDecl :: P (Maybe (TypeDecl SourcePos))
@@ -185,7 +185,7 @@ normalClassDeclM = do
     imp <- lopt implements
     bod <- classBody
     return $ \ms ->
-        generalize tps $ ClassDecl pos ms i tps ((fmap head) mex) imp bod
+        generalize tps $ ClassDecl pos ms i tps (fmap head mex) imp bod
 
 extends :: P [ClassType SourcePos]
 extends = tok KW_Extends >> classTypeList
@@ -463,27 +463,27 @@ ellipsis = period >> period >> period
 
 modifier :: P (Modifier SourcePos)
 modifier =
-        tok KW_Public      >> setPos (Public    )
-    <|> tok KW_Protected   >> setPos (Protected )
-    <|> tok KW_Private     >> setPos (Private   )
-    <|> tok KW_Abstract    >> setPos (Abstract  )
-    <|> tok KW_Static      >> setPos (Static    )
-    <|> tok KW_Strictfp    >> setPos (StrictFP  )
-    <|> tok KW_Final       >> setPos (Final     )
-    <|> tok KW_Native      >> setPos (Native    )
-    <|> tok KW_Transient   >> setPos (Transient )
-    <|> tok KW_Volatile    >> setPos (Volatile  )
+        tok KW_Public      >> setPos Public
+    <|> tok KW_Protected   >> setPos Protected
+    <|> tok KW_Private     >> setPos Private
+    <|> tok KW_Abstract    >> setPos Abstract
+    <|> tok KW_Static      >> setPos Static
+    <|> tok KW_Strictfp    >> setPos StrictFP
+    <|> tok KW_Final       >> setPos Final
+    <|> tok KW_Native      >> setPos Native
+    <|> tok KW_Transient   >> setPos Transient
+    <|> tok KW_Volatile    >> setPos Volatile
 
-    <|> tok KW_P_Typemethod  >> setPos (Typemethod )
-    <|> tok KW_P_Notnull     >> setPos (Notnull    )
-    <|> tok KW_P_Readonly    >> setPos (Readonly   )
-    <|> tok KW_P_Reflexive   >> setPos (Reflexive  )
-    <|> tok KW_P_Transitive  >> setPos (Transitive )
-    <|> tok KW_P_Symmetric   >> setPos (Symmetric  )
-    <|> tok Op_Query >> setPos Reads <*> policy
-    <|> tok Op_Bang  >> setPos Writes <*> policy
-    <|> tok Op_Plus  >> setPos Opens <*> lockExp
-    <|> tok Op_Minus >> setPos Closes <*> lockExp
+    <|> tok KW_P_Typemethod  >> setPos Typemethod
+    <|> tok KW_P_Notnull     >> setPos Notnull
+    <|> tok KW_P_Readonly    >> setPos Readonly
+    <|> tok KW_P_Reflexive   >> setPos Reflexive
+    <|> tok KW_P_Transitive  >> setPos Transitive
+    <|> tok KW_P_Symmetric   >> setPos Symmetric
+    <|> tok Op_Query >> setPos Reads   <*> policy
+    <|> tok Op_Bang  >> setPos Writes  <*> policy
+    <|> tok Op_Plus  >> setPos Opens   <*> lockExp
+    <|> tok Op_Minus >> setPos Closes  <*> lockExp
     <|> tok Op_Tilde >> setPos Expects <*> lockExp
 
 ----------------------------------------------------------------------------
@@ -493,7 +493,7 @@ varDecls :: P (VarDecl SourcePos) -> P [VarDecl SourcePos]
 varDecls varDeclFun = seplist1 varDeclFun comma
 
 varDecl :: P (VarDecl SourcePos)
-varDecl = setPos VarDecl <*> varDeclId <*> (opt $ tok Op_Equal >> varInit)
+varDecl = setPos VarDecl <*> varDeclId <*> opt (tok Op_Equal >> varInit)
 
 interfaceVarDecl :: P (VarDecl SourcePos)
 interfaceVarDecl = setPos VarDecl <*> varDeclId <*> (Just <$> (tok Op_Equal >> varInit))
@@ -506,7 +506,7 @@ varDeclId = do
     return $ foldl (\f pos' -> VarDeclArray pos' . f) (VarId pos) bs i
 
 arrBrackets :: P SourcePos
-arrBrackets = brackets $ getParaPosition
+arrBrackets = brackets getParaPosition
 
 localVarDecl :: P ([Modifier SourcePos], Type SourcePos, [VarDecl SourcePos])
 localVarDecl = do
@@ -542,7 +542,7 @@ blockStmt =
         return $ LocalClass pos (cd ms)) <|>
     (try $ do
         pos <- getParaPosition
-        (m,t,vds) <- endSemi $ localVarDecl
+        (m,t,vds) <- endSemi localVarDecl
         return $ LocalVars pos m t vds) <|>
     (try $ endSemi $ do
         pos <- getParaPosition
@@ -659,7 +659,7 @@ stmtNSI =
 stmtNoTrail :: P (Stmt SourcePos)
 stmtNoTrail =
     -- empty statement
-    setPos (const.Empty) <*> semiColon <|>
+    setPos (const . Empty) <*> semiColon <|>
     -- inner block
     setPos StmtBlock <*> block <|>
     -- assertions
@@ -1125,7 +1125,7 @@ arrayCreation = do
     t <- nonArrayType
     f <- (try $ do
              pos <- getParaPosition
-             ds <- list1 $ (brackets empty >> opt (angles argExp))
+             ds <- list1 (brackets empty >> opt (angles argExp))
              ai <- arrayInit
              return $ \ty -> ArrayCreateInit pos ty ds ai) <|>
          (do pos <- getParaPosition
@@ -1133,7 +1133,7 @@ arrayCreation = do
                       e <- brackets exp
                       p <- opt (angles argExp)
                       return (e,p)
-             ds  <- list  $ (brackets empty >> opt (angles argExp))
+             ds <- list (brackets empty >> opt (angles argExp))
              return $ \ty -> ArrayCreate pos ty des ds)
     return $ f t
 
@@ -1218,8 +1218,8 @@ ttype = try (setPos RefType <*> refType) <|> setPos PrimType <*> primType
          <|> setPos AntiQType <*>
                javaToken (\t ->
                    case t of
-                     AntiQTypeTok s -> Just $ s
-                     _ -> Nothing)
+                     AntiQTypeTok s -> Just  s
+                     _              -> Nothing)
 
 primType :: P (PrimType SourcePos)
 primType =
@@ -1256,7 +1256,7 @@ refTypeE = {- trace "refTypeE" -} (
              [] -> return (baseType, e)
              _  -> do typ <- setPos ArrayType <*>
                              (setPos RefType <*> pure baseType) <*> pure mps
-                      return $ (typ, 0)
+                      return (typ, 0)
          else return (baseType, e)
     ) <?> "refType")
 
@@ -1329,7 +1329,7 @@ typeArgsSuffix = {- trace "typeArgsSuffix" $ -}
   (do tok Op_Query
       wcArg <- setPos Wildcard <*> opt wildcardBound
       (rest, e) <- typeArgsEnd 0
-      return $ (wcArg:rest, e)) <|>
+      return (wcArg:rest, e)) <|>
 
   (do lArg <- setPos ActualArg <*> parens (setPos ActualLockState <*> seplist1 lock comma)
       (rest, e) <- typeArgsEnd 0
@@ -1338,12 +1338,12 @@ typeArgsSuffix = {- trace "typeArgsSuffix" $ -}
   (try $ do (rt, er)  <- refTypeE
             (rest, e) <- typeArgsEnd er
             tArg <- case nameOfRefType rt of
-                      Just n -> setPos ActualName <*> pure (ambName $ (flattenName n)) -- keep as ambiguous
+                      Just n -> setPos ActualName <*> pure (ambName (flattenName n)) -- keep as ambiguous
                       _ -> setPos ActualType <*> pure rt
             actArg <- setPos ActualArg <*> pure tArg
-            return $ (actArg:rest, e)) <|>
+            return (actArg:rest, e)) <|>
 
-  (do eArg <- (setPos ActualArg) <*> ((setPos ActualExp) <*> argExp)
+  (do eArg <- setPos ActualArg <*> (setPos ActualExp <*> argExp)
       (rest, e) <- typeArgsEnd 0
       return (eArg:rest, e))
 
@@ -1367,7 +1367,7 @@ argExp = do
   return $ fe e1
 
 argExp1 :: P (Exp SourcePos)
-argExp1 = (setPos PolicyExp) <*> policyExp
+argExp1 = setPos PolicyExp <*> policyExp
           <|> try methodInvocationExp
           <|> try fieldAccessExp
           <|> setPos ExpName <*> nameRaw eName

@@ -132,10 +132,10 @@ instance MonadBase BaseM where
   -- If an error occured, we return that rather than any computation result
   tryM (BaseM f) = BaseM $ \ec u -> do
                            olderr <- get     -- store collected errs so far
-                           modify (\_ -> []) -- start with empty list of err
+                           modify (const []) -- start with empty list of err
                            maybeA <- f ec u  -- run code
                            err <- get        -- get errs specific to this code
-                           modify (\_ -> olderr) -- restore old collection
+                           modify (const olderr) -- restore old collection
                            case err of
                              -- No error => The result of the computation is
                              -- of the form Just a
@@ -151,7 +151,7 @@ instance MonadBase BaseM where
 
 -- | Set the error context for the computation
 withErrCtxt :: MonadBase m => ContextInfo -> m a -> m a
-withErrCtxt err = withErrCtxt' (. (addContextInfo err))
+withErrCtxt err = withErrCtxt' (. addContextInfo err)
 
 -- | Try first argument. If and only it fails, execute catch computation
 -- given as second argument.
@@ -164,7 +164,7 @@ tryCatch tr ctch = do esa <- tryM tr
 -- | Lift Either value into monad by mapping Left to fail and Right to return
 liftEitherMB :: MonadBase m => Either Error a -> m a
 liftEitherMB eerra = case eerra of
-                       Left err -> failE $ err
+                       Left err -> failE err
                        Right x  -> return x
 
 --------------------------------------------
@@ -215,8 +215,7 @@ orM mba mbb = do
 
 -- | Monadic non-strict any (list disjunction)
 anyM :: Monad m => [m Bool] -> m Bool
-anyM [] = return False
-anyM (m:ms) = m `orM` anyM ms
+anyM ms = foldr orM (return False) ms
 
 -- | Run given computation if given value is Just something.
 -- Otherwise just return

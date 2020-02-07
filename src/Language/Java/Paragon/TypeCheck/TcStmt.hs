@@ -14,8 +14,8 @@ import Language.Java.Paragon.TypeCheck.TypeMap
 
 import Language.Java.Paragon.TypeCheck.TcExp
 
-import Control.Monad (unless)
-import Control.Applicative ( (<$>) )
+import Control.Monad (unless, void)
+import Control.Applicative ((<$>))
 
 import qualified Data.ByteString.Char8 as B
 
@@ -47,10 +47,9 @@ tcStmt (IfThenElse _ c s1 s2) = do
              $  toUndef $ "if-statement requires a condition of type compatible with boolean\n"
                ++ "Found type: " ++ prettyPrint tyC
   extendBranchPC pC ("branch dependent on condition " ++ prettyPrint c) $ do
-    (s1', s2') <- (isNotNullChecked c >>
-                   (maybeM (mLocks tyC)
-                    (\ls -> applyLockMods $ PL.openAll $
-                     map PL.skolemizeLock ls)) >> tcStmt s1)
+    (s1', s2') <- (isNotNullChecked c
+                    >> maybeM (mLocks tyC) (applyLockMods . PL.openAll . map PL.skolemizeLock)
+                    >> tcStmt s1)
                   ||| (isNullChecked c >> tcStmt s2)
     return $ IfThenElse Nothing c' s1' s2'
 
@@ -63,19 +62,19 @@ tcStmt (IfThen sp c s) = do
 tcStmt (While _ c sBody) = do
   !s <- getState                  -- Starting state S
   (tyC, pC, c') <- tcExp c
-  check (isBoolConvertible tyC) $  toUndef $ "Cannot convert type to boolean"
+  check (isBoolConvertible tyC) $ toUndef "Cannot convert type to boolean"
   extendBranchPC pC ("loop over condition " ++ prettyPrint c) $
     addBranchPC breakE $
     addBranchPC continueE $
      do maybeM (mLocks tyC)
-         (\ls -> applyLockMods $ PL.openAll $ map PL.skolemizeLock ls)
+         (applyLockMods . PL.openAll . map PL.skolemizeLock)
         -- First iteration of body
-        sBody' <- (isNotNullChecked c >> tcStmt sBody)
+        sBody' <- isNotNullChecked c >> tcStmt sBody
 
         -- Approximate state to the possible ones
         -- at the start of the loop
         sCont <- getExnState ExnContinue -- TODO smart constructor
-        maybeM sCont $ mergeWithState
+        maybeM sCont mergeWithState
         mergeWithState s             -- S* = S <> Ss <> Ss[exns](continue)[state]
         deactivateExn ExnContinue    -- S** = S*[exns /= continue]
 
@@ -111,7 +110,7 @@ tcStmt (BasicFor _ mForInit mTest mUp body) = do
       addBranchPC breakE $
       addBranchPC continueE $ do
         maybeM (mLocks tyC)
-         (\ls -> applyLockMods $ PL.openAll $ map PL.skolemizeLock ls)
+         (applyLockMods . PL.openAll . map PL.skolemizeLock)
         -- First iteration of body
         body' <- tcStmt body
         mUp' <- case mUp of
@@ -122,7 +121,7 @@ tcStmt (BasicFor _ mForInit mTest mUp body) = do
         -- Approximate state to the possible ones
         -- at the start of the loop
         sCont <- getExnState ExnContinue -- TODO smart constructor
-        maybeM sCont $ mergeWithState
+        maybeM sCont mergeWithState
         mergeWithState s             -- S* = S <> Ss <> Ss[exns](continue)[state]
         deactivateExn ExnContinue    -- S** = S*[exns /= continue]
 
@@ -157,7 +156,7 @@ tcStmt (Continue _ Nothing) = do
 -- Rule RETURNVOID
 tcStmt (Return _ Nothing) = do
   (tyR, _pR) <- getReturn
-  check (tyR == voidT) $ toUndef $ "Encountered unexpected empty return statement"
+  check (tyR == voidT) $ toUndef "Encountered unexpected empty return statement"
 {-  check (pR == top)   $ "Internal error: tcStmt: "
                           ++ "void return with non-top return policy should never happen: " ++ show pR
 -}
@@ -175,8 +174,8 @@ tcStmt (Return _ (Just e)) = do
                              "Expecting type: " ++ prettyPrint tyR
     Just ps -> do
       mapM_ (\(p,q) -> do
-               constraint PL.emptyLockSet p q $ toUndef $ "Cannot unify policy type parameters at method call"
-               constraint PL.emptyLockSet q p $ toUndef $  "Cannot unify policy type parameters at method call") ps
+               constraint PL.emptyLockSet p q $ toUndef "Cannot unify policy type parameters at method call"
+               constraint PL.emptyLockSet q p $ toUndef "Cannot unify policy type parameters at method call") ps
 
       -- Check pE <=[L] pR
       constraintLS pE pR $ toUndef $
@@ -244,8 +243,8 @@ tcStmt (Try _ block [catch] Nothing) = do
       extendVarEnv (unIdent i) (VSig tyP pR True False (isFinal ms) False) $ do --Last bool uncertain
                                          -- E* = E[vars{x +-> (tyP, pR)}]
         msX <- getExnState (ExnType tyP)
-        debugPrint $ "msX: " ++ show (fmap (const ()) msX)
-        maybeM msX $ mergeWithState  -- S* = St <> St[exns](X)[state]
+        debugPrint $ "msX: " ++ show (void msX)
+        maybeM msX mergeWithState  -- S* = St <> St[exns](X)[state]
         cBlock' <- tcBlock cBlock
         deactivateExn (ExnType tyP)
         let catch' = Catch Nothing (FormalParam Nothing (map notAppl ms)
@@ -406,8 +405,8 @@ withInits (Just (ForInitExps _ es)) tca = do
 withInits (Just (ForLocalVars _ ms t vds)) tca = do
   pV  <- localVarPol ms vds
   (tyV, tT) <- tcSrcType genMeta t
-  (vds', a) <- tcLocalVars pV tyV (isFinal ms) vds [] $ tca
-  return $ (Just $ ForLocalVars Nothing (map notAppl ms) tT vds', a)
+  (vds', a) <- tcLocalVars pV tyV (isFinal ms) vds [] tca
+  return (Just $ ForLocalVars Nothing (map notAppl ms) tT vds', a)
 
 
 ----------------------------------------
@@ -433,7 +432,7 @@ tcBlockStmts (BlockStmt _ stmt : bss) = do
 -- Rule LOCALVARINIT/LOCALVARDECL
 tcBlockStmts (LocalVars _ ms t vds : bss) = do
   let rPolExps = [ e | Reads _ e <- ms ]
-  check (length rPolExps <= 1) $ toUndef $
+  check (length rPolExps <= 1) $ toUndef
               "At most one read modifier allowed per variable"
 --  mapM_ tcPolicyMod rPolExps
   pV  <- localVarPol ms vds
@@ -520,7 +519,7 @@ localVarPol ms vds =
         debugPrint $ "Found read policy: " ++ prettyPrint p ++ " - evaluating"
         PL.VarPolicy <$> evalPolicy p
 --        liftTcDeclM $ PL.VarPolicy <$> evalPolicy p
-      _ -> fail $ "Only one read policy allowed on local variable"
+      _ -> fail "Only one read policy allowed on local variable"
 
 ---------------------------------------------------
 -- Typechecking Explicit Constructor Invocations --
@@ -575,7 +574,7 @@ checkReturnStmts (MethodBody sp mBlock) = do
 
                     Switch _ _ swBlocks ->
                       -- NOTE: relying on handling of duplication of default label
-                      or [ checkReturnStmts' bls foundReturn | (SwitchBlock _ (Default {}) bls) <- swBlocks ] ||
+                      or [ checkReturnStmts' bls foundReturn | (SwitchBlock _ Default{} bls) <- swBlocks ] ||
                       checkReturnStmts' blStmts foundReturn
 
                     Do _ bodyStmt _ ->

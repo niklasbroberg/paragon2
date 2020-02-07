@@ -52,7 +52,7 @@ instance Applicative PiReader where
 instance Fail.MonadFail PiReader where
   fail = liftBase . fail
 
-instance Monad (PiReader) where
+instance Monad PiReader where
   return x = PiReader $ \_ -> return x
 
   PiReader f >>= k = PiReader $ \pp -> do
@@ -62,17 +62,17 @@ instance Monad (PiReader) where
   fail = Fail.fail
 
 
-instance Functor (PiReader) where
+instance Functor PiReader where
   fmap = liftM
 
-instance MonadBase (PiReader) where
-  liftBase ba = PiReader $ \_ -> ba
+instance MonadBase PiReader where
+  liftBase ba = PiReader $ const ba
   withErrCtxt' ecf (PiReader f) = PiReader $ withErrCtxt' ecf . f
   tryM (PiReader f) = PiReader $ tryM . f
   failE = liftBase . failE
   failEC x = liftBase . failEC x
 
-instance MonadIO (PiReader) where
+instance MonadIO PiReader where
   liftIO = liftBase . liftIO
 
 class MonadBase m => MonadPR m where

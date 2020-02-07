@@ -12,6 +12,7 @@ import Language.Java.Paragon.TypeCheck.TypeMap
 
 import qualified Data.Map as Map
 import qualified Data.ByteString.Char8 as B
+import Data.Maybe(fromMaybe)
 
 import Data.Data
 
@@ -76,9 +77,9 @@ emptyVarMap = Map.empty
 --------------------------------------
 
 branchPC :: Maybe Entity -> CodeEnv -> [(ActorPolicy, String)]
-branchPC men (CodeEnv { branchPCE = (bm, def) }) =
+branchPC men CodeEnv{ branchPCE = (bm, def) } =
     flip (maybe def) men $ \en ->
-        maybe def id (Map.lookup en bm)
+        fromMaybe def (Map.lookup en bm)
 
 joinBranchPC :: ActorPolicy -> String -> CodeEnv -> CodeEnv
 joinBranchPC p str env = let (bm, def) = branchPCE env

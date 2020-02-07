@@ -65,7 +65,7 @@ instance Applicative NameRes where
 
 -- | Access expansion map
 getExpansion :: NameRes Expansion
-getExpansion = NameRes $ \_ -> return
+getExpansion = NameRes $ const return
 
 -- | Access name of currently handled syntactical unit
 getCurrentName :: NameRes (Name SourcePos)
@@ -120,32 +120,32 @@ mkPExpansionWithPrefix, mkTExpansionWithPrefix, mkEExpansionWithPrefix, mkMExpan
     Maybe (Name SourcePos) -> B.ByteString -> Expansion
 
 mkPExpansionWithPrefix n i = --n' i = let n = fmap dropData n' in
-  Map.fromList $ [((i, PName   ), return (n, PName)),
-                  ((i, POrTName), return (n, PName)),
-                  ((i, AmbName ), return (n, PName))]
+  Map.fromList [((i, PName   ), return (n, PName)),
+                ((i, POrTName), return (n, PName)),
+                ((i, AmbName ), return (n, PName))]
 
 -- |Construct an expansion that classifies the given identifier as TName
 -- in a lookup of TName or more general NameTypes
 mkTExpansionWithPrefix n i = --n' i = let n = fmap dropData n' in
-  Map.fromList $ [((i, TName   ), return (n, TName)),
-                  ((i, POrTName), return (n, TName)),
-                  ((i, AmbName ), return (n, TName))]
+  Map.fromList [((i, TName   ), return (n, TName)),
+                ((i, POrTName), return (n, TName)),
+                ((i, AmbName ), return (n, TName))]
 
 mkEExpansionWithPrefix n i = -- n' i = let n = fmap dropData n' in
-  Map.fromList $ [((i, EName   ), return (n, EName)),
-                  ((i, EOrLName), return (n, EName)),
-                  ((i, AmbName ), return (n, EName))]
+  Map.fromList [((i, EName   ), return (n, EName)),
+                ((i, EOrLName), return (n, EName)),
+                ((i, AmbName ), return (n, EName))]
 
 mkMExpansionWithPrefix n i = --n' i = let n = fmap dropData n' in
-  Map.fromList $ [((i, MName   ), return (n, MName)),
-                  ((i, MOrLName), return (n, MName)),
-                  ((i, AmbName ), return (n, MName))]
+  Map.fromList [((i, MName   ), return (n, MName)),
+                ((i, MOrLName), return (n, MName)),
+                ((i, AmbName ), return (n, MName))]
 
 mkLExpansionWithPrefix n i = --n' i = let n = fmap dropData n' in
-  Map.fromList $ [((i, LName   ), return (n, LName)),
-                  ((i, MOrLName), return (n, LName)),
-                  ((i, EOrLName), return (n, LName)),
-                  ((i, AmbName ), return (n, LName))]
+  Map.fromList [((i, LName   ), return (n, LName)),
+                ((i, MOrLName), return (n, LName)),
+                ((i, EOrLName), return (n, LName)),
+                ((i, AmbName ), return (n, LName))]
 
 -- |Convert list of expansions to a single expansion by taking the union
 expansionUnion :: [Expansion] -> Expansion

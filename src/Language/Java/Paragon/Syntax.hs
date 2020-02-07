@@ -695,7 +695,7 @@ data NameType
 nameType :: Name a -> NameType
 nameType (Name _ nt _ _) = nt
 nameType _ = panic (syntaxModule ++ ".nameType")
-             $ "AntiQName"
+                   "AntiQName"
 
 setNameType :: NameType -> Name a -> Name a
 setNameType nt (Name a _ mPre i) = Name a nt mPre i
@@ -708,7 +708,7 @@ mkUniformName :: (a -> a -> a) -- Merge annotations
               -> NameType -> [Ident a] -> Name a
 mkUniformName f nt ids = mkName' (reverse ids)
     where mkName' [] = panic (syntaxModule ++ ".mkUniformName")
-                       $ "Empty list of idents"
+                             "Empty list of idents"
           mkName' [i] = Name (ann i) nt Nothing i
           mkName' (i:is) =
               let pre = mkName' is
@@ -722,7 +722,7 @@ mkName :: (a -> a -> a) -- Merge annotations
        -> NameType -> NameType -> [Ident a] -> Name a
 mkName f nt ntPre ids = mkName' (reverse ids)
     where mkName' [] = panic (syntaxModule ++ ".mkName")
-                       $ "Empty list of idents"
+                             "Empty list of idents"
           mkName' [i] = Name (ann i) nt Nothing i
           mkName' (i:is) =
               let pre = mkUniformName f ntPre (reverse is)
@@ -736,8 +736,8 @@ flattenName :: Name a -> [Ident a]
 flattenName n = reverse $ flName n
     where flName (Name _ _ mPre i) = i : maybe [] flName mPre
 
-          flName (AntiQName{}) = panic (syntaxModule ++ ".flattenName") $
-                                 "Cannot flatten name anti-quote"
+          flName AntiQName{} = panic (syntaxModule ++ ".flattenName")
+                                     "Cannot flatten name anti-quote"
 
 mkIdent :: a -> String -> Ident a
 mkIdent a = Ident a . B.pack

@@ -1,7 +1,5 @@
-{-# LANGUAGE CPP, DeriveDataTypeable, TupleSections,
-             PatternGuards, ViewPatterns,
-             MultiParamTypeClasses,
-             FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE CPP, DeriveDataTypeable, PatternGuards,
+  MultiParamTypeClasses, FlexibleInstances, UndecidableInstances #-}
 module Language.Java.Paragon.TypeCheck.Types where
 
 import Language.Java.Paragon.Syntax hiding (Clause(..))
@@ -10,17 +8,12 @@ import Language.Java.Paragon.Interaction
 import Language.Java.Paragon.Error()
 import Language.Java.Paragon.SourcePos
 
---import Language.Java.Paragon.TypeCheck.Policy
---import Language.Java.Paragon.TypeCheck.Locks
---import Language.Java.Paragon.TypeCheck.Actors
 import {-# SOURCE #-} Language.Java.Paragon.PolicyLang
---    (ActorPolicy, ActorPolicyBounds, TypedActorIdSpec, TcLock)
 import Language.Java.Paragon.TypeCheck.NullAnalysis
 
 import qualified Data.ByteString.Char8 as B
 import Data.Maybe (isJust, fromJust)
 import Control.Applicative (Applicative, (<$>), (<*>))
---import Text.PrettyPrint
 
 #ifdef BASE4
 import Data.Data
@@ -197,15 +190,15 @@ qualClsType is = TcClassT (mkName_ TName PName is) []
 --                  "AntiQName should never appear in an AST being type-checked"
 
 stringT, objectT :: TcClassType
-stringT = qualClsType $ map (Ident defaultPos . B.pack) $
+stringT = qualClsType $ map (Ident defaultPos . B.pack)
   ["java","lang","String"]
-objectT = qualClsType $ map (Ident defaultPos . B.pack) $
+objectT = qualClsType $ map (Ident defaultPos . B.pack)
   ["java","lang","Object"]
 
 nullExnT :: TcType
 nullExnT = TcRefT $ TcClsRefT (qualClsType $
-  map (Ident defaultPos . B.pack) $
-    ["java","lang","NullPointerException"])
+  map (Ident defaultPos . B.pack)
+  ["java","lang","NullPointerException"])
 
 -- promoting
 
@@ -239,12 +232,12 @@ typeName_ t = error $ "typeName_: Not a class type: " ++ show t
 --                  Nothing -> error $ "typeName_: " ++ show typ
 
 isClassType, isRefType, isPrimType, isNullType, maybeNull :: TcStateType -> Bool
-isClassType (TcType (TcRefT (TcClsRefT (TcClassT{}))) _) = True
-isClassType (TcInstance{}) = True
+isClassType (TcType (TcRefT (TcClsRefT TcClassT{})) _) = True
+isClassType TcInstance{} = True
 isClassType _ = False
 
 isRefType (TcType (TcRefT _) _) = True
-isRefType (TcInstance{}) = True
+isRefType TcInstance{} = True
 isRefType _ = False
 
 mRefType :: TcStateType -> Maybe TcRefType
@@ -300,7 +293,7 @@ mArrayType (TcRefT (TcArrayT ty p)) = Just $
 mArrayType _ = Nothing
 
 mClassType :: TcType -> Maybe TcClassType
-mClassType (TcRefT (TcClsRefT (ct@TcClassT{}))) = Just ct
+mClassType (TcRefT (TcClsRefT ct@TcClassT{})) = Just ct
 mClassType _ = Nothing
 
 mInstanceType :: TcStateType -> Maybe (TcRefType, TypedActorIdSpec, [TypedActorIdSpec], NullType)
@@ -312,22 +305,22 @@ mInstanceType _ = Nothing
 
 widenConvert :: PrimType SourcePos -> [PrimType SourcePos]
 widenConvert pt = case pt of
-   FloatT  pos -> map ($(pos)) [DoubleT]
-   LongT   pos -> map ($(pos)) [DoubleT, FloatT]
-   IntT    pos -> map ($(pos)) [DoubleT, FloatT, LongT]
-   ShortT  pos -> map ($(pos)) [DoubleT, FloatT, LongT, IntT]
-   CharT   pos -> map ($(pos)) [DoubleT, FloatT, LongT, IntT]
-   ByteT   pos -> map ($(pos)) [DoubleT, FloatT, LongT, IntT, ShortT]
+   FloatT  pos -> map ($ pos) [DoubleT]
+   LongT   pos -> map ($ pos) [DoubleT, FloatT]
+   IntT    pos -> map ($ pos) [DoubleT, FloatT, LongT]
+   ShortT  pos -> map ($ pos) [DoubleT, FloatT, LongT, IntT]
+   CharT   pos -> map ($ pos) [DoubleT, FloatT, LongT, IntT]
+   ByteT   pos -> map ($ pos) [DoubleT, FloatT, LongT, IntT, ShortT]
    _           -> []
 
 narrowConvert :: PrimType SourcePos -> [PrimType SourcePos]
 narrowConvert pt = case pt of
-   DoubleT pos -> map ($(pos)) [ByteT, ShortT, CharT, IntT, LongT, FloatT]
-   FloatT  pos -> map ($(pos)) [ByteT, ShortT, CharT, IntT, LongT]
-   LongT   pos -> map ($(pos)) [ByteT, ShortT, CharT, IntT]
-   IntT    pos -> map ($(pos)) [ByteT, ShortT, CharT]
-   CharT   pos -> map ($(pos)) [ByteT, ShortT]
-   ShortT  pos -> map ($(pos)) [ByteT, CharT]
+   DoubleT pos -> map ($ pos) [ByteT, ShortT, CharT, IntT, LongT, FloatT]
+   FloatT  pos -> map ($ pos) [ByteT, ShortT, CharT, IntT, LongT]
+   LongT   pos -> map ($ pos) [ByteT, ShortT, CharT, IntT]
+   IntT    pos -> map ($ pos) [ByteT, ShortT, CharT]
+   CharT   pos -> map ($ pos) [ByteT, ShortT]
+   ShortT  pos -> map ($ pos) [ByteT, CharT]
    _           -> []
 
 widenNarrowConvert :: PrimType SourcePos -> [PrimType SourcePos]
@@ -335,7 +328,7 @@ widenNarrowConvert (ByteT pos) = [CharT pos]
 widenNarrowConvert _           = []
 
 
-box :: PrimType SourcePos -> Maybe (TcClassType)
+box :: PrimType SourcePos -> Maybe TcClassType
 box pt = let mkClassType str spos =
                  Just $ TcClassT
                           (mkName_ TName PName $
@@ -382,14 +375,14 @@ isNumConvertible :: TcStateType -> Bool
 isNumConvertible sty =
     unStateType sty `elem` [byteT, shortT, intT, longT, charT, floatT, doubleT] ||
     case unboxType sty of
-      Just t | t `elem` (map ($(aOfPrimType t)) [ByteT, ShortT, IntT, LongT, CharT, FloatT, DoubleT]) -> True
+      Just t | t `elem` map ($ aOfPrimType t) [ByteT, ShortT, IntT, LongT, CharT, FloatT, DoubleT] -> True
       _ -> False
 
 isIntConvertible :: TcStateType -> Bool
 isIntConvertible sty =
     unStateType sty `elem` [byteT, shortT, intT, longT, charT] ||
     case unboxType sty of
-      Just t | t `elem` (map ($(aOfPrimType t)) [ByteT, ShortT, IntT, LongT, CharT]) -> True
+      Just t | t `elem` map ($ aOfPrimType t) [ByteT, ShortT, IntT, LongT, CharT] -> True
       _ -> False
 
 isBoolConvertible :: TcStateType -> Bool
@@ -405,8 +398,8 @@ unaryNumPromote sty
 
     where numPromote :: PrimType SourcePos -> Maybe (PrimType SourcePos)
           numPromote pt
-              | pt `elem` map ($(aOfPrimType pt)) [LongT, FloatT, DoubleT] = Just pt
-              | pt `elem` map ($(aOfPrimType pt)) [ByteT, ShortT, IntT, CharT] = Just $ IntT (aOfPrimType pt)
+              | pt `elem` map ($ aOfPrimType pt) [LongT, FloatT, DoubleT] = Just pt
+              | pt `elem` map ($ aOfPrimType pt) [ByteT, ShortT, IntT, CharT] = Just $ IntT (aOfPrimType pt)
               | otherwise = Nothing
 
 unaryNumPromote_ :: TcStateType -> TcStateType
@@ -433,9 +426,9 @@ instance Pretty TcStateType where
       case tcst of
         --TcActorIdT aid -> text "actor[" <> pretty aid <> text "]"
         TcPolicyPolT p -> text "policy[" <> pretty p <> text "]"
-        TcLockT ls -> (hsep $ text "lock[" : punctuate (text ",") (map pretty ls)) <> text "]"
+        TcLockT ls -> hsep (text "lock[" : punctuate (text ",") (map pretty ls)) <> text "]"
         TcInstance ct aid aids _ -> pretty ct <> char '@' <> pretty aid <>
-                                 (hsep $ char '{' : punctuate (char ',') (map pretty aids)) <> char '}' --TODOY prettyprint nulltype
+                                 hsep (char '{' : punctuate (char ',') (map pretty aids)) <> char '}' --TODOY prettyprint nulltype
         TcType ty nt -> pretty ty <> pretty nt
 
 instance Pretty TcType where

@@ -309,10 +309,10 @@ lookupTypeOfT (TcRefT refT) = lookupTypeOfRefT refT
 lookupTypeOfT _ = const $ Left Nothing
 
 lookupTypeOfRefT :: TcRefType -> TypeMap -> Either (Maybe String) ([(RefType SourcePos, B.ByteString)], TypeSig)
-lookupTypeOfRefT (TcArrayT ty pol) _ = Right $ ([], hardCodedArrayTM ty pol)
+lookupTypeOfRefT (TcArrayT ty pol) _ = Right ([], hardCodedArrayTM ty pol)
 lookupTypeOfRefT (TcTypeVar _ ) _ = panic (typeMapModule ++ ".lookupTypeOfRefT")
                                     "TcTypeVar should have been instantiated"
-lookupTypeOfRefT TcNullT _ = Left $ Just $ "Cannot dereference null"
+lookupTypeOfRefT TcNullT _ = Left $ Just "Cannot dereference null"
 lookupTypeOfRefT _rt@(TcClsRefT (TcClassT n tas)) startTm =
     case n of
       Name _ TName _ _ ->
@@ -327,7 +327,7 @@ lookupTypeOfRefT _rt@(TcClsRefT (TcClassT n tas)) startTm =
                              " arguments but has been given " ++ show (length tas)
 --                   | not (null iaps) -> panic (typeMapModule ++ ".lookupTypeOfRefT")
 --                                        $ "Too many implicit arguments: " ++ show iaps
-                   | otherwise -> Right $ (iaps, instantiate (zip tps tas) tsig)
+                   | otherwise -> Right (iaps, instantiate (zip tps tas) tsig)
 
       Name _ _ _ _ -> Left Nothing
       _ -> panic (typeMapModule ++ ".lookupTypeOfRefT") $ show n
@@ -499,7 +499,7 @@ instance Pretty TypeMap where
                           mapCat "packages =>"    (packages tm)]
 
 mapCat :: (Pretty k, Pretty v) => String -> Map k v -> Doc
-mapCat lbl mp = myCat mp $ [text lbl, nest 2 $ pretty mp]
+mapCat lbl mp = myCat mp [text lbl, nest 2 $ pretty mp]
 
 myCat :: Map k v -> [Doc] -> Doc
 myCat mp = if Map.size mp == 0 then hcat else vcat

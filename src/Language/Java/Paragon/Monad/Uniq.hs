@@ -8,7 +8,7 @@ newtype Uniq = Uniq (IORef Int)
 
 -- |Get a unique number generator
 initUniq :: IO Uniq
-initUniq = newIORef 0 >>= return . Uniq
+initUniq = Uniq <$> newIORef 0
 
 -- |Get next unique identifier from generator
 getUniq :: Uniq -> IO Int

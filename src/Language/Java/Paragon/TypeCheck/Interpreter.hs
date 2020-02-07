@@ -14,7 +14,7 @@ import Language.Java.Paragon.TypeCheck.TypeMap
 import Language.Java.Paragon.TypeCheck.Types
 
 import qualified Data.Map as Map
-import Control.Monad (forM_, ap)
+import Control.Monad (forM_, ap, (>=>), void)
 
 import Data.Maybe (fromJust)
 import Data.List (nub, delete)
@@ -29,8 +29,6 @@ data Value = VLit (Literal SourcePos)
            | VAct PL.TypedActorIdSpec
            | VArr [Value]
   deriving (Show,Eq)
-
---type Map = Map.Map
 
 ----------------------------------------
 -- Monad for evaluating typemethods
@@ -64,13 +62,13 @@ instance Monad InterpretM where
   ReturnM a >>= k = k a
   MethodReturn v >>= _ = MethodReturn v
   GetVariable n f >>= k =
-      GetVariable n(\v -> f v >>= k)
+      GetVariable n(f >=> k)
   SetVariable i v m >>= k =
       SetVariable i v (m >>= k)
   CallMethod n as f >>= k =
-      CallMethod n as (\v -> f v >>= k)
-  EvalType rt f >>= k = EvalType rt (\rTy -> f rTy >>= k)
-  SubTypeOf rt1 rt2 f >>= k = SubTypeOf rt1 rt2 (\b -> f b >>= k)
+      CallMethod n as (f >=> k)
+  EvalType rt f >>= k = EvalType rt (f >=> k)
+  SubTypeOf rt1 rt2 f >>= k = SubTypeOf rt1 rt2 (f >=> k)
 
 instance Applicative InterpretM where
   pure = return
@@ -129,7 +127,7 @@ runInterpretM lokup = runReturnIM Map.empty
         rec (Map.insert i v vs) m
 
     runIM rec vs em@(CallMethod n as f) = do
-        tm <- liftTcDeclM $ getTypeMap
+        tm <- liftTcDeclM getTypeMap
         case lookupNamed typemethods n tm of
           Nothing -> case n of
                        Name _ _ (Just tname@(Name _ TName _ _)) i -> do
@@ -138,7 +136,7 @@ runInterpretM lokup = runReturnIM Map.empty
                        _ -> panic (interpretModule ++ ".runInterpretM") $
                             "Unknown typemethod: " ++ prettyPrint n
           Just (ps, bl) -> do
-            let vs' = Map.fromList $ zip (map (\s -> Ident defaultPos s) ps) as
+            let vs' = Map.fromList $ zip (map (Ident defaultPos) ps) as
             v <- runMethodIM vs' $ iBlock bl
             rec vs (f v)
 
@@ -217,11 +215,11 @@ iStmt s =
              forM_ vs $ \v -> do
                setVar i v
                iStmt stmt
-      ExpStmt _ e -> iExp e >> return ()
+      ExpStmt _ e -> void (iExp e)
       Return _ (Just e) -> do
              v <- iExp e
              MethodReturn v
-      _ -> panic (interpretModule ++ ".iStmt") $
+      _ -> panic (interpretModule ++ ".iStmt")
            "Unsupported statement in typemethod"
 
 iBool :: Exp SourcePos -> InterpretM Bool

@@ -20,7 +20,7 @@ import Data.List ((\\))
 import Data.Maybe (fromJust, fromMaybe)
 import qualified Data.Map as Map
 import Control.Applicative ( (<$>) )
-import Control.Monad ( when, foldM )
+import Control.Monad (when, foldM, forM_, zipWithM)
 
 import qualified Data.ByteString.Char8 as B (pack)
 
@@ -107,7 +107,7 @@ tcExp (ExpName _ n) = do
              check (null lTys) $
                mkError (LArityMismatch (prettyPrint n) (length lTys) 0) sp
              let ty = lockT [PL.ConcreteLock $ PL.Lock n []]
-             return $ (ty, pL, ExpName (toT ty) (notAppl n))
+             return (ty, pL, ExpName (toT ty) (notAppl n))
       Name sp EOrLName mPre i -> do
              tryCatch (tcExp $ ExpName sp $ Name sp LName mPre i)
                 (\ec ->tcExp $ ExpName sp $ Name sp EName mPre i)
@@ -217,7 +217,7 @@ tcExp ex@(Assign exSp lhs _op rhs) = do
 
   -- Check all the necessary constraints:
   -- do not assign possible null value to non-nullable location
-  check (not (nnf && (nullableFromStateType tyRhs))) $ mkError
+  check (not (nnf && nullableFromStateType tyRhs)) $ mkError
     (NNFieldAssN (prettyPrint lhs) (prettyPrint rhs)) exSp
 
   -- TODO: Check that _op is allowed on tyV
@@ -255,7 +255,7 @@ tcExp ex@(Assign exSp lhs _op rhs) = do
       --             "
 
       styV <- updateStateType mNStab tyV (Just tyRhs)
-      debugPrint $ "Done with assignment"
+      debugPrint "Done with assignment"
 
       return (styV, pV, Assign (Just (tyV, False)) lhs' (notAppl _op) rhs')
 
@@ -287,8 +287,7 @@ tcExp (Cond sp c e1 e2) = do
     -- typecheck branches
     ((ty1, p1, e1'), (ty2, p2, e2')) <-
         (   isNotNullChecked c
-         >> (maybeM (mLocks tyC) (\ls -> applyLockMods $
-                                         PL.openAll $ map PL.skolemizeLock ls))
+         >> maybeM (mLocks tyC) (applyLockMods . PL.openAll . map PL.skolemizeLock)
          >> tcExp e1) ||| (isNullChecked c >> tcExp e2)
     -- result of each branch has to be equal
     check (unStateType ty1 == unStateType ty2
@@ -370,7 +369,7 @@ tcExp (Cast sp t e) = do
                  constraint PL.emptyLockSet q p (mkError (UnificationFailed "cast") sp)
               ) ps
 
-        when (canExn) $ -- TODO: could throw ClassCastException
+        when canExn $ -- TODO: could throw ClassCastException
                return ()
         -- update new state type information
         styC <- updateStateType Nothing tyC (Just tyE)
@@ -405,13 +404,13 @@ tcExp (ArrayCreate sp bt dimEsPs dimImplPs) = do
   -- Check that the remaining dimexprs each conform to
   -- the policy given at the level outside it
   (polEDims, dimPsT, dimEsRest) <- checkDimExprs [] [] [] dimEsPsRest sp --pDimP1
-                                     =<< (evalMaybePol mDimP1)
+                                     =<< evalMaybePol mDimP1
 
   -- Evaluate given policies for implicit dimensions
   (polIDims, dimImplPsT) <- unzip <$> mapM evalMaybePol dimImplPs
 
   -- Return the array type, and the policy of the outermost dimexpr
-  let ty         = mkArrayType baseTy $ (polEDims ++ polIDims)
+  let ty         = mkArrayType baseTy (polEDims ++ polIDims)
       dimEsPsT   = zip (dimE1T:dimEsRest) dimPsT
   return (stateType ty, pol1,
           ArrayCreate (Just (ty, False)) btT dimEsPsT dimImplPsT)
@@ -425,7 +424,7 @@ tcExp (ArrayCreate sp bt dimEsPs dimImplPs) = do
                           -> (ActorPolicy, Maybe (Policy T))     -- ^ Policy and rewritten term of previous dimension
                           -> TcCodeM ([ActorPolicy], [Maybe (Policy T)], [Exp T])
             checkDimExprs accP accPE accE [] _ (pPrev, pePrev) =
-              return $ (reverse (pPrev:accP), reverse (pePrev:accPE), reverse accE)
+              return (reverse (pPrev:accP), reverse (pePrev:accPE), reverse accE)
             checkDimExprs accP accPE accE ((e,mp):emps) spos (pPrev, pePrev) =
               do (tyE,pE,e') <- tcExp e
                  check (isIntConvertible tyE) $
@@ -484,7 +483,7 @@ tcArrayInit baseType (pol1:pols) (ArrayInit sp inits) = do
          (ArrayInitExpPol (prettyPrint e) (prettyPrint p) (prettyPrint pol1)) sp
         ) (zip ps inits)
   return $ ArrayInit Nothing inits'
-tcArrayInit _ [] _ = fail $ "Array initializer has too many dimensions"
+tcArrayInit _ [] _ = fail "Array initializer has too many dimensions"
 
 tcVarInit :: TcType -> [ActorPolicy] -> VarInit SourcePos -> TcCodeM (ActorPolicy, VarInit T)
 tcVarInit baseType pols (InitExp _ e) = do
@@ -541,7 +540,7 @@ tcCreate ctyT@(TcClassT tyN@(Name _ _ _ tyI) _) tas args = do
         "Wrong number of type arguments in instance creation expression.\n" ++
         "Constructor expects " ++ show (length tps) ++
         " arguments but has been given " ++ show (length tas)
-  (tArgs, tasT) <- unzip <$> mapM (uncurry $ tcSrcTypeArg genBot) (zip tps tas)
+  (tArgs, tasT) <- unzip <$> zipWithM (tcSrcTypeArg genBot) tps tas
   iaas  <- mapM (\(rt,s) -> do
                    rTy <- evalSrcRefType genBot rt
                    aid <- instanceActorId $ Name defaultPos EName (Just tyN) $ Ident defaultPos s
@@ -576,7 +575,7 @@ tcCreate ctyT@(TcClassT tyN@(Name _ _ _ tyI) _) tas args = do
             mapM (\(t, ExnSig rX wX modsX) -> do
                     rX' <- substParPols subst rX
                     wX' <- substParPols subst wX
-                    return $ ((t, (rX', wX')), (ExnType t, (wX', modsX)))) exns
+                    return ((t, (rX', wX')), (ExnType t, (wX', modsX)))) exns
   mapM_ (\(arg,argP,parP) ->
              constraintLS argP parP $ toUndef $
                  "Constructor applied to argument with too restrictive policy:\n" ++
@@ -611,18 +610,16 @@ tcCreate ctyT@(TcClassT tyN@(Name _ _ _ tyI) _) tas args = do
   k <- foldM (\b e -> do
                 (st, _, _) <- tcExp e
                 case st of
-                  (TcInstance _ _ _ nt) -> return $ b && (committed nt)
-                  (TcType _ nt)         -> return $ b && (committed nt)
+                  (TcInstance _ _ _ nt) -> return $ b && committed nt
+                  (TcType _ nt)         -> return $ b && committed nt
                   _                     -> panic "CommittedSt called on Actor, Lock or Policy" ""
              ) True args
-  let nt = case k of
-             True  -> Committed
-             False -> Free
+  let nt = if k then Committed else Free
   styT <- getStateType Nothing Nothing $ clsTypeToType ctyT
   let styT' = setNullInStateType styT (NotNull, nt)
   return (styT', resP, tasT, args', isNative)
 tcCreate _ _ _ = panic (tcExpModule ++ ".tcCreate")
-                 $ "AntiQName"
+                 "AntiQName"
 
 --------------------------
 -- Method invocations
@@ -697,7 +694,7 @@ tcMethodInv mi = do
                   "Method " ++ prettyPrint i ++ " expects " ++
                   show (length tps) ++ " type arguments but has been given 0"
 
-            return $ (n, msig, args, psArgs, pPath,
+            return (n, msig, args, psArgs, pPath,
                            \ty -> MethodCallOrLockQuery (toT ty) (notAppl n) args', tysArgs, sp)
         MethodCallOrLockQuery _ n _ -> panic (tcExpModule ++ ".tcMethodInv")
                             $ "Unexpected name: " ++ show n
@@ -709,11 +706,10 @@ tcMethodInv mi = do
             let tas' = map (\a -> ActualArg (ann a) a) tas
             (tps, genMSig) <- instThis pE =<<
                               lookupMethodT tyE i tas' (map unStateType tysArgs) psArgs
-            (tArgs, tasT) <- unzip <$> mapM (uncurry $ tcSrcNWTypeArg genBot)
-                                            (zip tps tas)
+            (tArgs, tasT) <- unzip <$> zipWithM (tcSrcNWTypeArg genBot) tps tas
             let msig = instantiate (zip tps tArgs) genMSig
-            return $ (mkSimpleName MName i, msig, args, psArgs, pE,
-                      \ty -> PrimaryMethodCall (toT ty) e' tasT (notAppl i) args', tysArgs, sp)
+            return (mkSimpleName MName i, msig, args, psArgs, pE,
+                     \ty -> PrimaryMethodCall (toT ty) e' tasT (notAppl i) args', tysArgs, sp)
         TypeMethodCall sp n tas i args -> do
             (tysArgs, psArgs, args') <- unzip3 <$> mapM tcExp args
             let tas' = map (\a -> ActualArg (ann a) a) tas
@@ -722,14 +718,13 @@ tcMethodInv mi = do
                   "Method " ++ prettyPrint i ++ " expects " ++
                   show (length tps) ++ " type arguments but has been\
                   \ given " ++ show (length tas)
-            (tArgs, tasT) <- unzip <$> mapM (uncurry $ tcSrcNWTypeArg genBot)
-                                     (zip tps tas)
+            (tArgs, tasT) <- unzip <$> zipWithM (tcSrcNWTypeArg genBot) tps tas
             let msig = instantiate (zip tps tArgs) genMSig
-            return $ (n, msig, args, psArgs, pPath,
-                      \ty -> TypeMethodCall (toT ty) (notAppl n)
-                             tasT (notAppl i) args', tysArgs, sp)
+            return (n, msig, args, psArgs, pPath,
+                     \ty -> TypeMethodCall (toT ty) (notAppl n)
+                            tasT (notAppl i) args', tysArgs, sp)
 
-        _ -> fail $ "tcMethodInv: Unsupported method call"
+        _ -> fail "tcMethodInv: Unsupported method call"
 
   let (MSig tyR _mods pR psIs psPars pW lExp lMods exns nnps isNative) = msig
   -- Check argument's null type
@@ -755,7 +750,7 @@ tcMethodInv mi = do
             mapM (\(t, ExnSig rX wX modsX) -> do
                     rX' <- substParPols subst rX
                     wX' <- substParPols subst wX
-                    return $ ((t, (rX', wX')), (ExnType t, (wX', modsX)))) exns
+                    return ((t, (rX', wX')), (ExnType t, (wX', modsX)))) exns
   mapM_ (\(arg,argP,parP) ->
                   constraintLS argP parP $ mkError (MethodArgRestr (prettyPrint mi)
                     (prettyPrint arg) (prettyPrint argP) (prettyPrint parP)) sp
@@ -853,7 +848,7 @@ tcPrgPolicy plPol =
       PL.PolicyVar _ -> return ()
 
 tcClause :: PL.TcClause -> TcCodeM ()
-tcClause (PL.Clause h qs as) = do
+tcClause (PL.Clause h qs as) =
   -- get the type env from h:qs ??
   mapM_ (tcAtom h qs) as
 
@@ -862,7 +857,7 @@ tcAtom :: PL.ActorSetRep -> [PL.ActorSetRep] -> PL.TcAtom -> TcCodeM ()
 tcAtom h qs (PL.Atom n@(Name _ _ mPre i) reps) = do
   LSig _ lTys _ <- lookupLock mPre i
   let aTys = map getTy reps
-  flip mapM_ (zip lTys aTys)
+  forM_ (zip lTys aTys)
            (\(lTy,aTy) -> checkM (aTy `subTypeOf` lTy) $ toUndef $
                           "Lock " ++ prettyPrint n ++
                           " expects an argument of type " ++ prettyPrint lTy ++
@@ -957,7 +952,7 @@ tcSrcClsType _ct@(ClassType _ n tas) = do
 
 -}
 tcSrcType :: TcCodeM ActorPolicy -> Type SourcePos -> TcCodeM (TcType, Type T)
-tcSrcType _  (PrimType _ pt) = return $ (TcPrimT pt, PrimType Nothing (notAppl pt))
+tcSrcType _  (PrimType _ pt) = return (TcPrimT pt, PrimType Nothing (notAppl pt))
 tcSrcType gp (RefType  _ rt) = do
   (tyR, rtT) <- tcSrcRefType gp rt
   return (TcRefT tyR, RefType Nothing rtT)
@@ -968,7 +963,7 @@ tcSrcType _ _ = panic (tcExpModule ++ ".tcSrcType")
 
 tcSrcRefType :: TcCodeM ActorPolicy -> RefType SourcePos -> TcCodeM (TcRefType, RefType T)
 tcSrcRefType _ (TypeVariable _ i) =
-    return $ (TcTypeVar $ unIdent i, TypeVariable Nothing (notAppl i))
+    return (TcTypeVar $ unIdent i, TypeVariable Nothing (notAppl i))
 tcSrcRefType genPol (ArrayType _ t mps) = do
   (ty, tT) <- tcSrcType genPol t
   (pols, mpsT) <- unzip <$> mapM
@@ -982,7 +977,7 @@ tcSrcRefType genPol (ArrayType _ t mps) = do
                               pol <- tcPolicy p
                               return (pol, Just pT)) mps
   let (TcRefT arrTy) = mkArrayType ty pols
-  return $ (arrTy, ArrayType Nothing tT mpsT)
+  return (arrTy, ArrayType Nothing tT mpsT)
 tcSrcRefType gp (ClassRefType _ ct) = do
   (tyC, ctT) <- tcSrcClsType gp ct
   return (TcClsRefT tyC, ClassRefType Nothing ctT)
@@ -996,7 +991,7 @@ tcSrcClsType gp (ClassType _ n tas) = do
                          Nothing -> liftTcDeclM $ fetchType n
                                     -- fail $ "Unknown type: " ++ prettyPrint n
                          Just res -> return res
-  (tArgs, tasT) <- unzip <$> mapM (uncurry $ tcSrcTypeArg gp) (zip tps tas)
+  (tArgs, tasT) <- unzip <$> zipWithM (tcSrcTypeArg gp) tps tas
   return (TcClassT n tArgs, ClassType Nothing (notAppl n) tasT)
 
 tcSrcTypeArg :: TcCodeM ActorPolicy -> TypeParam SourcePos -> TypeArgument SourcePos -> TcCodeM (TcTypeArg, TypeArgument T)
@@ -1006,25 +1001,25 @@ tcSrcTypeArg gp tp (ActualArg _ a) = do
 tcSrcTypeArg _ _ _ = fail "tcSrcTypeArg: Wildcards not yet supported"
 
 tcSrcNWTypeArg :: TcCodeM ActorPolicy -> TypeParam SourcePos -> NonWildTypeArgument SourcePos -> TcCodeM (TcTypeArg, NonWildTypeArgument T)
-tcSrcNWTypeArg gp (TypeParam {}) an@(ActualName nPos n) = do
+tcSrcNWTypeArg gp TypeParam{} an@(ActualName nPos n) = do
   (tyC, _) <- tcSrcClsType gp (ClassType nPos n [])
   return (TcActualType $ TcClsRefT tyC, notAppl an)
 
-tcSrcNWTypeArg gp (TypeParam {}) (ActualType _ rt) = do
+tcSrcNWTypeArg gp TypeParam{} (ActualType _ rt) = do
     (tyR, rtT) <- tcSrcRefType gp rt
     return (TcActualType tyR, ActualType Nothing rtT)
-tcSrcNWTypeArg _ (ActorParam {}) (ActualName _ n) = do
+tcSrcNWTypeArg _ ActorParam{} (ActualName _ n) = do
     aid@(PL.TypedActorIdSpec rTy _) <- evalActorId n
     return (TcActualActor aid,
               ActualName Nothing $ amap (const $ Just (TcRefT rTy, False)) $ notAppl n)
 
 -- Policies may be names, or special expressions -- TODO: names must be final
-tcSrcNWTypeArg _ (PolicyParam {}) (ActualName nPos n) = do
+tcSrcNWTypeArg _ PolicyParam{} (ActualName nPos n) = do
     pol <- evalPolicy (ExpName nPos n)
     return (TcActualPolicy $ PL.VarPolicy pol,
               ActualName Nothing $ amap (const $ Just (policyT, False)) $ notAppl n)
 
-tcSrcNWTypeArg _ (PolicyParam {}) (ActualExp  _ e) = do
+tcSrcNWTypeArg _ PolicyParam{} (ActualExp  _ e) = do
   (tyE, _polE, eT) <- tcExp e
   check (isPolicyType tyE) $ toUndef $ "Not a policy type: " ++ prettyPrint tyE
   pol <- evalPolicy e
@@ -1032,7 +1027,7 @@ tcSrcNWTypeArg _ (PolicyParam {}) (ActualExp  _ e) = do
             ActualExp Nothing eT)
 
 -- Lock states must be locks
-tcSrcNWTypeArg _ (LockStateParam {}) (ActualLockState _ ls) = do
+tcSrcNWTypeArg _ LockStateParam{} (ActualLockState _ ls) = do
   locks <- mapM evalLock ls
   return (TcActualLockState locks, ActualLockState Nothing $ map notAppl ls) -- TODO: Not really not applicable...
 
@@ -1121,7 +1116,7 @@ opType (Add  _) t1 t2 | let sT = clsTypeToType stringT,
 
 opType op t1 t2
     -- Numeric operators
-    | op `elem` (map ($(defaultPos)) [Mult, Div, Rem, Add, Sub]) = do
+    | op `elem` map ($ defaultPos) [Mult, Div, Rem, Add, Sub] = do
         check (isNumConvertible t1) $ toUndef $
               "Numeric operator " ++ prettyPrint op ++
                 " used with non-numeric operand of type " ++ prettyPrint t1
@@ -1131,7 +1126,7 @@ opType op t1 t2
         return $ binaryNumPromote_ t1 t2
 
     -- Shift operators
-    | op `elem` (map ($(defaultPos)) [LShift, RShift, RRShift]) = do
+    | op `elem` map ($ defaultPos) [LShift, RShift, RRShift] = do
         check (isIntConvertible t1) $ toUndef $
               "Shift operator " ++ prettyPrint op ++
                 " used with non-integral operand of type " ++ prettyPrint t1
@@ -1141,7 +1136,7 @@ opType op t1 t2
         return $ unaryNumPromote_ t1
 
     -- Relational operators
-    | op `elem` (map ($(defaultPos)) [LThan, GThan, LThanE, GThanE]) = do
+    | op `elem` map ($ defaultPos) [LThan, GThan, LThanE, GThanE] = do
         check (isNumConvertible t1) $ toUndef $
               "Numerical comparison operator " ++ prettyPrint op ++
                " used with non-numeric operand of type " ++ prettyPrint t1

@@ -17,7 +17,7 @@ typeCheckTd :: TypeDecl -> TcBase ()
 typeCheckTd (ClassTypeDecl cd) = typeCheckCd cd
 
 typeCheckCd :: ClassDecl -> TcBase ()
-typeCheckCd (ClassDecl ms i tps _super _impls (ClassBody decls)) = do
+typeCheckCd (ClassDecl ms i tps _super _impls (ClassBody decls)) =
   mapM_ typeCheckDecl
 
 

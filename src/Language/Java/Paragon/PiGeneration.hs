@@ -24,7 +24,7 @@ transformCompilationUnit (CompilationUnit _ mpDecl _  [tdecl])
         where prePre = fmap (\(PackageDecl _ n) -> n) mpDecl
               preName = Name () TName prePre i
               (i, locals) = gatherLocalAlps tdecl
-transformCompilationUnit _ = panic (piGenModule ++ ".transformCompilationUnit") $
+transformCompilationUnit _ = panic (piGenModule ++ ".transformCompilationUnit")
                              "More than one type decl"
 
 gatherLocalAlps :: TypeDecl () -> (Ident (), [Ident ()])
@@ -34,7 +34,7 @@ gatherLocalAlps td =
           (i, filterAlps (unDecl ds))
       InterfaceTypeDecl _ (InterfaceDecl _ _ i _ _ (InterfaceBody _ mds)) ->
           (i, filterAlps mds)
-      _ -> panic (piGenModule ++ ".gatherLocalAlps") $ "Enum??"
+      _ -> panic (piGenModule ++ ".gatherLocalAlps") "Enum??"
 
 -- disregard initializers
 unDecl :: [Decl ()] -> [MemberDecl ()]
@@ -45,8 +45,7 @@ unDecl (_ : ds) = unDecl ds
 filterAlps :: [MemberDecl ()] -> [Ident ()]
 filterAlps = go []
   where go :: [Ident ()] -> [MemberDecl ()] -> [Ident ()]
-        go acc [] = acc
-        go acc (md:mds) = go (filterAlp md acc) mds
+        go acc mds = foldl (flip filterAlp) acc mds
 
         filterAlp :: MemberDecl () -> [Ident ()] -> [Ident ()]
         filterAlp md =
@@ -72,13 +71,13 @@ transformDecl (MemberDecl _ md) = [MemberDecl () $ transformMemberDecl md]
 transformDecl _ = []
 ----------------
 transformInterfaceBody :: InterfaceBody () -> ClassBody ()
-transformInterfaceBody (InterfaceBody _ mds) = ClassBody () $ (\md->MemberDecl () (transformMemberDecl md))<$>mds
+transformInterfaceBody (InterfaceBody _ mds) = ClassBody () $ (MemberDecl () . transformMemberDecl) <$> mds
 -------------
 transformMemberDecl :: MemberDecl () -> MemberDecl ()
 transformMemberDecl f@(FieldDecl _ _ t _)
     | t == PrimType () (ActorT ()) || t == PrimType () (PolicyT ()) = f
 --transformMemberDecl f@(FieldDecl _ _ [typeQQ| policy |] _) = f
-transformMemberDecl (FieldDecl _ fmods ft vdecs) = (FieldDecl () fmods ft (transformVarDecls vdecs))
+transformMemberDecl (FieldDecl _ fmods ft vdecs) = FieldDecl () fmods ft (transformVarDecls vdecs)
 transformMemberDecl m@(MethodDecl _ mmods mtparams mmaybet mident mformparams mexceptionspecs mb)
   | Typemethod () `elem` mmods  = m
   | otherwise  = MethodDecl () mmods mtparams mmaybet mident mformparams mexceptionspecs (transformMethodBody mb)

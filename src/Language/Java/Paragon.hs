@@ -36,9 +36,9 @@ main = do
   (flags, files) <- compilerOpts =<< getArgs
 
   -- Parse verbosity flags and set using 'setVerbosity'.
-  mapM_ setVerbosity $ [ k | Verbose k <- flags ]
+  mapM_ setVerbosity [ k | Verbose k <- flags ]
 
-  setCheckNull (not $ NoNullCheck `elem` flags)
+  setCheckNull (NoNullCheck `notElem` flags)
 
   when (Version `elem` flags) -- When the flag Version is set
            $ normalPrint paracVersionString -- Print the version string (the
@@ -49,13 +49,13 @@ main = do
            $ normalPrint $ usageInfo usageHeader options
 
   -- When files are specified, try to compile them
-  when (not (null files)) $
+  unless (null files) $
     -- Case distinction only done to not break test suite:
     -- It expects explicit fail signaling
     if length files == 1 then
       do res <- compile flags (head files)
          hasErrors <- handleErrors flags [res]
-         if hasErrors then (exitWith $ ExitFailure (-1)) else return ()
+         when hasErrors (exitWith $ ExitFailure (-1))
     else
       do res <- multiCompile flags files
          _ <- handleErrors flags res
@@ -119,9 +119,9 @@ compilerOpts argv =
 -- Returns true iff there was at least one error
 handleErrors :: [Flag] -> [(String, [Error])] -> IO Bool
 handleErrors flags errors = do
-  mapM_ (if (OldSkool `elem` flags) then errorTxtOld else
-           if (Eclipse `elem` flags) then errorEclipse else errorTxt) errors -- TODO should be different function for XML ofc.
-  return . not . null $ concat $ map snd errors
+  mapM_ (if OldSkool `elem` flags then errorTxtOld else
+           if Eclipse `elem` flags then errorEclipse else errorTxt) errors -- TODO should be different function for XML ofc.
+  return . not . null $ concatMap snd errors
 
 -- | Collect paths to interface files from options and environment
 buildPiPath :: [Flag] -> String -> IO [String]
@@ -160,7 +160,7 @@ compile flags filePath = do
 
   -- Compilation
   res <- runBaseM . withDefaultErrCtxt $ compilationStages pDirs fc
-  return $ (filePath, either id (\_ -> []) res) -- Return possibly empty list of errors
+  return (filePath, either id (const []) res) -- Return possibly empty list of errors
 
    where withDefaultErrCtxt = withErrCtxt EmptyContext
          compilationStages pDirs fc = do
@@ -205,7 +205,7 @@ genFiles :: [Flag] -> FilePath -> CompilationUnit T -> IO ()
 genFiles flags filePath ast  = let -- create .java ast
                              astC      = compileTransform ast
                              -- create .pi ast
-                             astPi     = piTransform (fmap (const ()) ast)
+                             astPi     = piTransform (void ast)
                              -- output to right files
                              baseName  = takeBaseName filePath
                              directory = takeDirectory filePath

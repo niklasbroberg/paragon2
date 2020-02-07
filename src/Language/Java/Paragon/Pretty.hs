@@ -403,7 +403,7 @@ instance Pretty (Exp a) where
 
   pretty (ArrayCreateInit _ t ps ainit) =
     text "new"
-        <+> hcat (pretty t : map ppArrayDim (map (Nothing,) ps))
+        <+> hcat (pretty t : map (ppArrayDim . (Nothing,)) ps)
         <+> pretty ainit
 
   pretty (FieldAccess _ fa) = pretty fa

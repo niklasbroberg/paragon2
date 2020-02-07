@@ -16,11 +16,11 @@ newPos :: String -> Int -> Int -> SourcePos
 newPos = SourcePos
 
 instance Eq SourcePos where
-  (==) = (\_ _ -> True)
+  _ == _ = True
 
 -- Also provide instance for Ord, since Map.lookup uses that...
 instance Ord SourcePos where
-  (<=) = (\_ _ -> True)
+  _ <= _ = True
 
 -- | Real equality operation
 realEqSourcePos :: SourcePos -> SourcePos -> Bool
@@ -28,8 +28,8 @@ realEqSourcePos (SourcePos p1 l1 c1)
                 (SourcePos p2 l2 c2) = p1 == p2 && l1 == l2 && c1 == c2
 
 instance Show SourcePos where
-  show (SourcePos p l c) = p ++ " (line " ++ (show l) ++ ", column " ++
-                           (show c) ++ ")"
+  show (SourcePos p l c) = p ++ " (line " ++ show l ++ ", column " ++
+                           show c ++ ")"
 
 -- On purpose no type def, would have been:
 -- extractPSPos :: SourcePos -> PS.SourcePos

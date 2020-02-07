@@ -185,7 +185,7 @@ instance HasSubTyping m =>
   inSet _aid NoActor      = return False
 
   enumSetMembers (SingletonActor aid) = return $ Just [aid]
-  enumSetMembers (TypedActor{}) = return Nothing
+  enumSetMembers TypedActor{} = return Nothing
   enumSetMembers NoActor = return $ Just []
 
 
@@ -261,7 +261,7 @@ instance Pretty MetaVarRep where
 instance (Pretty name) =>
     Pretty (Clause name ActorSetRep) where
   pretty (Clause h es b) =
-      let qs = [ ta | ta@(TypedActor{}) <- es ]
+      let qs = [ ta | ta@TypedActor{} <- es ]
       in (if null qs
           then id
           else (parens (hcat (punctuate comma $ map pretty qs)) <+>)) $
@@ -285,7 +285,7 @@ prettySetRep as = pretty as
 instance Pretty ActorSetRep where
     pretty (TypedActor rty bx) = pretty rty <+> pretty bx
     pretty (SingletonActor aid) = pretty aid
-    pretty (NoActor) = text "-"
+    pretty NoActor = text "-"
 
 {-
 instance Pretty TcAtom where

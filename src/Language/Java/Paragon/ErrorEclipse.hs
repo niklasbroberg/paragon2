@@ -4,27 +4,11 @@ module Language.Java.Paragon.ErrorEclipse (errorEclipse) where
 import Language.Java.Paragon.Error
 import Language.Java.Paragon.SourcePos
 
--- | Comvert context information into a string, always ends with a new line.
-contextTxt :: ContextInfo -> String
-contextTxt (ClassContext s) =
-  "In the context of class " ++ s ++ ":\\n"
-contextTxt (MethodContext s) =
-  "In the context of method " ++ s ++ ":\\n"
-contextTxt (LockStateContext s) =
-  "In the context of lock state " ++ s ++ ":\\n"
-contextTxt (LockSignatureContext s) =
-  "When checking the signature of lock " ++ s ++ ":\\n"
-contextTxt (ConstructorBodyContext s) =
-  "When checking the body of constructor " ++ s ++ ":\\n"
-contextTxt EmptyContext = ""
-contextTxt (FallbackContext s) =
-  "In fallback context " ++ s ++ ":\\n"
-
 -- | Prints error information for all errors found in this file
 errorEclipse :: (String, [Error]) -> IO ()
 errorEclipse (_, []) = return ()
 errorEclipse (_, err) =
-  mapM_ (\(Error info pos context) -> do
+  mapM_ (\(Error info pos _context) -> do
     putStr   $ dispSourcePos pos
     putStrLn $ errorTxt' info
     ) (reverse err)
@@ -35,11 +19,11 @@ errorEclipse (_, err) =
 -- the default, in which case only the name of the file is shown).
 dispSourcePos :: SourcePos -> String
 dispSourcePos pos =
-  if (realEqSourcePos pos defaultPos)
+  if realEqSourcePos pos defaultPos
     then "1:1:1:"
-    else (show $ sourceLine pos)         ++ ":" ++
-         (show $ (sourceColumn pos) - 1) ++ ":" ++
-         (show $ (sourceColumn pos) - 1) ++ ":"
+    else show (sourceLine pos)       ++ ":" ++
+         show (sourceColumn pos - 1) ++ ":" ++
+         show (sourceColumn pos - 1) ++ ":"
 
 -- | Convert an error to a human readable string
 errorTxt' :: ErrorInfo -> String
@@ -66,8 +50,8 @@ errorTxt' (FileClassMismatchFetchType fname cname) =
 
 -- TcExp
 errorTxt' (LArityMismatch lname expr got) =
-  "Lock " ++ lname ++ " expects " ++ (show expr) ++ " arguments, but has been "
-  ++ "given " ++ (show got) ++ "."
+  "Lock " ++ lname ++ " expects " ++ show expr ++ " arguments, but has been "
+  ++ "given " ++ show got ++ "."
 
 errorTxt' (FieldLRTObject field obj opol fpol) =
   "Cannot update field " ++ field ++ " of object " ++ obj ++

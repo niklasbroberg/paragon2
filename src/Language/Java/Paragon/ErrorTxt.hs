@@ -27,7 +27,7 @@ errorTxt (_, []) = return ()
 errorTxt (file, err) =
   mapM_ (\(Error info pos context) -> do
     dispSourcePos file pos
-    putStrLn $ concat (map contextTxt (reverse context)) ++ errorTxt' info
+    putStrLn $ concatMap contextTxt (reverse context) ++ errorTxt' info
     putStrLn ""
     ) (reverse err)
 
@@ -35,7 +35,7 @@ errorTxt (file, err) =
 errorTxtOld :: (String, [Error]) -> IO ()
 errorTxtOld (_, []) = return ()
 errorTxtOld (_, [Error info _pos context]) = do
-  putStrLn $ concat (map contextTxt (reverse context)) ++ errorTxt' info
+  putStrLn $ concatMap contextTxt (reverse context) ++ errorTxt' info
   exitWith $ ExitFailure (-1)
 errorTxtOld (s, _e:err) = errorTxtOld (s, err)
 
@@ -45,7 +45,7 @@ errorTxtOld (s, _e:err) = errorTxtOld (s, err)
 -- the default, in which case only the name of the file is shown).
 dispSourcePos :: String -> SourcePos -> IO ()
 dispSourcePos file pos =
-  if (realEqSourcePos pos defaultPos)
+  if realEqSourcePos pos defaultPos
     then do
       putStrLn $ "In " ++ file ++ " at unknown line:"
     else do
@@ -113,8 +113,8 @@ errorTxt' (NonStaticFieldReferencedFromStatic fieldName) =
 
 -- TcExp
 errorTxt' (LArityMismatch lname expr got) =
-  "Lock " ++ lname ++ " expects " ++ (show expr) ++ " arguments, but has been "
-  ++ "given " ++ (show got) ++ "."
+  "Lock " ++ lname ++ " expects " ++ show expr ++ " arguments, but has been "
+  ++ "given " ++ show got ++ "."
 
 errorTxt' (FieldLRTObject field obj opol fpol) =
   "Cannot update field " ++ field ++ " of object " ++ obj ++

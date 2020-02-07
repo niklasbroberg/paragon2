@@ -9,8 +9,8 @@ import Language.Java.Paragon.Interaction
 
 import Data.Generics.Uniplate.Data
 import Data.List (nub, union, delete)
---import Data.Maybe (fromJust)
 import Control.Arrow ((***))
+import Control.Monad (void)
 
 import qualified Data.ByteString.Char8 as B
 
@@ -54,7 +54,7 @@ compileClassDecl (ClassDecl _ ms i tps mSuper impls cbody) =
   in ClassDecl () ms' (voidAnn i) tps' mSuper' impls' $
        compileClassBody cbody tpMembers tpPars tpAsss
 compileClassDecl _ = panic (compilerModule ++ ".compileClassDecl")
-                     $ "Enum not supported"
+                           "Enum not supported"
 
 -- Paragon type parameters need to be replaced by runtime counterparts.
 -- 1. Lock state parameters should be removed completed.
@@ -97,12 +97,12 @@ splitTypeParams = go ([],[],[],[]) -- error "compileTypeParams undefined"
 
 compileClassBody :: ClassBody T -> [MemberDecl ()] -> [FormalParam ()] -> [BlockStmt ()] -> ClassBody ()
 compileClassBody (ClassBody _ ds) tpMembers tpPars tpAsss =
-  let ds' = concat $ map (compileDecl tpPars tpAsss) ds
+  let ds' = concatMap (compileDecl tpPars tpAsss) ds
   in ClassBody () (map (MemberDecl ()) tpMembers ++ ds')
 
 compileDecl :: [FormalParam ()] -> [BlockStmt ()] -> Decl T -> [Decl ()]
-compileDecl _ _ (InitDecl _ _ _) = panic (compilerModule ++ ".compileDecl")
-                                   $ "InitDecl not yet supported"
+compileDecl _ _ InitDecl{} = panic (compilerModule ++ ".compileDecl")
+                               "InitDecl not yet supported"
 compileDecl tpPars tpAsss (MemberDecl _ md) = compileMemberDecl tpPars tpAsss md
 
 compileMemberDecl :: [FormalParam ()] -> [BlockStmt ()] -> MemberDecl T -> [Decl ()]
@@ -158,12 +158,7 @@ compileFormalParam :: FormalParam T -> FormalParam ()
 compileFormalParam (FormalParam _ ms t va vid) =
     FormalParam () (removeParagonMods ms) (compileType t) va (voidAnn vid)
 
-actorVarDecl, policyVarDecl, compileVarDecl :: VarDecl T -> VarDecl ()
-actorVarDecl (VarDecl _ (VarId _ i@(Ident _ rawI)) Nothing)
-    = -- [varDeclQQ| $$i = Actor.newConcreteActor($s$rawI) |]
-      vDecl (voidAnn i) $ callStatic "Actor" "newConcreteActor"
-                             [Lit () $ String () $ B.unpack rawI]
-actorVarDecl vd = compileVarDecl vd
+policyVarDecl, compileVarDecl :: VarDecl T -> VarDecl ()
 
 policyVarDecl (VarDecl _ (VarId _ i@(Ident _ rawI))
                            (Just (InitExp _ (PolicyExp _ (PolicyLit _ cs)))))
@@ -247,7 +242,7 @@ compileStmt (Open t (Lock _ lN aN )) = ExpStmt () $ MethodInv () $ MethodCallOrL
 compileStmt (Close t (Lock _ lN aN )) = ExpStmt () $ MethodInv () $ MethodCallOrLockQuery ()
          (Name () MName (Just $ voidAnn lN)
                    (Ident () (B.pack "close")))
-         $ map (compileExp . (\(ActorName _ x) -> (ExpName t x))) aN
+         $ map (compileExp . (\(ActorName _ x) -> ExpName t x)) aN
 compileStmt (OpenBlock  _ _ bl) = StmtBlock () $ compileBlock bl
 compileStmt (CloseBlock _ _ bl) = StmtBlock () $ compileBlock bl
 
@@ -303,7 +298,7 @@ compileExp (ArrayCreate _ t edims idims) =
     let edims' = map (compileExp *** const Nothing) edims
         idims' = map (const Nothing) idims
     in ArrayCreate () (compileType t) edims' idims'
-compileExp e@(ArrayCreateInit{}) =
+compileExp e@ArrayCreateInit{} =
     error $ "Compilation of ArrayCreateInit not yet supported: " ++ prettyPrint e
 
 compileExp (FieldAccess _ fa) = FieldAccess () $ compileFieldAccess fa
@@ -336,7 +331,7 @@ compileExp (Cond _ c th el) = Cond () (compileExp c) (compileExp th) (compileExp
 compileExp (Assign _ lhs aop e) = compileAOp (voidAnn aop) lhs e
 --    Assign () (compileLhs lhs) (compileAOp aop) (compileExp e)
 
-compileExp e@(InstanceOf{}) =
+compileExp e@InstanceOf{} =
     error $ "Compilation of InstanceOf not yet supported: " ++ prettyPrint e
 
 -- Lit, This, ThisClass, AntiQExp
@@ -353,17 +348,16 @@ compileMethodInv mi = case mi of
 
   MethodCallOrLockQuery _ n as -> MethodCallOrLockQuery () (voidAnn n) $ map compileExp as
   PrimaryMethodCall _ e tas i as ->
-      let isNative = maybe False snd $ ann mi
-          (trueTas,demotedArgs) = splitNWTypeArgs tas
+      let (trueTas,demotedArgs) = splitNWTypeArgs tas
           args = (if isNative then id else (demotedArgs ++)) $ map compileExp as
        in PrimaryMethodCall () (compileExp e) trueTas (voidAnn i) args
   TypeMethodCall _ n tas i as ->
-      let isNative = maybe False snd $ ann mi
-          (trueTas,demotedArgs) = splitNWTypeArgs tas
+      let (trueTas,demotedArgs) = splitNWTypeArgs tas
           args = (if isNative then id else (demotedArgs ++)) $ map compileExp as
        in TypeMethodCall () (voidAnn n) trueTas (voidAnn i) args
   _ -> panic (compilerModule ++ ".compileMethodInv")
        $ prettyPrint mi
+  where isNative = maybe False snd $ ann mi
 
 splitTypeArgs :: [TypeArgument T] -> ([TypeArgument ()], [Argument ()])
 splitTypeArgs = go ([], [])
@@ -371,7 +365,7 @@ splitTypeArgs = go ([], [])
       go (ttas, as) [] = (reverse ttas, reverse as)
       go (ttas, as) (ta:tas) =
           case ta of
-            Wildcard{} -> panic (compilerModule ++ ".splitTypeArgs") $
+            Wildcard{} -> panic (compilerModule ++ ".splitTypeArgs")
                           "Wildcards not yet supported"
                           -- go (compileWildcard ta:ttas, as) tas
             ActualArg _ nwta ->
@@ -501,7 +495,7 @@ clauseHeadToActor (ClauseDeclHead _ (ClauseVarDecl _ _ i)) = Var () i
 clauseHeadToActor (ClauseVarHead _ a) = a
 
 clauseHeadToExp :: [(Ident (), Int)] -> ClauseHead T -> Exp ()
-clauseHeadToExp vs (ClauseDeclHead _ (ClauseVarDecl t _ i)) =
+clauseHeadToExp vs (ClauseDeclHead _ (ClauseVarDecl _ _ i)) =
     actorToExp vs (Var Nothing i)
 clauseHeadToExp vs (ClauseVarHead _ a) = actorToExp vs a
 
@@ -626,4 +620,4 @@ policyType        = mkPkgType "Policy"
 lockType          = mkPkgType "Lock"
 
 voidAnn :: Annotated ast => ast a -> ast ()
-voidAnn = fmap (const ())
+voidAnn = void

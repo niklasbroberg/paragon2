@@ -80,7 +80,7 @@ instance ActorId ActorIdSpec where
 instance Pretty ActorIdSpec where
   pretty (ConcreteActorId aid) = pretty aid
   pretty (ActorTPVar i) = pretty i
-  pretty (ThisId) = text "this"
+  pretty ThisId = text "this"
 
 instance ActorId TypedActorIdSpec where
   TypedActorIdSpec _ aid1 `mayEq` TypedActorIdSpec _ aid2

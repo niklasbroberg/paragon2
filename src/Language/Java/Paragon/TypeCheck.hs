@@ -16,20 +16,16 @@ import Language.Java.Paragon.TypeCheck.Types
 import Language.Java.Paragon.TypeCheck.TypeMap
 import Language.Java.Paragon.TypeCheck.NullAnalysis
 
-import Control.Monad (when, foldM, void)
+import Control.Monad (unless, foldM, foldM_)
 import qualified Data.Map as Map
 import Data.Map((!))
 import qualified Data.Set as Set
 import qualified Data.ByteString.Char8 as B
 import Data.Maybe
-import Data.List (intersperse, unzip4)
+import Data.List (intercalate, unzip4)
 import Control.Applicative ((<$>))
 import Control.Arrow (second)
 
--- import Data.Data ()
--- import Data.Generics.Uniplate.Data (transformBi)
-
---typeCheck :: FilePath -> CompilationUnit () -> BaseM (CompilationUnit T)
 -- | Generate
 typeCheck :: PiPath -- ^ Paths to pi files
           -> String -- ^ Base name of the file
@@ -92,7 +88,7 @@ typeCheckCd baseName mpkg (ClassDecl sp ms i tps mSuper _impls (ClassBody _ decl
   staticWPol <- PL.VarPolicy <$> getWritePolicy ms
 
   let memberDecls = [ mdecl | MemberDecl _ mdecl  <- decls ]
-      inits       = [ idecl | idecl@(InitDecl {}) <- decls ]
+      inits       = [ idecl | idecl@InitDecl {}   <- decls ]
       supers      = maybe [objectType] (:[]) mSuper
   withFoldMap withTypeParam tps $ do
   registerThisType mpkg i tps supers
@@ -128,7 +124,7 @@ typeCheckCd _ _ _ = panic (typeCheckerBase ++ ".typeCheckCd")
 objectType :: ClassType SourcePos
 objectType = ClassType defaultPos
               (mkName_ TName PName $
-               map (\s -> Ident defaultPos (B.pack s)) ["java","lang","Object"]) []
+               map (Ident defaultPos . B.pack) ["java","lang","Object"]) []
 
 registerThisType :: Maybe (Name SourcePos)
                  -> Ident SourcePos
@@ -154,7 +150,7 @@ registerThisType pkgPre i tps supers = do
                         True False cTys [] thisTM
     --debugPrint $ "regThisType[thisTM]:\n " ++ prettyPrint thisTM -- show (methods thisTM)
     extendGlobalTypeMap (extendTypeMapT iN    tps [] thisSig)
-    when (not (pkgPre == Nothing)) $
+    unless (isNothing pkgPre) $
          extendGlobalTypeMap (extendTypeMapT fullN tps [] thisSig)
 
 
@@ -169,7 +165,7 @@ registerThisTypeSigs pkgPre i tps supers = do
                        Left mErr
                            -> panic (typeCheckerBase ++ ".withSuperType")
                               $ "Super type evaluated but now doesn't exist: " ++ show mErr
-                       Right (_,superSig) -> (tMembers superSig) -- { constrs = Map.empty }
+                       Right (_,superSig) -> tMembers superSig -- { constrs = Map.empty }
 
   let iN    = Name defaultPos TName Nothing i
       fullN = Name defaultPos TName pkgPre  i
@@ -180,7 +176,7 @@ registerThisTypeSigs pkgPre i tps supers = do
   --debugPrint $ "regThisTypeSigs: " ++ show (methods resTm)
   extendGlobalTypeMap (merge resTm)
   extendGlobalTypeMap (extendTypeMapT iN    tps [] thisSig)
-  when (not (pkgPre == Nothing)) $
+  unless (isNothing pkgPre) $
        extendGlobalTypeMap (extendTypeMapT fullN tps [] thisSig)
 
 
@@ -195,9 +191,9 @@ typeCheckActorFields mDecls tcba = do
     --debug "fetchActors"
     let acts = [ (ms, rt, vd)
                      | FieldDecl _ ms (RefType _ rt) vds <- mDecls
+                     , Final defaultPos `elem` ms
                      , vd <- vds
                      -- Only final ones can be used in policies
-                     , Final defaultPos `elem` ms
                ]
     debugPrint $ "Actors: " ++ show acts ++ "\n"
     --let -- (sfs,unstables)  = partition (\(ms, _) -> Static () `elem` ms) acts
@@ -209,21 +205,8 @@ typeCheckActorFields mDecls tcba = do
         debugPrint "fetchActors complete"
         tcba
 
-            where spawnActorVd, evalActorVd -- , unknownActorVd
-                      ::  ([Modifier SourcePos], RefType SourcePos, VarDecl SourcePos)
+            where evalActorVd :: ([Modifier SourcePos], RefType SourcePos, VarDecl SourcePos)
                       -> TcDeclM a -> TcDeclM a
-                  -- Only Nothing for initializer
-                  spawnActorVd (ms, rt, VarDecl _ (VarId _ i) _) tcra = do
-                    rTy <- evalSrcRefType genBot rt
-                    a <- PL.TypedActorIdSpec rTy . PL.ConcreteActorId <$> freshActorId (prettyPrint i)
-                    p <- PL.VarPolicy <$> getReadPolicy ms
-                    let vti = VSig (TcRefT rTy) p False
-                              (Static defaultPos `elem` ms) (Final defaultPos `elem` ms) False
-                    withCurrentTypeMap (\tm -> return $ tm { actors = Map.insert (unIdent i) a (actors tm),
-                                                             fields = Map.insert (unIdent i) vti (fields tm) }) $
-                      tcra
-                  spawnActorVd (_, _, VarDecl _ arvid _) _ =
-                      fail $ "Deprecated array syntax not supported: " ++ prettyPrint arvid
 
 {-                  -- All non-final OR non-static
                   unknownActorVd (ms, VarDecl _ (VarId _ i) _) tcra = do
@@ -238,7 +221,7 @@ typeCheckActorFields mDecls tcba = do
                       fail $ "Deprecated array syntax not supported: " ++ prettyPrint arvid
 -}
                   -- Final
-                  evalActorVd (ms, rt, VarDecl sp (VarId _ i) mInit) tcra = do
+                  evalActorVd (_ms, rt, VarDecl _sp (VarId _ i) mInit) tcra = do
                     rTy <- evalSrcRefType genBot rt
 --                    p <- PL.VarPolicy <$> getReadPolicy ms
 --                    let vti = VSig (TcRefT rTy) p False
@@ -270,9 +253,7 @@ typeCheckActorFields mDecls tcba = do
                                               fields = Map.insert iName vti tmFields }
                            else failEither $ mkError (FieldAlreadyDefined (B.unpack iName)) sp) $
 -- to here -}
-                    withCurrentTypeMap (\tm -> return $ tm { actors = Map.insert (unIdent i) a (actors tm) }) $
-                                                    --fields = Map.insert (unIdent i) vti (fields tm) }) $
-                      tcra
+                    withCurrentTypeMap (\tm -> return $ tm { actors = Map.insert (unIdent i) a (actors tm) }) tcra
 --                  evalActorVd (_,_, VarDecl _ _ Nothing) _ = panic (typeCheckerBase ++ ".evalActorVd") $ "No initializer"
                   evalActorVd (_,_, VarDecl _ arvid _)   _ = fail $ "Deprecated array syntax not supported: " ++ prettyPrint arvid
 
@@ -285,12 +266,12 @@ typeCheckTMPolLocks :: [MemberDecl SourcePos] -> TcDeclM a -> TcDeclM a
 typeCheckTMPolLocks = withFoldMap typeCheckTMPolLock
 
 typeCheckTMPolLock :: MemberDecl SourcePos -> TcDeclM a -> TcDeclM a
-typeCheckTMPolLock md@(LockDecl{}) tcba = typeCheckLockDecl md tcba
+typeCheckTMPolLock md@LockDecl{} tcba = typeCheckLockDecl md tcba
 typeCheckTMPolLock md@(MethodDecl _ ms _ _ _ _ _ _) tcba
                    | Typemethod defaultPos `elem` ms = typeCheckTMSig md $ do
                                                  st <- setupStartState
                                                  _ <- typeCheckMethodDecl st md
-                                                 addTMBody md $ tcba
+                                                 addTMBody md tcba
 typeCheckTMPolLock md@(FieldDecl _ ms (PrimType _ (PolicyT _)) _) tcba
                    | Final defaultPos `elem` ms = typeCheckPolicyField md tcba
 typeCheckTMPolLock _ tcba = tcba
@@ -307,7 +288,7 @@ typeCheckLockDecl :: MemberDecl SourcePos -> TcDeclM a -> TcDeclM a
 typeCheckLockDecl (LockDecl _ ms i rts mProps) tcba = do
   lsig <- withErrCtxt (LockSignatureContext (prettyPrint i)) $ do
     let rPolExps = [ e | Reads _ e <- ms ]
-    check (length rPolExps <= 1) $ toUndef $
+    check (length rPolExps <= 1) $ toUndef
               "At most one read modifier allowed per field"
     mapM_ (typeCheckPolicyMod emptyCodeState) rPolExps
     pol <- getLockPolicy ms
@@ -315,7 +296,7 @@ typeCheckLockDecl (LockDecl _ ms i rts mProps) tcba = do
     shortProps <- getLockModProps Nothing i ms
     prs <- evalSrcLockProps i mProps
     return $ LSig (PL.VarPolicy pol) rTys (shortProps ++ prs)
-  withCurrentTypeMap (\tm -> return $ tm { locks = Map.insert (unIdent i) lsig (locks tm) }) $
+  withCurrentTypeMap (\tm -> return $ tm { locks = Map.insert (unIdent i) lsig (locks tm) })
     tcba
 
 --typeCheckLockDecl (LockDecl _ _ _ _ _) _ = fail $ "Lock properties not yet supported"
@@ -342,17 +323,17 @@ typeCheckTMSig (MethodDecl _ ms tps retT i ps exns _) tcba = do
   newMethMap <- withErrCtxt (FallbackContext ("When checking signature of typemethod "
                                ++ prettyPrint i)) $ do
     -- 1. No type parameters
-    check (null tps) $  toUndef $ "No type parameters allowed on typemethod methods"
+    check (null tps) $ toUndef "No type parameters allowed on typemethod methods"
     -- 2. No interaction with policies or lock states
-    check (all (\m -> not (isPolicyMod m || isLockStateMod m)) ms) $ toUndef $
+    check (all (\m -> not (isPolicyMod m || isLockStateMod m)) ms) $ toUndef
           "Methods annotated with typemethod cannot have policy or lock state modifiers"
     -- 3. Same check for parameters
     let (pis, pmss) = unzip [ (unIdent pI, pms) | FormalParam _ pms _ _ (VarId _ pI) <- ps ]
         plms = [ m | m <- concat pmss, isPolicyMod m, isLockStateMod m ]
         nnp = [ pid | (pid, pms) <- zip pis pmss, Notnull defaultPos `elem` pms]
-    check (null plms) $ toUndef $ "Parameters to typemethods must not have policy modifiers"
+    check (null plms) $ toUndef "Parameters to typemethods must not have policy modifiers"
     -- 4. No exceptions may be thrown
-    check (null exns) $ toUndef $ "Methods annotated with typemethod may not throw exceptions"
+    check (null exns) $ toUndef "Methods annotated with typemethod may not throw exceptions"
     tyPs <- mapM (evalSrcType genBot) [ t | FormalParam _ _ t _ _ <- ps ]
     rTy <- evalReturnType genBot retT
     tp <- PL.topM
@@ -376,7 +357,7 @@ typeCheckTMSig (MethodDecl _ ms tps retT i ps exns _) tcba = do
         newMethMap = Map.singleton (tps, tyPs, isVarArity) mti
     return newMethMap
 
-  withCurrentTypeMap (\tm -> return $ tm { methods = Map.insertWith Map.union (unIdent i) newMethMap (methods tm) }) $
+  withCurrentTypeMap (\tm -> return $ tm { methods = Map.insertWith Map.union (unIdent i) newMethMap (methods tm) })
        tcba
 
 typeCheckTMSig md _ = panic (typeCheckerBase ++ ".typeCheckTMSig") $
@@ -408,12 +389,14 @@ typeCheckPolicyField fd@(FieldDecl _ ms t vds) tcba = do
   -- 0. Flatten
   let pols = [ (i, initz) | VarDecl _ (VarId _ i) initz <- vds ]
   vti <- withErrCtxt (FallbackContext ("When checking policy fields "
-                 ++ concat (intersperse ", " (map (prettyPrint . fst) pols)))) $ do
+                 ++ intercalate ", " (map (prettyPrint . fst) pols))) $ do
+
+
     -- 1. Check that initializer exists
-    check (all ((/= Nothing) . snd) pols) $ toUndef $
+    check (all ((/= Nothing) . snd) pols) $ toUndef
                "typeCheckPolicyField: Uninitialized policy"
     -- 2. Check that policy is bottom
-    check (null [ () | Reads _ _ <- ms ]) $ toUndef $
+    check (null [ () | Reads _ _ <- ms ]) $ toUndef
                "typeCheckPolicyField: Policy must have policy bottom"
     -- 3. Add signature to environment
     tcty <- evalSrcType genMeta t
@@ -432,7 +415,7 @@ typeCheckPolicyField fd@(FieldDecl _ ms t vds) tcba = do
     tp <- PL.topM
     _  <- typeCheckFieldDecl tp tp st fd
     -- 5. Evaluate the initializers
-    withFoldMap (evalAddPolicyInit st) (map (second fromJust) pols) $
+    withFoldMap (evalAddPolicyInit st) (map (second fromJust) pols)
       tcba
 
           where
@@ -458,7 +441,7 @@ evalAddPolicyInit st (i, InitExp _ eInit) tcba = do
   check (isPolicyType tyInit) $ toUndef $
         "Cannot initialize policy field " ++ prettyPrint i ++
         " with non-policy expression " ++ prettyPrint eInit ++ " of type " ++ prettyPrint tyInit
-  withCurrentTypeMap (\tm -> return $ tm { policies = Map.insert (unIdent i) tcPol (policies tm) }) $
+  withCurrentTypeMap (\tm -> return $ tm { policies = Map.insert (unIdent i) tcPol (policies tm) })
     tcba
 evalAddPolicyInit _ (i, arrInit) _ =
     fail $ "Cannot initialize policy field " ++ prettyPrint i ++
@@ -469,10 +452,10 @@ evalAddPolicyInit _ (i, arrInit) _ =
 
 typeCheckSignatures :: [MemberDecl SourcePos] -> (ActorPolicy -> TcDeclM a) -> TcDeclM a
 typeCheckSignatures mds tcbaf = do
-  debugPrint $ "Entering typeCheckSignatures..."
+  debugPrint "Entering typeCheckSignatures..."
   st <- setupStartState
   withFoldMap (typeCheckSignature st) mds $ do
-    debugPrint $ "Done with typeCheckSignatures"
+    debugPrint "Done with typeCheckSignatures"
     getConstrPol >>= tcbaf
 
 getConstrPol :: TcDeclM ActorPolicy
@@ -489,18 +472,18 @@ typeCheckSignature st _fd@(FieldDecl _ ms t vds) tcba
   debugPrint $ "typeCheckSignature: " ++ prettyPrint _fd
   let fis = [ i | VarDecl _ (VarId _ i) _ <- vds ]
   vti <- withErrCtxt (FallbackContext ("When checking signature for fields "
-                      ++ concat (intersperse ", " (map prettyPrint fis)))) $ do
+                      ++ intercalate ", " (map prettyPrint fis))) $ do
     -- 1. Check field type
     ty <- evalSrcType genMeta t
     debugPrint $ "Type evaluated to: " ++ show ty
     -- _  <- lookupTypeOfT ty <$> getTypeMap -- TODO
     -- 2. Typecheck and evaluate field policy
     let rPolExps = [ e | Reads _ e <- ms ]
-    check (length rPolExps <= 1) $ toUndef $
+    check (length rPolExps <= 1) $ toUndef
               "At most one read modifier allowed per field"
     mapM_ (typeCheckPolicyMod st) rPolExps
     rPol <- getReadPolicy ms
-    check (Final defaultPos `elem` ms || (not $ PL.includesThisVP rPol)) $ toUndef $
+    check (Final defaultPos `elem` ms || not (PL.includesThisVP rPol)) $ toUndef $
           prettyPrint (PL.thisP :: PL.PrgPolicy) ++
           " may not be used as the policy of non-final fields"
 
@@ -517,7 +500,7 @@ typeCheckSignature st _fd@(FieldDecl _ ms t vds) tcba
                  varFinal  = Final  defaultPos `elem` ms,
                  varNotnull = Notnull defaultPos `elem` ms
                }
-  withFoldMap (addField vti) vds $
+  withFoldMap (addField vti) vds
     tcba
 
         where addField :: VarFieldSig -> VarDecl SourcePos -> TcDeclM a -> TcDeclM a
@@ -556,10 +539,10 @@ typeCheckSignature st _fd@(FieldDecl _ ms t vds) tcba
 
 -- Methods
 typeCheckSignature st (MethodDecl sp ms tps retT i ps exns _mb) tcba
-    | not (Typemethod defaultPos `elem` ms) = do
+    | Typemethod defaultPos `notElem` ms = do
   -- debug $ "typeCheckSignature: " ++ prettyPrint (MethodDecl () ms tps retT i ps exns (MethodBody () Nothing))
   newMethMap <- withErrCtxt (FallbackContext ("When checking signature of method " ++ prettyPrint i ++ "("
-                             ++ concat (intersperse ", " [prettyPrint t | FormalParam _ _ t _ _ <- ps ]) ++ ")")) $ do
+                             ++ intercalate ", " [prettyPrint t | FormalParam _ _ t _ _ <- ps ] ++ ")")) $ do
     -- 0. Setup type params
     withFoldMap withTypeParam tps $ do
     -- 1. Check return type
@@ -576,7 +559,7 @@ typeCheckSignature st (MethodDecl sp ms tps retT i ps exns _mb) tcba
     -- 5. Typecheck and evaluate exception signatures
     xSigs <- withFoldMap withParam pInfos $ mapM (typeCheckExnSig st) exns
     -- 6. Add signature to typemap
-    rPol <- getReturnPolicy ms $ pPols -- IF GENERIC: map (TcRigidVar True) pIs
+    rPol <- getReturnPolicy ms pPols -- IF GENERIC: map (TcRigidVar True) pIs
     wPol <- getWritePolicy ms
     --debugPrint $ "Method " ++ prettyPrint i ++ " has wPol: " ++ show wPol
     let pnn = [x | (Just x) <- pMnn]
@@ -602,7 +585,7 @@ typeCheckSignature st (MethodDecl sp ms tps retT i ps exns _mb) tcba
       let newTm = tm { methods = Map.insertWith Map.union (unIdent i) newMethMap (methods tm) }
       if isOverloaded (methods newTm) (methods tm)
         then return newTm
-        else failEither $ mkError (MethodAlreadyDefined $ B.unpack (unIdent i)) sp) $
+        else failEither $ mkError (MethodAlreadyDefined $ B.unpack (unIdent i)) sp)
     tcba
   where
     -- Map.union did the job of checking for overloading because of the nature of keys
@@ -617,7 +600,7 @@ typeCheckSignature st (MethodDecl sp ms tps retT i ps exns _mb) tcba
 -- Constructors
 typeCheckSignature st (ConstructorDecl sp ms tps i ps exns _mb) tcba = do
   (pTs, isVA, cti) <- withErrCtxt (FallbackContext ("When checking signature of constructor " ++ prettyPrint i ++ "("
-                             ++ concat (intersperse ", " [prettyPrint t | FormalParam _ _ t _ _ <- ps ]) ++ ")")) $ do
+                             ++ intercalate ", " [prettyPrint t | FormalParam _ _ t _ _ <- ps ] ++ ")")) $ do
     -- 0. Setup type parameters
     withFoldMap withTypeParam tps $ do
     -- 1. Check parameter types and policy modifiers
@@ -653,7 +636,7 @@ typeCheckSignature st (ConstructorDecl sp ms tps i ps exns _mb) tcba = do
       let key = (tps, pTs, isVA)
       if Map.notMember key (constrs tm)
         then return $ tm { constrs = Map.insert key cti (constrs tm) }
-        else failEither $ mkError ConstructorAlreadyDefined sp) $
+        else failEither $ mkError ConstructorAlreadyDefined sp)
     tcba
 
 -- Locks -- already handled
@@ -729,7 +712,7 @@ typeCheckParam st (FormalParam _ ms t ell (VarId _ i)) = do
     checkPolicyMods st ms
        "typeCheckSignature: At most one read modifier allowed per parameter"
     rPol <- getParamPolicy (unIdent i) ms
-    let mNN = if (Notnull defaultPos `elem` ms) then Just $ unIdent i else Nothing
+    let mNN = if Notnull defaultPos `elem` ms then Just $ unIdent i else Nothing
     bt <- PL.bottomM
     return (if ell then arrayType ty bt else ty, unIdent i, rPol, mNN)
 typeCheckParam _ (FormalParam _ _ _ _ arvid) =
@@ -745,7 +728,7 @@ typeCheckPolicyMod st polExp = do
                                             ("policy modifier " ++ prettyPrint polExp) False) st
                                   (--liftBase (debug "inside runTC") >>
                                    tcExp polExp)
-  check (null cs) $ toUndef $ "Internal WTF: typeCheckPolicyMod: Constraints in policy exp?!?"
+  check (null cs) $ toUndef "Internal WTF: typeCheckPolicyMod: Constraints in policy exp?!?"
   check (isPolicyType ty) $ toUndef $ "Wrong type for policy expression: " ++ prettyPrint ty
   -- check that _pol is bottom shouldn't be necessary
   return polExp'
@@ -774,7 +757,7 @@ typeCheckInitDecl :: ActorPolicy -> CodeState -> Block SourcePos -> TcDeclM (Cod
 typeCheckInitDecl lim st bl = do
     tm <- getTypeMap
     (newSB,cs) <- runTcCodeM (simpleEnv lim False "initializer block" False) st $
-                      addBranchPCList (map (\s -> Ident defaultPos s) (Map.keys (fields tm))) $ do
+                      addBranchPCList (map (Ident defaultPos) (Map.keys (fields tm))) $ do
                         bl' <- tcBlock bl
                         s <- getState
                         return (s, bl')
@@ -792,11 +775,11 @@ typeCheckMemberDecls sLim cLim ms = do
   mapM (typeCheckMemberDecl sLim cLim st) ms
 
 typeCheckMemberDecl :: ActorPolicy -> ActorPolicy -> CodeState -> TypeCheck TcDeclM MemberDecl
-typeCheckMemberDecl sLim cLim st fd@(FieldDecl {}) =
+typeCheckMemberDecl sLim cLim st fd@FieldDecl{} =
     typeCheckFieldDecl sLim cLim st fd
-typeCheckMemberDecl _ _ st md@(MethodDecl {}) =
+typeCheckMemberDecl _ _ st md@MethodDecl{} =
     typeCheckMethodDecl st md
-typeCheckMemberDecl _ _ st cd@(ConstructorDecl {}) =
+typeCheckMemberDecl _ _ st cd@ConstructorDecl{} =
     typeCheckConstrDecl st cd
 typeCheckMemberDecl _ _ _ md = return $ notAppl md
 
@@ -826,11 +809,11 @@ typeCheckVarDecl lim st vd@(VarDecl _ (VarId _ i) mInit) = do
                    (rhsTy, rhsPol, e') <- tcExp e
                    mps <- fieldTy =<: rhsTy
                    case mps of
-                     Nothing -> fail $ "typeCheckVarDecl: type mismatch"
+                     Nothing -> fail "typeCheckVarDecl: type mismatch"
                      Just ps -> do
                         mapM_ (\(p,q) -> do
-                                 constraint PL.emptyLockSet p q $ toUndef $ "Cannot unify policy type parameters at method call"
-                                 constraint PL.emptyLockSet q p $ toUndef $ "Cannot unify policy type parameters at method call") ps
+                                 constraint PL.emptyLockSet p q $ toUndef "Cannot unify policy type parameters at method call"
+                                 constraint PL.emptyLockSet q p $ toUndef "Cannot unify policy type parameters at method call") ps
                         constraint PL.emptyLockSet rhsPol fieldPol $ toUndef $
                                        "Cannot assign result of expression " ++ prettyPrint e ++
                                        " with policy " ++ prettyPrint rhsPol ++
@@ -862,7 +845,7 @@ typeCheckMethodDecl st (MethodDecl _ ms tps _rt i ps _exs mb) = do
                  (MethodDecl defaultPos ms tps _rt i ps _exs (MethodBody defaultPos Nothing))
   withErrCtxt (MethodContext (prettyPrint i)) $ do
   withFoldMap withTypeParam tps $ do
-  tysPs <- mapM (evalSrcType genBot) $ [ t | FormalParam _ _ t _ _ <- ps ]
+  tysPs <- mapM (evalSrcType genBot) [ t | FormalParam _ _ t _ _ <- ps ]
   let isVarArity = case reverse ps of
                      [] -> False
                      (FormalParam _ _ _ b _ : _) -> b
@@ -905,13 +888,13 @@ typeCheckMethodDecl st (MethodDecl _ ms tps _rt i ps _exs mb) = do
 
   -- This little thing is what actually checks the body
   ((mb', endSt),cs) <- runTcCodeM env st $ do
-                         let nt = zip (map (\s -> Ident defaultPos s) pIs) tysPs
+                         let nt = zip (map (Ident defaultPos) pIs) tysPs
                          mapM_ (uncurry registerParamType) nt
                          mapM_ (\(pid,t) -> do
                                   st' <- getStateType (Just (mkSimpleName EName pid)) Nothing t
                                   updateStateType (Just (mkSimpleName EName pid, True)) t
                                                       (Just (setNullInStateType st' (NotNull, Free))) )
-                                            [(pid, t)| pid <- (map (\s -> Ident defaultPos s) nnps), (pj,t) <- nt, pid==pj]
+                                            [(pid, t)| pid <- map (Ident defaultPos) nnps, (pj,t) <- nt, pid==pj]
                          mb' <- tcMethodBody mb
                          checkReturnStmts mb
                          eSt <- getState
@@ -934,7 +917,7 @@ typeCheckConstrDecl st (ConstructorDecl _ ms tps ci ps _exs cb) = do
   --debug $ "Type-checking constructor:\n " ++ prettyPrint cd
   withFoldMap withTypeParam tps $ do
   -- Lookup the correct function signature
-  tysPs <- mapM (evalSrcType genBot) $ [ t | FormalParam _ _ t _ _ <- ps ]
+  tysPs <- mapM (evalSrcType genBot) [ t | FormalParam _ _ t _ _ <- ps ]
   let isVarArity = case reverse ps of
                      [] -> False
                      (FormalParam _ _ _ b _ : _) -> b
@@ -980,11 +963,12 @@ typeCheckConstrDecl st (ConstructorDecl _ ms tps ci ps _exs cb) = do
 
   -- This little thing is what actually checks the body
   ((cb',endSt),cs) <- runTcCodeM env st $ do
-                        let nt = zip (map (\s -> Ident defaultPos s) pIs) tysPs
+                        let nt = zip (map (Ident defaultPos) pIs) tysPs
                         mapM_ (uncurry registerParamType) nt
                         mapM_ (\(i,t) -> do
                                  st' <- getStateType (Just (mkSimpleName EName i)) Nothing t
-                                 updateStateType (Just (mkSimpleName EName i, True)) t (Just (setNullInStateType st' (NotNull, Free))) ) [(i, t)| i <- (map (\s -> Ident defaultPos s) nnps), (j,t) <- nt, i==j]
+                                 updateStateType (Just (mkSimpleName EName i, True)) t (Just (setNullInStateType st' (NotNull, Free))) )
+                          [(i, t) | i <- map (Ident defaultPos) nnps, (j,t) <- nt, i==j]
                         cb' <- tcConstrBody cb
                         eSt <- getState
                         return (cb', eSt)
@@ -1104,16 +1088,16 @@ isLockStateMod m =
 solve :: [PL.ConstraintWMsg] -> TcDeclM ()
 solve cs = do
   finePrint $ "Solving (" ++ show (length cs) ++ ") constraints... "
-  debugPrint $ "Constraints:\n"
+  debugPrint "Constraints:\n"
   mapM_ (debugPrint . show) cs
   checkM (PL.solve $ map fst cs) $
-         toUndef $ "The system failed to infer the set of unspecified policies"
-  finePrint $ "... Done!"
+         toUndef "The system failed to infer the set of unspecified policies"
+  finePrint "... Done!"
 
 -- | Checks for redeclaration of parameters
 checkParams :: [FormalParam SourcePos] -> TcDeclM ()
 checkParams ps = do
-  void (foldM (\argSet param ->
+  (foldM_ (\argSet param ->
           let parIdStr = unIdent $ getFormalParamId param
           in  if Set.member parIdStr argSet
                 then failE $

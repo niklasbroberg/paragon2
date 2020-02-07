@@ -144,7 +144,7 @@ extendVarEnv :: B.ByteString -> VarFieldSig -> TcCodeM a -> TcCodeM a
 extendVarEnv i vti = withEnv $ \env -> do
   let (oldVmap:oldVmaps) = vars env
   if Map.notMember i oldVmap
-    then return $ env { vars = (Map.insert i vti oldVmap) : oldVmaps }
+    then return $ env { vars = Map.insert i vti oldVmap : oldVmaps }
     else failE $ mkErrorFromInfo $ VariableAlreadyDefined (B.unpack i)
 
 lookupActorName :: ActorName SourcePos -> TcCodeM (TcStateType, ActorPolicy)
@@ -190,7 +190,7 @@ findBestMethod tArgs argTys argPs candidates = do
         isApplicable (tps, pIs, pTys, isVA) = do
           b1 <- checkArgs tps tArgs
           if b1 then do
-                  tyArgs <- mapM (uncurry $ evalSrcTypeArg genBot) $ zip tps tArgs
+                  tyArgs <- zipWithM (evalSrcTypeArg genBot) tps tArgs
                   let subst = zip pIs argPs
                   pTys' <- mapM (substTypeParPols subst) $
                                 instantiate (zip tps tyArgs) pTys
@@ -219,7 +219,7 @@ findBestMethod tArgs argTys argPs candidates = do
         checkTys True [p] [a] = do
           mps <- a `isAssignableTo` p
           case mps of
-            Just _ -> return $ mps
+            Just _ -> return mps
             Nothing -> bottomM >>= \bt -> a `isAssignableTo` arrayType p bt
         checkTys True [p] as = do
           mpps <- zipWithM isAssignableTo as (repeat p) -- [M [(P,P)]]
@@ -249,7 +249,7 @@ findBestMethod tArgs argTys argPs candidates = do
         moreSpecificThan (_,_,ps1,False) (_,_,ps2,False) = do
                                            mpss <- zipWithM isAssignableTo ps1 ps2 -- [M [(P,P)]]
                                            return $ isJust $ sequence mpss
-        moreSpecificThan _ _ = fail $ "Varargs not yet supported"
+        moreSpecificThan _ _ = fail "Varargs not yet supported"
 {-        moreSpecificThan (_,ps1,True ) (_,ps2,True ) = do
           let n = length ps1
               k = length ps2
@@ -291,11 +291,11 @@ lookupMethod mPre i tArgs argTys argPs = do
                            "Type " ++ prettyPrint preTy ++
                              " does not have a method named " ++ prettyPrint i ++
                              " matching argument types (" ++
-                             (unwords $ intersperse ", " $ map prettyPrint argTys) ++
+                             unwords (intersperse ", " $ map prettyPrint argTys) ++
                              ")"
                        Nothing -> "No method named " ++ prettyPrint i ++
                                   " matching argument types (" ++
-                                 (unwords $ intersperse ", " $ map prettyPrint argTys) ++
+                                 unwords (intersperse ", " $ map prettyPrint argTys) ++
                                  ") is in scope"
 
         (_:_:_) -> fail $ case mPreTy of
@@ -303,11 +303,11 @@ lookupMethod mPre i tArgs argTys argPs = do
                                 "Type " ++ prettyPrint preTy ++
                                   " has more than one most specific method " ++ prettyPrint i ++
                                   " matching argument types (" ++
-                                  (unwords $ intersperse ", " $ map prettyPrint argTys) ++
+                                  unwords (intersperse ", " $ map prettyPrint argTys) ++
                                   ")"
                             Nothing -> "More than one most specific method named " ++ prettyPrint i ++
                                        " matching argument types (" ++
-                                      (unwords $ intersperse ", " $ map prettyPrint argTys) ++
+                                      unwords (intersperse ", " $ map prettyPrint argTys) ++
                                       ") is in scope"
 
         [((tps,_,ts,isVA), aps)] ->
@@ -347,7 +347,7 @@ lookupLock mPre i@(Ident sp _) = do
 
 lookupFieldT :: TcStateType -> Ident SourcePos -> TcCodeM VarFieldSig
 lookupFieldT typ i = do
-  check (isRefType typ) $ toUndef $ "Not a reference type: " ++ (prettyPrint typ)
+  check (isRefType typ) $ toUndef ("Not a reference type: " ++ prettyPrint typ)
   aSig <- lookupTypeOfStateType typ
   case Map.lookup (unIdent i) (fields $ tMembers aSig) of
     Just vti -> return vti
@@ -373,14 +373,14 @@ lookupMethodT typ i tArgs argTys argPs = do
                 "Type " ++ prettyPrint typ ++
                             " does not have a method named " ++ prettyPrint i ++
                             " matching argument types (" ++
-                            (unwords $ intersperse ", " $ map prettyPrint argTys) ++
+                            unwords (intersperse ", " $ map prettyPrint argTys) ++
                             ")"
 
         (_:_:_) -> fail $
                      "Type " ++ prettyPrint typ ++
                                  " has more than one most specific method " ++ prettyPrint i ++
                                  " matching argument types (" ++
-                                 (unwords $ intersperse ", " $ map prettyPrint argTys) ++
+                                 unwords (intersperse ", " $ map prettyPrint argTys) ++
                                  ")"
 
         [((tps,_,ts,isVA), aps)] ->
@@ -423,13 +423,13 @@ lookupConstr ctyp tArgs pThis argTys argPs = do
     [] -> fail $ "Type " ++ prettyPrint ctyp ++
                  " does not have a constructor \
                   \matching argument types (" ++
-                 (unwords $ intersperse ", " $ map prettyPrint argTys) ++
+                 unwords (intersperse ", " $ map prettyPrint argTys) ++
                  ")"
     (_:_:_) ->
         fail $ "Type " ++ prettyPrint ctyp ++
                  " has more than one most specific \
                   \constructor matching argument types (" ++
-                 (unwords $ intersperse ", " $ map prettyPrint argTys) ++
+                 unwords (intersperse ", " $ map prettyPrint argTys) ++
                  ")"
     [((tps,_,ts,isVA), aps)] ->
         let sig = (tps, ts, isVA) in
@@ -707,7 +707,7 @@ equivTo (TcRefT rt1) (TcRefT rt2) = equivRefT rt1 rt2
              else equivTypeArgs tas1 tas2
 
         equivTypeArgs :: [TcTypeArg] -> [TcTypeArg] -> Maybe [(ActorPolicy, ActorPolicy)]
-        equivTypeArgs tas1 tas2 = concat <$> sequence (map (uncurry equivTypeArg) (zip tas1 tas2))
+        equivTypeArgs tas1 tas2 = concat <$> zipWithM equivTypeArg tas1 tas2
 
         equivTypeArg :: TcTypeArg -> TcTypeArg -> Maybe [(ActorPolicy, ActorPolicy)]
         equivTypeArg (TcActualPolicy p1) (TcActualPolicy p2) = Just [(p1, p2)]
@@ -732,7 +732,7 @@ isCastableTo t1 t2 = do
      -- Only the last one, that includes reference narrowing, can throw a ClassCastException.
      case (t1, t2) of
        (TcPrimT pt1, TcPrimT pt2) -> -- primitive (widening +) narrowing
-           return $ (if pt2 `elem` narrowConvert pt1 ++ widenNarrowConvert pt1 then Just [] else Nothing, False)
+           return (if pt2 `elem` narrowConvert pt1 ++ widenNarrowConvert pt1 then Just [] else Nothing, False)
        (TcRefT  rt1, TcPrimT pt2)
            | Just ct2 <- box pt2 -> do -- reference widening + unboxing AND
                                        -- reference narrowing + unboxing
@@ -807,12 +807,12 @@ instance HasSubTyping TcDeclM where
 -- Resolution thanks to the transitive closure.
 solveConstraints :: [ConstraintWMsg] -> TcDeclM ()
 solveConstraints cs = do
-      finePrint $ "Solving constraints..."
+      finePrint "Solving constraints..."
       debugPrint $ show (length cs)
       let wcs     = [c | (c, _) <- cs] -- TODO: Take error texts into account
       b <- solve wcs
       check b (toUndef "The system failed to infer the set of unspecified policies ")
-      finePrint $ "Constraints successfully solved!"
+      finePrint "Constraints successfully solved!"
 
 {-
 
@@ -872,7 +872,7 @@ scrambleT :: TcRefType -> Ident SourcePos -> Bool -> TcCodeM ()
 scrambleT rtyO iF fresh = setState =<< transformBiM scr =<< getState -- "updateStateM"
   where scr :: InstanceInfo -> TcCodeM InstanceInfo
         scr isig = do
-             appl <- liftTcDeclM $ (iType isig) `subTypeOf` rtyO
+             appl <- liftTcDeclM $ iType isig `subTypeOf` rtyO
              return $ if appl && not (fresh && iFresh isig)
                        then isig { iMembers = scrVM $ iMembers isig }
                        else isig

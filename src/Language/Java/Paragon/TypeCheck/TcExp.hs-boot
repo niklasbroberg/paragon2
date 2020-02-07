@@ -11,18 +11,16 @@ import Language.Java.Paragon.SourcePos
 import Language.Java.Paragon.TypeCheck.Policy
 import Language.Java.Paragon.TypeCheck.Actors
 import Language.Java.Paragon.TypeCheck.Locks
---import Language.Java.Paragon.TypeCheck.Monad.TcCodeM
 import Language.Java.Paragon.TypeCheck.Monad
 import Language.Java.Paragon.TypeCheck.Types
 import Language.Java.Paragon.TypeCheck.TypeMap
 import Language.Java.Paragon.TypeCheck.NullAnalysis
 
-import Data.List ( (\\) )
+import Data.List ((\\))
 import Data.Maybe (fromJust)
 import qualified Data.Map as Map
-import Control.Applicative ( (<$>) )
--- import Control.Arrow ( first, second )
-import Control.Monad ( when, foldM )
+import Control.Applicative ((<$>))
+import Control.Monad (when, foldM)
 
 import qualified Data.ByteString.Char8 as B ()
 {-

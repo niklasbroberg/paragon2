@@ -2,8 +2,7 @@
 module Language.Java.Paragon.Annotated where
 
 import Language.Haskell.TH
---import Language.Haskell.TH.Syntax
-import Control.Monad ((<=<))
+import Control.Monad ((<=<), void)
 
 class Functor ast => Annotated ast where
   ann :: ast l -> l
@@ -67,7 +66,7 @@ doCons (RecC c sts) = doCons $ NormalC c [(s, t) | (_, s, t) <- sts]
 doCons c = error (modName ++ ".doCons: Unhandled constructor: " ++ pprint c)
 
 removeAnnotation :: Annotated ast => ast l -> ast ()
-removeAnnotation = fmap (const ())
+removeAnnotation = void
 
 removeAnnotationMany :: Annotated ast => [ast l] -> [ast ()]
 removeAnnotationMany = map removeAnnotation
