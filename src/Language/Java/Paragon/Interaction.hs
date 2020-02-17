@@ -73,32 +73,6 @@ checkNull = readIORef unsafeCheckNullGlobalVar
 setCheckNull :: Bool -> IO ()
 setCheckNull b = writeIORef unsafeCheckNullGlobalVar b
 
--------------------------------------------------------------
--- Generate XML output
--- [Currently unused]
-
-{-
-{-# NOINLINE unsafeXmlOutputGlobalVar #-}
-
-unsafeXmlOutputGlobalVar :: IORef Bool
-unsafeXmlOutputGlobalVar = unsafePerformIO $ newIORef False
-
-getXmlOutput :: IO Bool
-getXmlOutput = readIORef unsafeXmlOutputGlobalVar
-
-enableXmlOutput :: IO ()
-enableXmlOutput = writeIORef unsafeXmlOutputGlobalVar True
--}
---xmlOutput :: IORef XMLNode
---xmlOutput = unsafePerformIO $ newIORef $
---            XMLNode "parac" [XMLAttribute "version" versionString] []
-
---insertXMLNode :: XMLNode -> IO ()
---insertXMLNode n = readIORef (xmlOutput) >>= \x -> writeIORef xmlOutput (insertNode x n)
-
-
--------------------------------------------------------------
-
 -- | A function for generating bug report guidelines
 panic :: String -> String -> a
 panic cause extra = error $ "Panic! " ++ cause ++ " caused the impossible, \
