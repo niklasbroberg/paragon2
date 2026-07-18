@@ -13,20 +13,34 @@ Build-Type:             Simple
 Cabal-Version:          >= 1.8
 
 Extra-Source-Files:     src/Language/Java/Paragon/Lexer.x
-                        lib/se/chalmers/paragon/Actor.java
-                        lib/se/chalmers/paragon/ActorList.java
-                        lib/se/chalmers/paragon/ActorVariable.java
-                        lib/se/chalmers/paragon/Atom.java
-                        lib/se/chalmers/paragon/Clause.java
-                        lib/se/chalmers/paragon/ConcreteActor.java
-                        lib/se/chalmers/paragon/Lock.java
-                        lib/se/chalmers/paragon/LockArityError.java
-                        lib/se/chalmers/paragon/LockException.java
-                        lib/se/chalmers/paragon/LockState.java
-                        lib/se/chalmers/paragon/Policy.java
-                        lib/se/chalmers/paragon/PClause.java
-                        lib/se/chalmers/paragon/UniqueNameError.java
-                        lib/se/chalmers/paragon/Util.java
+                        lib/se/chalmers/paragon/annotations/ArgumentPolicy.java
+                        lib/se/chalmers/paragon/annotations/ExceptionPolicy.java
+                        lib/se/chalmers/paragon/annotations/ExpectsOpen.java
+                        lib/se/chalmers/paragon/annotations/OpensLock.java
+                        lib/se/chalmers/paragon/annotations/ReadPolicy.java
+                        lib/se/chalmers/paragon/annotations/WritePolicy.java
+                        lib/se/chalmers/paragon/bidsystem/BidSystem.java
+                        lib/se/chalmers/paragon/bidsystem/Channel.java
+                        lib/se/chalmers/paragon/bidsystem/NoBidExc.java
+                        lib/se/chalmers/paragon/java/util/ArrayMap.java
+                        lib/se/chalmers/paragon/java/util/Map.java
+                        lib/se/chalmers/paragon/runtime/Actor.java
+                        lib/se/chalmers/paragon/runtime/Argument.java
+                        lib/se/chalmers/paragon/runtime/Atom.java
+                        lib/se/chalmers/paragon/runtime/Clause.java
+                        lib/se/chalmers/paragon/runtime/DebugPrinter.java
+                        lib/se/chalmers/paragon/runtime/GlobalPolicy.java
+                        lib/se/chalmers/paragon/runtime/Lock.java
+                        lib/se/chalmers/paragon/runtime/LockID.java
+                        lib/se/chalmers/paragon/runtime/LockProperty.java
+                        lib/se/chalmers/paragon/runtime/LockState.java
+                        lib/se/chalmers/paragon/runtime/ParagonException.java
+                        lib/se/chalmers/paragon/runtime/Policy.java
+                        lib/se/chalmers/paragon/runtime/Test.java
+                        lib/se/chalmers/paragon/runtime/Variable.java
+                        lib/se/chalmers/paragon/runtime/system/ReadFile.java
+                        lib/se/chalmers/paragon/runtime/system/RuntimeActor.java
+                        lib/se/chalmers/paragon/runtime/system/RuntimeIdentifier.java
 
 Flag base4
 
