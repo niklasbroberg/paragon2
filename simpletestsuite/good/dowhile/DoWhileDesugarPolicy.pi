@@ -1,0 +1,10 @@
+public class DoWhileDesugarPolicy
+{
+  public static final java.lang.Object Alice = new java.lang.Object();
+  public static final policy alice = {Alice:};
+  public static final policy pub = {java.lang.Object x:};
+  public static final ?DoWhileDesugarPolicy.pub int pubData;
+  public static final ?DoWhileDesugarPolicy.alice int aliceData;
+  !DoWhileDesugarPolicy.alice public static void f()
+  ;
+}

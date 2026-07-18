@@ -1,0 +1,17 @@
+// `do { S } while (c)` should typecheck exactly when its desugaring
+// `S; while (c) { S }` does, for a body S containing no break, continue or
+// local declaration. DoWhileDesugarPlain.para is that desugaring; the pair
+// must agree.
+//
+// This checks something the bad/ oracles cannot: those match on error text,
+// so they stay green even if the DOWHILE rule in TcStmt.hs admits an illegal
+// flow. Checking do-while against the already-trusted WHILE rule does not.
+public class DoWhilePlain {
+  public int f() {
+    int i = 0;
+    do {
+      i = i + 1;
+    } while (i < 3);
+    return i;
+  }
+}

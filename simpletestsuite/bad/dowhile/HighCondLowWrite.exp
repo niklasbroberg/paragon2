@@ -1,0 +1,3 @@
+In the context of class HighCondLowWrite:
+In the context of method f:
+Assignment to pubData with policy { java.lang.Object x :} not allowed in do-while loop over condition aliceData < 3

@@ -17,13 +17,15 @@ cd "$(dirname "$0")/.."
 SUITE=simpletestsuite
 
 # Baselines. Raise these when the underlying gaps are fixed.
-#   good: 9 failures are unimplemented statement forms in the
-#         return-reachability analysis (do-while, labeled break, switch).
-#   bad:  5 of the 6 non-matching tests hit that same gap and so are vacuous;
+#   good: the remaining failures are statement forms tcStmt has no case for
+#         (labeled break, switch), so they die on its catch-all before the
+#         return-reachability analysis ever runs. checkReturnStmts already
+#         handles those forms; the gap is in the typechecker, not in it.
+#   bad:  3 of the 4 non-matching tests hit that same gap and so are vacuous;
 #         1 (arrays/BasicArrayPolicies) reaches the right verdict but prints an
 #         unsimplified policy expression.
-GOOD_MIN=${GOOD_MIN:-105}
-BAD_MIN=${BAD_MIN:-72}
+GOOD_MIN=${GOOD_MIN:-109}
+BAD_MIN=${BAD_MIN:-74}
 
 PARAC=${PARAC:-$(find dist-newstyle -type f -name parac -perm -u+x 2>/dev/null | head -1)}
 if [ -z "$PARAC" ] || [ ! -x "$PARAC" ]; then
@@ -34,8 +36,11 @@ PARAC=$(realpath "$PARAC")
 LIB=$(realpath lib)
 
 # parac writes .java/.pi next to its input; keep the tree clean on exit.
+# Sweep both: a good/ test that starts passing emits a .pi that was not there
+# before, and dropping only .java left those behind as untracked litter.
 cleanup() {
-  git ls-files --others --exclude-standard -- "$SUITE" | grep '\.java$' | xargs -r rm -f
+  git ls-files --others --exclude-standard -- "$SUITE" \
+    | grep -E '\.(java|pi)$' | xargs -r rm -f
   git checkout -- "$SUITE" 2>/dev/null || true
 }
 trap cleanup EXIT
