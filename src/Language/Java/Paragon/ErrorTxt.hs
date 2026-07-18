@@ -36,7 +36,7 @@ errorTxtOld :: (String, [Error]) -> IO ()
 errorTxtOld (_, []) = return ()
 errorTxtOld (_, [Error info _pos context]) = do
   putStrLn $ concat (map contextTxt (reverse context)) ++ errorTxt' info
-  exitWith $ ExitFailure (-1)
+  exitWith $ ExitFailure 1
 errorTxtOld (s, _e:err) = errorTxtOld (s, err)
 
 

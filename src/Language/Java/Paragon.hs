@@ -55,7 +55,7 @@ main = do
     if length files == 1 then
       do res <- compile flags (head files)
          hasErrors <- handleErrors flags [res]
-         if hasErrors then (exitWith $ ExitFailure (-1)) else return ()
+         if hasErrors then (exitWith $ ExitFailure 1) else return ()
     else
       do res <- multiCompile flags files
          _ <- handleErrors flags res
