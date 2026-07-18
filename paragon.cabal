@@ -35,8 +35,6 @@ Library
   Build-Depends:        array >= 0.1, pretty >= 1.0, cpphs >= 1.3, parsec >= 2.1 && < 3, containers, transformers,
                         uniplate == 1.6.1, template-haskell >= 2.7 && < 3, directory, filepath, bytestring,
                         flowlocks-framework
--- Package used for debug printout. Remove for production build:
-                        , haskell-src-exts
   if flag(base4)
     Build-depends:      base >= 4 && < 5, syb
     cpp-options:        -DBASE4
@@ -126,8 +124,6 @@ Executable parac
   Build-Depends:        array >= 0.1, pretty >= 1.0, cpphs >= 1.3, parsec >= 2.1 && < 3, containers, transformers, 
                         uniplate == 1.6.1, directory, filepath, template-haskell >= 2.7 && < 3, bytestring,
                         flowlocks-framework
--- Package used for debug printout. Remove for production build:
-                        , haskell-src-exts
   if flag(base4)
     Build-depends:      base >= 4 && < 5, syb
     cpp-options:        -DBASE4
