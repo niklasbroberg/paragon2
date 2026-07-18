@@ -98,6 +98,43 @@ tcStmt (While _ c sBody) = do
         deactivateExn ExnBreak           -- S'' = S'[exns /= break]
         return $ While Nothing c' sBody'
 
+-- Rule DOWHILE
+-- Like WHILE, but the body is executed before the condition is first
+-- evaluated, so the loop always performs at least one iteration.
+--
+-- We deliberately check the body under the branch-pc extended by the
+-- condition's policy, exactly as WHILE does, even though the *first*
+-- iteration does not in fact depend on the condition. On every later
+-- iteration it does, and a single pass has to cover them all. Extending
+-- the pc only ever adds constraints, so this is the conservative
+-- direction: it may reject a program Java-Paragon could in principle
+-- accept, but it cannot admit an illegal flow. Splitting the first
+-- iteration out to type it under the unextended pc would be more precise
+-- and is the obvious refinement if this proves too strict in practice.
+tcStmt (Do _ sBody c) = do
+  !s <- getState                  -- Starting state S
+  (tyC, pC, c') <- tcExp c
+  check (isBoolConvertible tyC) $ toUndef $ "Cannot convert type to boolean"
+  extendBranchPC pC ("do-while loop over condition " ++ prettyPrint c) $
+    addBranchPC breakE $
+    addBranchPC continueE $
+     do maybeM (mLocks tyC)
+         (\ls -> applyLockMods $ PL.openAll $ map PL.skolemizeLock ls)
+        sBody' <- tcStmt sBody
+
+        -- `continue` in a do-while jumps to the condition, i.e. back to
+        -- the top of the loop, so it merges in just as it does for while.
+        sCont <- getExnState ExnContinue
+        maybeM sCont $ mergeWithState
+        mergeWithState s             -- S* = S <> Ss <> Ss[exns](continue)[state]
+        deactivateExn ExnContinue    -- S** = S*[exns /= continue]
+
+        -- Fix outgoing state
+        sBreak <- getExnState ExnBreak   -- Sb = Ss'[exns](break)[state]
+        maybeM sBreak mergeWithState     -- S' = Se' <> Sb
+        deactivateExn ExnBreak           -- S'' = S'[exns /= break]
+        return $ Do Nothing sBody' c'
+
 -- Rule BASICFOR
 tcStmt (BasicFor _ mForInit mTest mUp body) = do
   (mForInit', forf) <- withInits mForInit $ do

@@ -22,8 +22,8 @@ SUITE=simpletestsuite
 #   bad:  5 of the 6 non-matching tests hit that same gap and so are vacuous;
 #         1 (arrays/BasicArrayPolicies) reaches the right verdict but prints an
 #         unsimplified policy expression.
-GOOD_MIN=${GOOD_MIN:-102}
-BAD_MIN=${BAD_MIN:-70}
+GOOD_MIN=${GOOD_MIN:-105}
+BAD_MIN=${BAD_MIN:-72}
 
 PARAC=${PARAC:-$(find dist-newstyle -type f -name parac -perm -u+x 2>/dev/null | head -1)}
 if [ -z "$PARAC" ] || [ ! -x "$PARAC" ]; then
