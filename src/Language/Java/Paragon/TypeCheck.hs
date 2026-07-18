@@ -683,8 +683,10 @@ withParam (FormalParam _ ms _ _ (VarId _ i), ty, p) = do
     let vsig = VSig ty (PL.VarPolicy p) True (Static defaultPos `elem` ms) (Final defaultPos `elem` ms) (Notnull defaultPos `elem` ms)
     withCurrentTypeMap $ \tm -> return $ tm { fields = Map.insert (unIdent i) vsig (fields tm) }
 
+-- NB: this equation lives in the function monad ((->) (TcDeclM a)), which has
+-- no MonadFail. Pre-GHC-8.8 `fail` defaulted to `error`, so spell that out.
 withParam (FormalParam _ _ _ _ arvid, _, _) =
-    fail $ "Deprecated array syntax not supported: " ++ prettyPrint arvid
+    error $ "Deprecated array syntax not supported: " ++ prettyPrint arvid
 
 
 typeCheckExnSig :: CodeState -> ExceptionSpec SourcePos -> TcDeclM (TcType, ExnSig)

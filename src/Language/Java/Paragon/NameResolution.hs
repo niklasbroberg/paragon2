@@ -755,8 +755,10 @@ unionExpnMaps expns =
              (\(i, nt) r1 r2 -> do
                        (mPre1,_) <- r1
                        (mPre2,_) <- r2
+                       -- This is the Either String monad; base 4.13 dropped its
+                       -- `fail = Left`, so name the constructor directly.
                        unless (mPre1 == mPre2) $
-                               fail $ "Ambiguous " ++ prettyPrint nt ++ " " ++ prettyPrint i ++
+                               Left $ "Ambiguous " ++ prettyPrint nt ++ " " ++ prettyPrint i ++
                                 "\nCould refer to either of:" ++
                                 "\n    " ++ prettyPrint (Name defaultPos AmbName mPre1 (Ident defaultPos i)) ++
                                 "\n    " ++ prettyPrint (Name defaultPos AmbName mPre2 (Ident defaultPos i))

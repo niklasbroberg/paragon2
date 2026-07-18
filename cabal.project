@@ -1,0 +1,22 @@
+-- Build Paragon together with its local flowlocks-framework dependency.
+packages: .
+          ../flowlocks-framework
+
+-- Modernization: let the old, tightly-bounded dependencies resolve against a
+-- current GHC's package set instead of the GHC 7.0.2-era pins in the .cabal files.
+allow-newer: all
+
+-- Reproducibility: pin the view of Hackage to a fixed point in time, so the
+-- solver cannot be perturbed by packages uploaded after this date. Combined
+-- with cabal.project.freeze (exact versions + flags for every dependency),
+-- this is what keeps the build from bit-rotting again, and is the cabal
+-- equivalent of a Stack snapshot.
+--
+-- To move deliberately to a newer dependency set: bump this date, delete
+-- cabal.project.freeze, run `cabal update && cabal freeze`, and rebuild.
+index-state: 2026-07-18T06:27:46Z
+
+-- The .cabal's default build assumes base < 4; the `base4` flag selects the
+-- base >= 4 code paths needed by any modern GHC.
+package paragon
+  flags: +base4

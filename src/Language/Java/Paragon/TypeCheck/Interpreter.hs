@@ -17,7 +17,7 @@ import Language.Java.Paragon.TypeCheck.Types
 
 import qualified Data.Map as Map
 import Control.Applicative
-import Control.Monad (forM_, ap)
+import Control.Monad (forM_, ap, liftM)
 
 import Data.Maybe (fromJust)
 import Data.List (nub, delete)
@@ -69,6 +69,11 @@ instance Monad InterpretM where
       CallMethod n as (\v -> f v >>= k)
   EvalType rt f >>= k = EvalType rt (\rTy -> f rTy >>= k)
   SubTypeOf rt1 rt2 f >>= k = SubTypeOf rt1 rt2 (\b -> f b >>= k)
+
+-- InterpretM is a free-monad AST with no failure constructor. Before GHC 8.8
+-- an undefined `fail` defaulted to `error`; keep exactly that behaviour.
+instance MonadFail InterpretM where
+  fail = error
 
 instance Applicative InterpretM where
   pure = return
@@ -388,6 +393,10 @@ instance Functor IM where
   fmap f (IM g) = IM $ \istate -> case g istate of
                                    Left pct -> Left pct
                                    Right (a, newState) -> Right (f a, newState)
+
+instance Applicative IM where
+  pure x = IM $ \ist -> Right (x, ist)
+  (<*>)  = ap
 
 instance Monad IM where
   return x = IM $ \ist -> Right (x, ist)

@@ -182,6 +182,7 @@ instance Monad TcCodeM where
                       (b, s2, cs2) <- g e s1
                       return (b, s2, cs1 ++ cs2)
 
+instance MonadFail TcCodeM where
   fail err = TcCodeM $ \_ _ -> fail err
 
 instance Functor TcCodeM where

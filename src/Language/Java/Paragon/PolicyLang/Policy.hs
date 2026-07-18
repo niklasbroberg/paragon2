@@ -18,6 +18,10 @@ module Language.Java.Paragon.PolicyLang.Policy (
     ) -} ) where
 
 --import Language.Java.Paragon.Syntax (Name)
+-- base 4.11 added Semigroup's (<>) to the Prelude; it collides with
+-- Text.PrettyPrint's document concatenation re-exported via Paragon.Pretty.
+import Prelude hiding ((<>))
+
 import Language.Java.Paragon.Pretty
 import Language.Java.Paragon.TypeCheck.Types
 --import Language.Java.Paragon.Error()
@@ -198,10 +202,6 @@ instance Data (TcMetaVar a) where
                  "Meta variables should never be reified"
     dataTypeOf = panic (policyModule ++ ": instance Data TcMetaVar (dataTypeOf)")
                  "Meta variables should never be reified"
-
-instance Typeable (TcMetaVar a) where
-    typeOf = panic (policyModule ++ ": instance Typeable TcMetaVar (typeOf)")
-             "Meta variables should never be reified"
 
 instance Eq (TcMetaVar a) where
   (TcMetaVar i1 _) == (TcMetaVar i2 _) = i1 == i2

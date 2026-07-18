@@ -221,9 +221,6 @@ data Modifier a
     | Expects a [Lock a]
   deriving (Eq,Ord,Show,Typeable,Data,Functor)
 
-isMethodStatic :: [Modifier a] -> Bool
-isMethodStatic ms = Static () `elem` removeAnnotationMany ms
-
 -----------------------------------------------------------------------
 -- Statements
 
@@ -692,6 +689,35 @@ data NameType
     | AmbName  -- ^Ambiguous name
   deriving (Eq,Ord,Show,Typeable,Data)
 
+-----------------------------------------------------------------------
+-- Annotations
+--
+-- NB: this splice must precede every use of `ann` / `amap` /
+-- `removeAnnotation*` in this module. A top-level TH splice divides a module
+-- into declaration groups, and instances produced by a splice are not visible
+-- to declarations in earlier groups. GHC 7 did not enforce this, so the splice
+-- originally sat at the end of the file; the helpers that consume these
+-- instances now follow it.
+
+$(deriveAnnMany
+  [''CompilationUnit, ''PackageDecl, ''ImportDecl,
+   ''TypeDecl, ''ClassDecl, ''ClassBody, ''EnumBody, ''EnumConstant,
+   ''InterfaceDecl, ''InterfaceBody, ''Decl, ''MemberDecl,
+   ''VarDecl, ''VarDeclId, ''VarInit, ''ArrayInit,
+   ''FormalParam, ''MethodBody, ''ConstructorBody, ''ExplConstrInv,
+   ''Modifier, ''Block, ''BlockStmt, ''Stmt,
+   ''Catch, ''SwitchBlock, ''SwitchLabel, ''ForInit, ''ExceptionSpec,
+   ''Exp, ''Literal, ''Op, ''AssignOp, ''Lhs, 
+   ''ArrayIndex, ''FieldAccess, ''MethodInvocation,
+   ''Type, ''PrimType, ''RefType, ''ClassType, ''ReturnType,
+   ''TypeArgument, ''NonWildTypeArgument, ''WildcardBound, ''TypeParam,
+   ''PolicyExp, ''LockProperties, ''Clause, ''LClause,
+   ''ClauseVarDecl, ''ClauseHead,
+   ''Actor, ''ActorName, ''Atom, ''Lock, ''Ident, ''Name])
+
+isMethodStatic :: [Modifier a] -> Bool
+isMethodStatic ms = Static () `elem` removeAnnotationMany ms
+
 nameType :: Name a -> NameType
 nameType (Name _ nt _ _) = nt
 nameType _ = panic (syntaxModule ++ ".nameType") 
@@ -744,22 +770,3 @@ mkIdent a = Ident a . B.pack
 
 mkIdent_ :: String -> Ident SourcePos
 mkIdent_ = mkIdent defaultPos
-
------------------------------------------------------------------------
--- Annotations
-
-$(deriveAnnMany 
-  [''CompilationUnit, ''PackageDecl, ''ImportDecl,
-   ''TypeDecl, ''ClassDecl, ''ClassBody, ''EnumBody, ''EnumConstant,
-   ''InterfaceDecl, ''InterfaceBody, ''Decl, ''MemberDecl,
-   ''VarDecl, ''VarDeclId, ''VarInit, ''ArrayInit,
-   ''FormalParam, ''MethodBody, ''ConstructorBody, ''ExplConstrInv,
-   ''Modifier, ''Block, ''BlockStmt, ''Stmt,
-   ''Catch, ''SwitchBlock, ''SwitchLabel, ''ForInit, ''ExceptionSpec,
-   ''Exp, ''Literal, ''Op, ''AssignOp, ''Lhs, 
-   ''ArrayIndex, ''FieldAccess, ''MethodInvocation,
-   ''Type, ''PrimType, ''RefType, ''ClassType, ''ReturnType,
-   ''TypeArgument, ''NonWildTypeArgument, ''WildcardBound, ''TypeParam,
-   ''PolicyExp, ''LockProperties, ''Clause, ''LClause,
-   ''ClauseVarDecl, ''ClauseHead,
-   ''Actor, ''ActorName, ''Atom, ''Lock, ''Ident, ''Name])

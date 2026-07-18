@@ -66,9 +66,9 @@ import Data.Data
 import Data.Generics (Data(..),Typeable(..))
 #endif
 
-instance Applicative (GenParser s a) where
-    pure  = return
-    (<*>) = ap
+-- parsec 3 makes GenParser a type synonym for ParsecT and already provides
+-- Functor/Applicative/Monad for it, so the hand-rolled instance parsec 2
+-- required is now both illegal (synonym in the instance head) and redundant.
 
 -- import Debug.Trace (trace)
 

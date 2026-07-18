@@ -43,6 +43,7 @@ instance Monad NameRes where
                          let NameRes g = k a
                           in g n e
 
+instance MonadFail NameRes where
   fail = liftPR . fail
 
 instance MonadPR NameRes where

@@ -768,7 +768,7 @@ getReturnPolicy mods pPols =
 -------------------------------------------------------------------
 -- Evaluating types
 
-class (HasSubTyping m, MonadTcDeclM m) => EvalPolicyM m where
+class (HasSubTyping m, MonadFail m, MonadTcDeclM m) => EvalPolicyM m where
   evalPolicy :: Exp SourcePos -> m PL.PrgPolicy
   evalActorId :: Name SourcePos -> m PL.TypedActorIdSpec
   evalActor :: [(Ident SourcePos, TcRefType)] -> Actor SourcePos -> m PL.ActorSetRep
@@ -1213,6 +1213,7 @@ instance Monad TcDeclM  where
                        let TcDeclM g = k a
                        g ctm gtm' ty
 
+instance MonadFail TcDeclM  where
   fail = liftPR . fail
 
 instance Functor TcDeclM  where
