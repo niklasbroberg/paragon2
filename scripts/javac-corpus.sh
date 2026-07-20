@@ -93,16 +93,24 @@ while read -r j; do
   else
     bad=$((bad+1))
     { echo "--- ${j#$STAGE/}"; head -3 "$WORK/e.txt"; } >> "$WORK/fail.txt"
-    # Classify. The dominant failure is the whole v1 flat package being absent,
-    # which javac reports as "package se.chalmers.paragon does not exist" -- NOT
-    # as an unresolved symbol, so a symbol histogram alone shows almost nothing.
+    # Classify PER ERROR, not per file -- a file can have both problems, and
+    # they are independent (see issue #5). javac reports the missing v1 package
+    # AND the lowering errors in the same run, so a first-match-wins classifier
+    # silently hides every lowering gap behind the package error: that bug made
+    # this script report 2 lowering failures where issue #5 documents 11.
     if grep -q "package se\.chalmers\.paragon does not exist" "$WORK/e.txt"; then
       echo "$j" >> "$WORK/v1.txt"
-      # which v1 entry points appear in this file, for the retarget checklist
       grep -oE "paragon\.(Lock|Policy|Actor|Atom|ActorList|Util)\.[a-zA-Z]+" "$j" \
         | sed 's/^paragon\.//' >> "$WORK/sym.txt"
-    else
+    fi
+    # Residual = errors that are NOT the missing v1 package. These are the
+    # Paragon/Java lowering gaps (issue #5) and survive the #1 retarget.
+    grep "error:" "$WORK/e.txt" \
+      | grep -v "package se\.chalmers\.paragon does not exist" > "$WORK/resid.txt"
+    if [ -s "$WORK/resid.txt" ]; then
       echo "$j" >> "$WORK/other.txt"
+      sed -E 's/^.*error: //; s/\b[A-Za-z_][A-Za-z0-9_]*\b$/<name>/' "$WORK/resid.txt" \
+        | sort -u >> "$WORK/othersym.txt"
     fi
   fi
 done < <(find "$STAGE" -name '*.java' | sort)
@@ -118,12 +126,13 @@ echo "javac compiled       : $ok / $total"
 echo "javac failed         : $bad / $total"
 v1=$( [ -f "$WORK/v1.txt" ] && wc -l < "$WORK/v1.txt" || echo 0 )
 other=$( [ -f "$WORK/other.txt" ] && wc -l < "$WORK/other.txt" || echo 0 )
-echo "  of which v1-API    : $v1   <-- the issue #1 retarget target"
-echo "  of which other     : $other"
+echo "  hit missing v1 API : $v1   <-- issue #1 (the retarget target)"
+echo "  hit lowering gaps  : $other   <-- issue #5 (SURVIVES the retarget)"
 echo
-echo "NOTE: most generated .java never touches the runtime (plain Java), so the"
-echo "  headline $ok/$total overstates progress. The number that matters for the"
-echo "  Compile.hs retarget is v1-API: $v1 -> 0."
+echo "NOTE: the two categories OVERLAP -- a file can have both, and javac reports"
+echo "  both in one run. Most generated .java never touches the runtime at all,"
+echo "  so the headline $ok/$total overstates progress; and fixing #1 will NOT take"
+echo "  the failures to zero, because the $other lowering-gap files stay broken."
 
 if [ "$ERRORS" = 1 ] && [ -s "$WORK/sym.txt" ]; then
   echo
@@ -132,8 +141,12 @@ if [ "$ERRORS" = 1 ] && [ -s "$WORK/sym.txt" ]; then
 fi
 if [ "$ERRORS" = 1 ] && [ -s "$WORK/other.txt" ]; then
   echo
-  echo "--- non-v1 failures (separate causes, not the retarget) ---"
+  echo "--- lowering-gap files (issue #5; independent of the runtime API) ---"
   sed "s|^$STAGE/||" "$WORK/other.txt"
+  if [ -s "$WORK/othersym.txt" ]; then
+    echo "--- their error kinds ---"
+    sort -u "$WORK/othersym.txt" | head -12
+  fi
 fi
 if [ "$VERBOSE" = 1 ] && [ -s "$WORK/fail.txt" ]; then
   echo
