@@ -66,7 +66,7 @@ main = do
          when hasErrors $ exitWith (ExitFailure 1)
 
 -- | All different flags that can be provided to the Paragon compiler
-data Flag = Verbose Int | Version | Help | PiPath String | Eclipse | OldSkool | OutputPath String | SourcePath String | NoNullCheck
+data Flag = Verbose Int | Version | Help | PiPath String | Eclipse | OldSkool | OutputPath String | SourcePath String | NoNullCheck | NoJavaCodegen
   deriving (Show, Eq)
 
 -- | Two strings describing the version and the usage of the compiler
@@ -102,6 +102,9 @@ options =
     , Option ['n'] ["nonull"]
                  (NoArg NoNullCheck)
                  "Do not check for flows via unchecked nullpointer exceptions"
+    , Option [] ["no-java-codegen"]
+                 (NoArg NoJavaCodegen)
+                 "Typecheck only: do not emit .java (.pi is still written)"
     ]
 
 -- |Converts the list of arguments to a pair of two lists of equal length. 
@@ -219,9 +222,17 @@ genFiles flags filePath ast  = let -- create .java ast
                              java,pifile :: String
                              java      = prettyPrint astC
                              pifile    = prettyPrint astPi
-                         in do createDirectoryIfMissing True outdir 
-                               writeFile javaPath java
-                               >> writeFile piPath pifile
+                         in do createDirectoryIfMissing True outdir
+                               -- --no-java-codegen suppresses only the .java.
+                               -- `java`/`astC` are lazy lets, so compileTransform
+                               -- never runs when the write is skipped.
+                               -- .pi is still emitted: it is an *input* to
+                               -- typechecking other files (the pi-path), not
+                               -- merely output, so suppressing it would break
+                               -- multi-file use.
+                               unless (NoJavaCodegen `elem` flags) $
+                                 writeFile javaPath java
+                               writeFile piPath pifile
   where getOutdir []               = "."
         getOutdir (OutputPath p:_) = p
         getOutdir (_:xs)           = getOutdir xs
