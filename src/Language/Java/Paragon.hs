@@ -50,16 +50,20 @@ main = do
   
   -- When files are specified, try to compile them
   when (not (null files)) $
-    -- Case distinction only done to not break test suite:
-    -- It expects explicit fail signaling
+    -- Case distinction is only about OUTPUT: multiCompile prints a
+    -- "Compiling <f>" banner per file, which the single-file path must not
+    -- emit (the bad/ oracles match on exact output). Both branches must
+    -- signal failure identically -- the multi-file branch used to discard
+    -- handleErrors' result and always exit 0, so a failing file in a
+    -- multi-file run reported success.
     if length files == 1 then
       do res <- compile flags (head files)
          hasErrors <- handleErrors flags [res]
-         if hasErrors then (exitWith $ ExitFailure 1) else return ()
+         when hasErrors $ exitWith (ExitFailure 1)
     else
       do res <- multiCompile flags files
-         _ <- handleErrors flags res
-         return ()
+         hasErrors <- handleErrors flags res
+         when hasErrors $ exitWith (ExitFailure 1)
 
 -- | All different flags that can be provided to the Paragon compiler
 data Flag = Verbose Int | Version | Help | PiPath String | Eclipse | OldSkool | OutputPath String | SourcePath String | NoNullCheck
