@@ -45,7 +45,7 @@ Extra-Source-Files:     src/Language/Java/Paragon/Lexer.x
 Flag base4
 
 Library
-  Build-Tools:          alex >= 2.3
+  build-tool-depends:   alex:alex >= 2.3
   Build-Depends:        array >= 0.1, pretty >= 1.0, cpphs >= 1.3, parsec >= 2.1 && < 3, containers, transformers,
                         uniplate == 1.6.1, template-haskell >= 2.7 && < 3, directory, filepath, bytestring,
                         flowlocks-framework
@@ -134,7 +134,7 @@ Executable parac
                         Language.Java.Paragon.PolicyLang.Policy
 
 
-  Build-Tools:          alex >= 2.3
+  build-tool-depends:   alex:alex >= 2.3
   Build-Depends:        array >= 0.1, pretty >= 1.0, cpphs >= 1.3, parsec >= 2.1 && < 3, containers, transformers, 
                         uniplate == 1.6.1, directory, filepath, template-haskell >= 2.7 && < 3, bytestring,
                         flowlocks-framework
