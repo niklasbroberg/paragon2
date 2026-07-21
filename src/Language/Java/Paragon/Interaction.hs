@@ -14,10 +14,6 @@ import Data.IORef
 import Control.Monad
 import System.IO.Unsafe (unsafePerformIO) -- Trust me, I know what I'm doing... :-D
 
--- Comment out to get rid of dependency on haskell-src-exts:
-import Language.Haskell.Exts.Parser
-import Language.Haskell.Exts.Pretty
-
 import Language.Java.Paragon.Monad.Base
 
 -------------------------------------------------------------
@@ -52,16 +48,16 @@ finePrint   = verbosePrint 3      -- ^Report verbosely (default for -v)
 debugPrint  = verbosePrint 4      -- ^Include DEBUG output
 tracePrint  = verbosePrint 5      -- ^State and env changes
 
--- This trace function uses haskell-src-exts to get nice formating.
--- To avoid depending on this package, comment out this version and the imports above, and
--- comment in the version using show below. 
+-- | Format a value for trace output (verbosity 4-5).
+--
+-- This used to round-trip `show` output through haskell-src-exts' expression
+-- parser and pretty-printer to get line-broken, indented traces. That pulled a
+-- large, GHC-version-sensitive dependency into the tree purely for debug
+-- formatting, so we now use plain `show` -- the fallback the old version
+-- already took whenever the parse failed. The module documented this exact
+-- swap as the supported way to drop the dependency.
 formatData :: Show a => a -> String
-formatData s = case parseExp (show s) of
-    ParseOk x -> prettyPrintStyleMode 
-      -- ribbonsPerLine adjust how eager the printer is to break lines eg in records.
-      Style{ mode = PageMode, lineLength = 150, ribbonsPerLine = 2.5 } defaultMode x
-    ParseFailed{} -> show s
--- formatData = show
+formatData = show
 
 unsafeCheckNullGlobalVar :: IORef Bool
 unsafeCheckNullGlobalVar = unsafePerformIO $ newIORef False

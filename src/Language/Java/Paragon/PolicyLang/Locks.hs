@@ -4,6 +4,10 @@ module Language.Java.Paragon.PolicyLang.Locks where
 
 --import Data.List (intersect, union, (\\) )
 
+-- base 4.11 added Semigroup's (<>) to the Prelude; it collides with
+-- Text.PrettyPrint's document concatenation re-exported via Paragon.Pretty.
+import Prelude hiding ((<>))
+
 import Language.Java.Paragon.Syntax (Name(..), Ident(..), NameType(LName))
 import Language.Java.Paragon.Pretty
 --import Language.Java.Paragon.Interaction

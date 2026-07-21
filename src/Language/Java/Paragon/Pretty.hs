@@ -6,6 +6,12 @@ module Language.Java.Paragon.Pretty
      module Text.PrettyPrint
     ) where
 
+-- base 4.11 added Semigroup's (<>) to the Prelude, which collides with
+-- Text.PrettyPrint's document concatenation (and has a different fixity,
+-- so mixing it with <+> is also a parse error). Documents are what we mean
+-- throughout this module.
+import Prelude hiding ((<>))
+
 import Text.PrettyPrint
 import Data.Char (toLower)
 import Control.Arrow (first)

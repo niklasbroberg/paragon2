@@ -34,6 +34,10 @@ module Language.Java.Paragon.PolicyLang
      thisP, substThis, includesThis, includesThisVP
     ) where
 
+-- base 4.11 added Semigroup's (<>) to the Prelude; it collides with
+-- Text.PrettyPrint's document concatenation re-exported via Paragon.Pretty.
+import Prelude hiding ((<>))
+
 import Language.Java.Paragon.SourcePos
 import Language.Java.Paragon.Error (Error)
 import Language.Java.Paragon.Syntax (Name)

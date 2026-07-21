@@ -93,7 +93,7 @@ extendGlobalTypeMap = liftTcDeclM . extendGlobalTypeMapTB
 fetchType :: Name SourcePos -> TcDeclM ([TypeParam SourcePos],[(RefType SourcePos, B.ByteString)],TypeSig)
 getTypeMap :: MonadTcDeclM m => m TypeMap
 
-class (HasSubTyping m, MonadTcDeclM m) => EvalPolicyM m where
+class (HasSubTyping m, MonadFail m, MonadTcDeclM m) => EvalPolicyM m where
   evalPolicy :: Exp SourcePos -> m PL.PrgPolicy
   evalActorId :: Name SourcePos -> m PL.TypedActorIdSpec
   evalActor :: [(Ident SourcePos, TcRefType)] -> Actor SourcePos -> m PL.ActorSetRep

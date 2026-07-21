@@ -7,6 +7,10 @@ module Language.Java.Paragon.TypeCheck.NullAnalysis
      nullable, committed, free,
      joinNT
     ) where
+-- Pretty re-exports Text.PrettyPrint, whose (<>) collides with the (<>)
+-- the Prelude gained in base 4.11. Documents are what we mean here.
+import Prelude hiding ((<>))
+
 import Language.Java.Paragon.Pretty
 
 #ifdef BASE4

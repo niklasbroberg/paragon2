@@ -23,7 +23,6 @@ import Data.Generics (Data(..),Typeable(..))
 
 data MetaVarRep
 instance Data MetaVarRep
-instance Typeable MetaVarRep
 instance Eq MetaVarRep
 instance Ord MetaVarRep
 instance Show MetaVarRep
@@ -32,7 +31,6 @@ instance Pretty MetaVarRep
 
 data PolicyVarRep
 instance Data PolicyVarRep
-instance Typeable PolicyVarRep
 instance Eq PolicyVarRep
 instance Ord PolicyVarRep
 instance Show PolicyVarRep
@@ -40,7 +38,6 @@ instance Pretty PolicyVarRep
 
 data ActorSetRep
 instance Data ActorSetRep
-instance Typeable ActorSetRep
 instance Eq ActorSetRep
 instance Ord ActorSetRep
 instance Show ActorSetRep

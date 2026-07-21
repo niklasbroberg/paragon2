@@ -4,3 +4,9 @@
 *.o
 \#*
 
+# cabal / build artifacts (dev container writes these into the bind-mounted workspace)
+dist-newstyle/
+dist/
+.ghc.environment.*
+.cabal-store/
+

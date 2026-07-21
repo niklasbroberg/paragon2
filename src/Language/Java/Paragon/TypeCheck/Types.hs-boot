@@ -17,7 +17,6 @@ instance Eq TcRefType
 instance Ord TcRefType
 instance Show TcRefType
 instance Data TcRefType
-instance Typeable TcRefType
 instance Pretty TcRefType
 
 class (Functor m, Applicative m, Monad m) => HasSubTyping m where
