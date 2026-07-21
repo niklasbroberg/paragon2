@@ -217,9 +217,11 @@ errorTxt' (MethodArgRestr mi arg argP parP) =
 
 errorTxt' (ParsingError p) =
   "Parsing error: " ++ p
-  
+
+errorTxt' (UnsupportedFeature s) = s
+
 errorTxt' (FallbackError e) = e
-  
+
 -- Others
-errorTxt' e = 
+errorTxt' e =
   "Extra error: Show instance for this error not available:\n" ++ show e

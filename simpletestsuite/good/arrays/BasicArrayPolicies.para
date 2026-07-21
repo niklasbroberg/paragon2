@@ -1,5 +1,3 @@
-import se.chalmers.paragon.*;
-
 public class BasicArrayPolicies {
 
     public static final Object alice = new Object();
