@@ -1,0 +1,10 @@
+public class DoWhilePolicy
+{
+  public static final java.lang.Object Alice = new java.lang.Object();
+  public static final policy alice = {Alice:};
+  public static final policy pub = {java.lang.Object x:};
+  public static final ?DoWhilePolicy.pub int pubData;
+  public static final ?DoWhilePolicy.alice int aliceData;
+  !DoWhilePolicy.alice public static void f()
+  ;
+}

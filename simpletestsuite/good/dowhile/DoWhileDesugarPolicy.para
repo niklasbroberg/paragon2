@@ -1,0 +1,20 @@
+public class DoWhileDesugarPolicy {
+  public static final Object Alice = new Object();
+  public static final policy alice = { Alice : };
+  public static final policy pub = { Object x : };
+
+  public static final ?pub int pubData;
+  public static final ?alice int aliceData;
+
+  !alice public static void f() {
+    int i = 0;
+    {
+      aliceData = pubData;
+      i = i + 1;
+    }
+    while (i < 3) {
+      aliceData = pubData;
+      i = i + 1;
+    }
+  }
+}

@@ -98,6 +98,57 @@ tcStmt (While _ c sBody) = do
         deactivateExn ExnBreak           -- S'' = S'[exns /= break]
         return $ While Nothing c' sBody'
 
+-- Rule DOWHILE
+-- Like WHILE, but the body is executed before the condition is first
+-- evaluated, so the loop always performs at least one iteration.
+--
+-- The body is checked in a single pass under the branch-pc extended by the
+-- condition's policy, exactly as WHILE does, even though the *first*
+-- iteration does not in fact depend on the condition.
+--
+-- That looks over-conservative but appears not to be. Compare the
+-- desugaring `do {S} while (c)` == `S; while (c) {S}`, which types S once
+-- under pc and once under pc |_| pC. The second copy's constraints subsume
+-- the first's, so the accept/reject verdict should coincide with the single
+-- pass here, and splitting the first iteration out to type it under the
+-- unextended pc would buy no precision.
+--
+-- Treat that as an argument, not a proof: it reasons about constraint sets
+-- only, and ignores the lock and exception state, which genuinely do differ
+-- between one pass and two. It has been checked empirically in both
+-- directions -- see simpletestsuite/{good,bad}/dowhile, where each do-while
+-- is paired with its desugaring and the two must agree -- but it has not
+-- been checked against the Paragon metatheory by anyone who knows it.
+--
+-- Note also that the desugaring is only valid for bodies with no break or
+-- continue: in `S; while (c) {S}` the first copy of S is not inside a loop,
+-- so a `break` there escapes. It is a testing device, not an implementation
+-- strategy, and typing the body twice is in any case what WHILE and BASICFOR
+-- below deliberately stopped doing (see their commented-out second passes).
+tcStmt (Do _ sBody c) = do
+  !s <- getState                  -- Starting state S
+  (tyC, pC, c') <- tcExp c
+  check (isBoolConvertible tyC) $ toUndef $ "Cannot convert type to boolean"
+  extendBranchPC pC ("do-while loop over condition " ++ prettyPrint c) $
+    addBranchPC breakE $
+    addBranchPC continueE $
+     do maybeM (mLocks tyC)
+         (\ls -> applyLockMods $ PL.openAll $ map PL.skolemizeLock ls)
+        sBody' <- tcStmt sBody
+
+        -- `continue` in a do-while jumps to the condition, i.e. back to
+        -- the top of the loop, so it merges in just as it does for while.
+        sCont <- getExnState ExnContinue
+        maybeM sCont $ mergeWithState
+        mergeWithState s             -- S* = S <> Ss <> Ss[exns](continue)[state]
+        deactivateExn ExnContinue    -- S** = S*[exns /= continue]
+
+        -- Fix outgoing state
+        sBreak <- getExnState ExnBreak   -- Sb = Ss'[exns](break)[state]
+        maybeM sBreak mergeWithState     -- S' = Se' <> Sb
+        deactivateExn ExnBreak           -- S'' = S'[exns /= break]
+        return $ Do Nothing sBody' c'
+
 -- Rule BASICFOR
 tcStmt (BasicFor _ mForInit mTest mUp body) = do
   (mForInit', forf) <- withInits mForInit $ do

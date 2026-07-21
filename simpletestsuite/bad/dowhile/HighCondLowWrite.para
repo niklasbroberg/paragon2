@@ -1,0 +1,21 @@
+// A high condition guarding a low write: an implicit flow that must be
+// rejected. This is the do-while half of a differential pair -- both halves
+// must be rejected, for the same reason, or the DOWHILE rule in TcStmt.hs
+// is not extending the branch-pc over the loop condition.
+//
+// The .exp stops short of the trailing "* $$<constant:N>N" that parac
+// appends: that counter is not stable between the two halves.
+public class HighCondLowWrite {
+  public static final Object Alice = new Object();
+  public static final policy alice = { Alice : };
+  public static final policy pub = { Object x : };
+
+  public static final ?pub int pubData;
+  public static final ?alice int aliceData;
+
+  !pub public static void f() {
+    do {
+      pubData = 1;
+    } while (aliceData < 3);
+  }
+}
