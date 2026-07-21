@@ -13,7 +13,7 @@ import qualified Data.Map as Map
 import qualified Data.ByteString.Char8 as B
 
 import Control.Applicative
-import Control.Monad (unless)
+import Control.Monad (unless, when)
 import Data.Traversable
 import Data.List (nub)
 import Prelude hiding (mapM)
@@ -877,6 +877,26 @@ buildMapFromPkg Nothing = return Map.empty
 buildMapFromPkg (Just (PackageDecl pos n)) = 
     snd <$> buildMapFromImportName (TypeImportOnDemand pos n)
 
+-- | True if a (resolved) name is exactly the flat @se.chalmers.paragon@
+-- package. That is the superseded v1 runtime location; the v2 runtime lives in
+-- @se.chalmers.paragon.runtime@. The flat package still *resolves* only because
+-- v1 @.pi@ stubs (Actor.pi, Policy.pi) linger at that level, so an import of it
+-- must be rejected explicitly rather than allowed to typecheck against stubs
+-- while codegen targets @.runtime@.
+isFlatParagonPkg :: Name a -> Bool
+isFlatParagonPkg n = nameParts n == map B.pack ["se","chalmers","paragon"]
+  where nameParts (Name _ _ mPre ident) = maybe [] nameParts mPre ++ [unIdent ident]
+        nameParts _ = []
+
+flatParagonImportError :: ImportDecl SourcePos -> SourcePos -> Error
+flatParagonImportError imp pos = mkError
+  (UnsupportedFeature $
+     "Import of the superseded v1 runtime package `se.chalmers.paragon`: `"
+     ++ prettyPrint imp
+     ++ "`. The Paragon runtime is now `se.chalmers.paragon.runtime`; "
+     ++ "update the import.")
+  pos
+
 -- | Build expansion map from an import declaration
 -- | Returns declaration with resolved prefix and the constructed expansion
 buildMapFromImportName :: ImportDecl SourcePos
@@ -888,6 +908,8 @@ buildMapFromImportName imp = do
       SingleTypeImport pos tn@(Name pos' TName mPre i) -> do
               -- Explicit import of a single type mPre.tn
               mPre' <- resolvePre mPre
+              when (maybe False isFlatParagonPkg mPre') $
+                failE $ flatParagonImportError imp pos
               let resName = Name pos' TName mPre' i
                   resImp  = SingleTypeImport pos resName
                   resExpn = mkTExpansionWithPrefix mPre' (unIdent i)
@@ -913,7 +935,10 @@ buildMapFromImportName imp = do
 
               let resName = Name pos' PName mPre' i
                   resImp  = TypeImportOnDemand pos resName
-                                          
+
+              when (isFlatParagonPkg resName) $
+                failE $ flatParagonImportError imp pos
+
               -- Resolve as package or fail
               withPackage resName
                 (do 

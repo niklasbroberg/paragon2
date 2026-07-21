@@ -17,8 +17,12 @@ import qualified Data.ByteString.Char8 as B
 compilerModule :: String
 compilerModule = libraryBase ++ ".Compile"
 
-compileTransform :: CompilationUnit T -> CompilationUnit () 
+compileTransform :: CompilationUnit T -> CompilationUnit ()
 compileTransform (CompilationUnit _ mp is tds) =
+    -- Imports pass through untouched. A stale import of the flat v1
+    -- `se.chalmers.paragon` package is a *source* error, rejected during name
+    -- resolution (see NameResolution.buildMapFromImportName) rather than
+    -- silently retargeted here at codegen.
     CompilationUnit () (fmap voidAnn mp) (map voidAnn is) $ map compileTypeDecl tds
 
 compileTypeDecl :: TypeDecl T -> TypeDecl ()
@@ -159,16 +163,15 @@ compileFormalParam (FormalParam _ ms t va vid) =
     FormalParam () (removeParagonMods ms) (compileType t) va (voidAnn vid)
 
 actorVarDecl, policyVarDecl, compileVarDecl :: VarDecl T -> VarDecl ()
-actorVarDecl (VarDecl _ (VarId _ i@(Ident _ rawI)) Nothing) 
-    = -- [varDeclQQ| $$i = Actor.newConcreteActor($s$rawI) |]
-      vDecl (voidAnn i) $ callStatic "Actor" "newConcreteActor"
-                             [Lit () $ String () $ B.unpack rawI]
+actorVarDecl (VarDecl _ (VarId _ i) Nothing)
+    = -- v2: a fresh actor is just a fresh object.  `$$i = new Object()`
+      vDecl (voidAnn i) newObject
 actorVarDecl vd = compileVarDecl vd
 
-policyVarDecl (VarDecl _ (VarId _ i@(Ident _ rawI)) 
+policyVarDecl (VarDecl _ (VarId _ i)
                            (Just (InitExp _ (PolicyExp _ (PolicyLit _ cs)))))
-    = vDecl (voidAnn i) $ callStatic "Policy" "newPolicy"
-      (Lit () (String () $ B.unpack rawI) : map clauseToExp cs)
+    = -- v2 Policy has no name; it is just its clauses.  `$$i = new Policy(cs...)`
+      vDecl (voidAnn i) $ newRT "Policy" (map clauseToExp cs)
 policyVarDecl vd = compileVarDecl vd
 
 compileVarDecl (VarDecl _ vid mInit) = VarDecl () (voidAnn vid) $ fmap compileVarInit mInit
@@ -237,17 +240,12 @@ compileVarDeclGeneric con ms t vds =
 
 compileStmt :: Stmt T -> Stmt ()
 compileStmt (StmtBlock _ bl) = StmtBlock () $ compileBlock bl
-compileStmt (Open t (Lock _ lN aN )) = ExpStmt () $ MethodInv () $ MethodCallOrLockQuery ()
-         (Name () MName (Just $ voidAnn lN) 
-                   (Ident () (B.pack "open"))) 
-         $ map (compileExp . (\aname -> case aname of
-                                          ActorName _ x -> ExpName t x
-                                          ActorTypeVar _ _ i -> ExpName t (Name t EName Nothing i)
-                             )) aN
-compileStmt (Close t (Lock _ lN aN )) = ExpStmt () $ MethodInv () $ MethodCallOrLockQuery ()
-         (Name () MName (Just $ voidAnn lN) 
-                   (Ident () (B.pack "close"))) 
-         $ map (compileExp . (\(ActorName _ x) -> (ExpName t x))) aN
+-- v2 lock state is external and value-based:
+--   LockState.open(new Lock(<lockID>, actors...))
+compileStmt (Open _ (Lock _ lN aN)) = ExpStmt () $ callStatic "LockState" "open"
+         [ newRT "Lock" (ExpName () (voidAnn lN) : map actorNameToArg aN) ]
+compileStmt (Close _ (Lock _ lN aN)) = ExpStmt () $ callStatic "LockState" "close"
+         [ newRT "Lock" (ExpName () (voidAnn lN) : map actorNameToArg aN) ]
 compileStmt (OpenBlock  _ _ bl) = StmtBlock () $ compileBlock bl
 compileStmt (CloseBlock _ _ bl) = StmtBlock () $ compileBlock bl
 
@@ -346,10 +344,10 @@ compileExp e = voidAnn e
 compileMethodInv :: MethodInvocation T -> MethodInvocation ()
 compileMethodInv mi = case mi of
   MethodCallOrLockQuery _ n@(Name _ LName _ _) as ->
+      -- Lock query `L(a...)` -> LockState.isOpen(new Lock(L, new Actor(a)...))
       MethodCallOrLockQuery ()
-         (Name () MName (Just $ voidAnn n) 
-                   (Ident () (B.pack "isOpen"))) 
-         $ map compileExp as
+         (Name () MName (Just $ mkPkgTypeName "LockState") (Ident () (B.pack "isOpen")))
+         [ newRT "Lock" (ExpName () (voidAnn n) : map (wrapActor . compileExp) as) ]
 
   MethodCallOrLockQuery _ n as -> MethodCallOrLockQuery () (voidAnn n) $ map compileExp as
   PrimaryMethodCall _ e tas i as -> 
@@ -434,15 +432,14 @@ lhsToExp (NameLhs _ n) = ExpName () n
 lhsToExp (FieldLhs _ fa) = FieldAccess () fa
 lhsToExp (ArrayLhs _ ai) = ArrayAccess () ai
 
--- lockExpToExp is irrelevant - Lock never happens!
+-- A lock used as a boolean: LockState.isOpen(new Lock(<lockID>, actors...))
 lockExpToExp :: Lock T -> Exp ()
-lockExpToExp (Lock _ n _ans) = -- [expQQ| #N#n.isOpen() |]
-  MethodInv () (MethodCallOrLockQuery () 
-                (Name () MName (Just $ voidAnn n) (Ident () (B.pack "isOpen"))) [])
-lockExpToExp (LockVar _ i) = 
-  MethodInv () (MethodCallOrLockQuery () 
-                (Name () MName (Just $ mkSimpleName EName $ voidAnn i) 
-                          (Ident () (B.pack "isOpen"))) [])
+lockExpToExp (Lock _ n ans) =
+  callStatic "LockState" "isOpen"
+    [ newRT "Lock" (ExpName () (voidAnn n) : map actorNameToArg ans) ]
+lockExpToExp (LockVar _ i) =
+  callStatic "LockState" "isOpen"
+    [ ExpName () (mkSimpleName EName $ voidAnn i) ]
 
 -----
 compileLhs :: Lhs T -> Lhs ()
@@ -477,8 +474,7 @@ compileFieldAccess fa =
 -- Policies
 
 compilePolicyExp :: PolicyExp T -> Exp ()
-compilePolicyExp (PolicyLit _ cs) = callStatic "Policy" "newPolicy"
-                                    (Lit () (String () "") : map clauseToExp cs)
+compilePolicyExp (PolicyLit _ cs) = newRT "Policy" (map clauseToExp cs)
 compilePolicyExp (PolicyTypeVar _ i) = ExpName () (mkSimpleName EName $ voidAnn i)
 -- PolicyOf may only appear in modifiers, which will have been removed.
 compilePolicyExp pe =
@@ -489,12 +485,21 @@ compilePolicyExp pe =
 -- Clauses and components
 
 clauseToExp :: Clause T -> Exp ()
-clauseToExp (Clause _ _ h body) = 
-    let vs = nub [ a | Var _ a <- universeBi (clauseHeadToActor $ voidAnn h) 
-                               ++ universeBi (map voidAnn body) ] 
+clauseToExp (Clause _ cvds h body) =
+    let -- Types of the quantified variables, keyed by name.  The head may also
+        -- declare one (ClauseDeclHead).  v2's Clause is type-aware: the sets
+        -- array types each `new Variable(k)` occurring below.
+        headDecls = case h of
+                      ClauseDeclHead _ cvd -> [cvd]
+                      _                    -> []
+        varTypes = [ (voidAnn i, compileRefType rt)
+                   | ClauseVarDecl _ rt i <- headDecls ++ cvds ]
+        vs = nub [ a | Var _ a <- universeBi (clauseHeadToActor $ voidAnn h)
+                               ++ universeBi (map voidAnn body) ]
              `zip` [0..] -- Substs
+        sets = [ maybe objectRefType id (lookup ident varTypes) | (ident, _) <- vs ]
         exps = clauseHeadToExp vs h : map (atomToExp vs) body
-     in callStatic "Policy" "newPClause" exps
+     in newRT "Clause" (setsArray sets : exps)
 
 clauseHeadToActor :: ClauseHead () -> Actor ()
 clauseHeadToActor (ClauseDeclHead _ (ClauseVarDecl _ _ i)) = Var () i
@@ -505,22 +510,26 @@ clauseHeadToExp vs (ClauseDeclHead _ (ClauseVarDecl t _ i)) =
     actorToExp vs (Var Nothing i)
 clauseHeadToExp vs (ClauseVarHead _ a) = actorToExp vs a
 
-headToExp, atomToExp :: [(Ident (), Int)] -> Atom T -> Exp ()
-headToExp vs (Atom _ _ acts) =
-    callStatic "ActorList" "newActorList" (map (actorToExp vs) acts)
-atomToExp vs (Atom _ n acts) = 
-    callStatic "Atom" "newAtom" (ExpName () (voidAnn n): map (actorToExp vs) acts)
+-- An atom is a lock predicate: `new Atom(<lockID>, args...)`.  The lock name
+-- resolves to the static final LockID field emitted by compileLockDecl.  (v2
+-- has no ActorList; a clause head is a bare Argument, a lock-property head is
+-- itself an Atom, so both go through atomToExp / actorToExp directly.)
+atomToExp :: [(Ident (), Int)] -> Atom T -> Exp ()
+atomToExp vs (Atom _ n acts) =
+    newRT "Atom" (ExpName () (voidAnn n) : map (actorToExp vs) acts)
 
+-- Compile an actor position to a runtime Argument: a concrete actor becomes
+-- `new Actor(obj)`, a quantified variable becomes `new Variable(k)`.
 actorToExp :: [(Ident (), Int)] -> Actor T -> Exp ()
-actorToExp _vs (Actor _ (ActorName _ n)) = ExpName () $ voidAnn n
-actorToExp _vs (Actor _ (ActorTypeVar _ _rt tv)) = ExpName () (mkSimpleName EName (voidAnn tv))
-actorToExp vs (Var _ i) = 
+actorToExp _vs (Actor _ (ActorName _ n)) = wrapActor $ ExpName () (voidAnn n)
+actorToExp _vs (Actor _ (ActorTypeVar _ _rt tv)) = wrapActor $ ExpName () (mkSimpleName EName (voidAnn tv))
+actorToExp vs (Var _ i) =
     let res = lookup (voidAnn i) vs
         k = case res of
               Just m -> fromIntegral m
               Nothing -> panic (compilerModule ++ ".actorToExp")
                          $ "No such actor variable: " ++ show (i, vs)
-     in callStatic "Actor" "newActorVariable" [Lit () $ Int () k]
+     in newRT "Variable" [Lit () $ Int () k]
 
 
 -- Locks
@@ -538,11 +547,12 @@ compileLockDecl md =
                   lpExps = maybe [] 
                              (map (lockPropToExp i) . (\(LockProperties _ cs) -> cs)) 
                              mLProps
-                  lockE = callStatic "Lock" "newLock" 
-                               [Lit () $ String () $ B.unpack rawI, Lit () $ Int () (fromIntegral $ length pars)]
+                  -- v2 LockID is type-aware: the arity is the actual parameter
+                  -- classes, not just a count.  `new LockID("L", T0.class, ...)`
+                  arity = [ ClassLit () (Just (RefType () (compileRefType par))) | par <- pars ]
+                  lockE = newRT "LockID" (Lit () (String () $ B.unpack rawI) : arity)
                   lockD = FieldDecl () ([Static (),Final ()] `union` removeParagonMods ms)
-                            lockType
-                            -- [typeQQ| se.chalmers.paragon.Lock |]
+                            lockIDType
                             [vDecl (voidAnn i) lockE]
               in MemberDecl () lockD : 
                         lockExpsToInit i (lmExps ++ lpExps)
@@ -556,12 +566,17 @@ lockExpsToInit _ [] = []
 lockExpsToInit _i es = [InitDecl () True . Block () $
                         map (BlockStmt () . ExpStmt ()) es]
                         
+-- v2 lock properties are global and value-based: a LockProperty (typed head
+-- Atom + body Atoms, with a sets array) registered on GlobalPolicy, rather than
+-- a clause mutated onto the lock instance.
 lockPropToExp :: Ident T -> LClause T -> Exp ()
-lockPropToExp _i@(Ident _ rawI) (LClause _ _ h body) =
-    let vs = nub [ a | Var _ a <- universeBi (map voidAnn (h:body)) ] `zip` [0..] -- Substs
-        exps = headToExp vs h : map (atomToExp vs) body
-
-    in call [B.unpack rawI,"addClause"] exps
+lockPropToExp _i (LClause _ cvds h body) =
+    let varTypes = [ (voidAnn vi, compileRefType rt) | ClauseVarDecl _ rt vi <- cvds ]
+        vs = nub [ a | Var _ a <- universeBi (map voidAnn (h:body)) ] `zip` [0..] -- Substs
+        sets = [ maybe objectRefType id (lookup ident varTypes) | (ident, _) <- vs ]
+        prop = newRT "LockProperty"
+                 (setsArray sets : atomToExp vs h : map (atomToExp vs) body)
+    in callStatic "GlobalPolicy" "addProperty" [prop]
 lockPropToExp i _ = panic (compilerModule ++ ".lockPropToExp")
                     $ prettyPrint i
 
@@ -612,7 +627,7 @@ vDecl i initz = VarDecl () (VarId () i) (Just $ InitExp () initz)
 
 
 pkgPrefix :: Name ()
-pkgPrefix = mkUniformName const PName $ map (Ident () . B.pack) ["se","chalmers","paragon"]
+pkgPrefix = mkUniformName const PName $ map (Ident () . B.pack) ["se","chalmers","paragon","runtime"]
 
 mkPkgTypeName :: String -> Name ()
 mkPkgTypeName str = Name () TName (Just pkgPrefix) (Ident () (B.pack str))
@@ -620,10 +635,56 @@ mkPkgTypeName str = Name () TName (Just pkgPrefix) (Ident () (B.pack str))
 mkPkgType :: String -> Type ()
 mkPkgType str = RefType () $ ClassRefType () $ ClassType () (mkPkgTypeName str) []
 
-concreteActorType, policyType, lockType :: Type ()
-concreteActorType = mkPkgType "ConcreteActor"
+-- The v2 runtime is value/constructor-based rather than static-factory-based:
+-- e.g. `new Policy(clauses...)`, `new Clause(sets, head, body...)`,
+-- `new Actor(obj)`, `new Variable(k)`, `new Lock(lockID, actors...)`. These
+-- helpers emit `new se.chalmers.paragon.runtime.<T>(args)` and `new <T>(args)`.
+newRT :: String -> [Exp ()] -> Exp ()
+newRT typ args =
+    InstanceCreation () [] (ClassType () (mkPkgTypeName typ) []) args Nothing
+
+newPlain :: String -> [Exp ()] -> Exp ()
+newPlain typ args =
+    InstanceCreation () [] (ClassType () (Name () TName Nothing (Ident () (B.pack typ))) []) args Nothing
+
+-- v2 makes actors plain objects; the object *is* the identity.
+newObject :: Exp ()
+newObject = newPlain "Object" []
+
+-- Wrap an actor object expression as a runtime Argument: `new Actor(e)`.
+wrapActor :: Exp () -> Exp ()
+wrapActor e = newRT "Actor" [e]
+
+-- An actor named at a lock open/close/query site, wrapped as `new Actor(...)`
+-- for the `Lock(LockID, Actor...)` constructor.
+actorNameToArg :: ActorName T -> Exp ()
+actorNameToArg (ActorName _ n)      = wrapActor $ ExpName () (voidAnn n)
+actorNameToArg (ActorTypeVar _ _ i) = wrapActor $ ExpName () (mkSimpleName EName (voidAnn i))
+
+objectRefType :: RefType ()
+objectRefType = ClassRefType () (ClassType () (Name () TName Nothing (Ident () (B.pack "Object"))) [])
+
+objectType :: Type ()
+objectType = RefType () objectRefType
+
+-- The element type `Class<?>` for the `Class<?>[] sets` arrays that v2's
+-- type-aware Clause/LockProperty constructors expect.
+classWildType :: Type ()
+classWildType = RefType () $ ClassRefType () $
+    ClassType () (Name () TName Nothing (Ident () (B.pack "Class"))) [Wildcard () Nothing]
+
+-- `new Class<?>[]{ T0.class, T1.class, ... }` — one class literal per clause
+-- variable, indexed to match the `new Variable(k)` it types.
+setsArray :: [RefType ()] -> Exp ()
+setsArray rts =
+    ArrayCreateInit () classWildType [Nothing] $
+      ArrayInit () [ InitExp () (ClassLit () (Just (RefType () rt))) | rt <- rts ]
+
+concreteActorType, policyType, lockType, lockIDType :: Type ()
+concreteActorType = objectType          -- v2: a Paragon actor is a plain Object
 policyType        = mkPkgType "Policy"
 lockType          = mkPkgType "Lock"
+lockIDType        = mkPkgType "LockID"   -- a lock *declaration* is its LockID
 
 voidAnn :: Annotated ast => ast a -> ast ()
 voidAnn = fmap (const ())
